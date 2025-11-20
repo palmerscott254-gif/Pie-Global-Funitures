@@ -24,9 +24,10 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/admin/', permanent=False)),
 ]
 
-# Serve media files in development
+# Serve media and static files
+# Note: In production, use a proper web server (Nginx, Apache) or CDN
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Customize admin site

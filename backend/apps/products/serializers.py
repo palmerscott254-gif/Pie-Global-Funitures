@@ -7,6 +7,8 @@ class ProductSerializer(serializers.ModelSerializer):
     
     in_stock = serializers.ReadOnlyField()
     discount_percentage = serializers.ReadOnlyField()
+    main_image = serializers.SerializerMethodField()
+    gallery = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -21,6 +23,35 @@ class ProductSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at', 'in_stock', 'discount_percentage']
+    
+    def get_main_image(self, obj):
+        """Return absolute URL for main image"""
+        request = self.context.get('request')
+        if obj.main_image and hasattr(obj.main_image, 'url'):
+            if request is not None:
+                return request.build_absolute_uri(obj.main_image.url)
+            # Fallback if no request in context
+            from django.conf import settings
+            return f"{settings.BACKEND_URL}{obj.main_image.url}"
+        return None
+    
+    def get_gallery(self, obj):
+        """Return absolute URLs for gallery images"""
+        request = self.context.get('request')
+        if obj.gallery:
+            if isinstance(obj.gallery, list):
+                gallery_urls = []
+                for image_path in obj.gallery:
+                    if image_path:
+                        # Construct absolute URL for each gallery image
+                        if request is not None:
+                            full_url = request.build_absolute_uri(f"/media/{image_path}")
+                        else:
+                            from django.conf import settings
+                            full_url = f"{settings.BACKEND_URL}/media/{image_path}"
+                        gallery_urls.append(full_url)
+                return gallery_urls
+        return []
     
     def validate_price(self, value):
         """Ensure price is positive."""
@@ -46,6 +77,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     
     in_stock = serializers.ReadOnlyField()
     discount_percentage = serializers.ReadOnlyField()
+    main_image = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -55,3 +87,14 @@ class ProductListSerializer(serializers.ModelSerializer):
             'main_image', 'stock', 'featured', 'on_sale',
             'in_stock', 'discount_percentage'
         ]
+    
+    def get_main_image(self, obj):
+        """Return absolute URL for main image"""
+        request = self.context.get('request')
+        if obj.main_image and hasattr(obj.main_image, 'url'):
+            if request is not None:
+                return request.build_absolute_uri(obj.main_image.url)
+            # Fallback if no request in context
+            from django.conf import settings
+            return f"{settings.BACKEND_URL}{obj.main_image.url}"
+        return None

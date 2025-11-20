@@ -3,9 +3,9 @@ import { FaMapMarkerAlt, FaClock, FaPhone, FaEnvelope, FaDirections } from 'reac
 
 const LocationSection = () => {
   const locationData = {
-    address: '123 Furniture Avenue, Nairobi, Kenya',
+    address: 'Kayole Spine Rd, Nairobi',
     phone: '+254 706 271 001',
-    email: 'info@pieglobal.com',
+    email: 'Murimip55@gmail.com',
     hours: [
       { day: 'Monday - Friday', time: '8:00 AM - 6:00 PM' },
       { day: 'Saturday', time: '9:00 AM - 4:00 PM' },

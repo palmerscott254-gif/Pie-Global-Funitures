@@ -90,13 +90,12 @@ const CallToAction = () => {
             className="grid grid-cols-3 gap-8 mt-16 max-w-3xl mx-auto"
           >
             {[
-              { number: '500+', label: 'Products' },
-              { number: '1000+', label: 'Happy Customers' },
-              { number: '10+', label: 'Years Experience' },
+              { label: 'Quality Furniture for Every Home' },
+              { label: 'Affordable & Custom Designs' },
+              { label: 'Fast Delivery Within Nairobi' },
             ].map((stat, index) => (
               <div key={index} className="text-white">
-                <div className="text-4xl md:text-5xl font-bold mb-2">{stat.number}</div>
-                <div className="text-white/80 text-sm md:text-base">{stat.label}</div>
+                <div className="text-white text-base md:text-lg font-semibold leading-relaxed">{stat.label}</div>
               </div>
             ))}
           </motion.div>

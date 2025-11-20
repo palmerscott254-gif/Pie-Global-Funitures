@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { homeApi, productsApi, aboutApi } from '@/services/api';
 import type { SliderImage, Product, HomeVideo, AboutPage } from '@/types';

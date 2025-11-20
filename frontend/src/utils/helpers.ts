@@ -13,11 +13,17 @@ export const formatPrice = (price: string | number): string => {
 
 /**
  * Get full media URL
+ * Handles both absolute URLs from API and relative paths
  */
-export const getMediaUrl = (path: string | undefined): string => {
+export const getMediaUrl = (path: string | undefined | null): string => {
   if (!path) return '/placeholder-product.jpg';
-  if (path.startsWith('http')) return path;
-  return `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${path}`;
+  // Already an absolute URL (from updated serializers)
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  // Relative path - prepend API base URL
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  // Ensure path starts with /
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${normalizedPath}`;
 };
 
 /**
@@ -35,14 +41,14 @@ export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
+  let timeout: number;
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
     };
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout = setTimeout(later, wait) as unknown as number;
   };
 }
 
