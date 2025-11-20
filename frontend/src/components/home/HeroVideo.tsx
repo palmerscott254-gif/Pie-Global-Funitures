@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { memo, useRef, useEffect } from 'react';
 import type { HomeVideo, SliderImage } from '@/types';
 
 interface HeroVideoProps {
@@ -7,24 +8,42 @@ interface HeroVideoProps {
   slider?: SliderImage;
 }
 
-const HeroVideo = ({ video, slider }: HeroVideoProps) => {
+const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // Ensure video plays smoothly on mount
+    if (videoRef.current) {
+      videoRef.current.play().catch(err => {
+        console.log('Video autoplay failed:', err);
+      });
+    }
+  }, []);
+
   return (
     <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
       {video ? (
         <video
+          ref={videoRef}
           src={video.video}
           autoPlay
           loop
           muted
           playsInline
+          preload="auto"
           className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            willChange: 'transform',
+            transform: 'translateZ(0)',
+          }}
         />
       ) : slider ? (
         <img
           src={slider.image}
           alt={slider.title}
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
         />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
@@ -130,6 +149,8 @@ const HeroVideo = ({ video, slider }: HeroVideoProps) => {
       </div>
     </section>
   );
-};
+});
+
+HeroVideo.displayName = 'HeroVideo';
 
 export default HeroVideo;

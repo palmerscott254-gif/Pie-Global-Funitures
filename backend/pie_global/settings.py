@@ -47,6 +47,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'pie_global.middleware.VideoMimeTypeMiddleware',  # Video MIME types
 ]
 
 ROOT_URLCONF = 'pie_global.urls'

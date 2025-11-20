@@ -11,7 +11,7 @@ const LocationSection = () => {
       { day: 'Saturday', time: '9:00 AM - 4:00 PM' },
       { day: 'Sunday', time: 'Closed' },
     ],
-    googleMapsUrl: 'https://maps.google.com/?q=Nairobi,Kenya',
+    googleMapsUrl: 'https://maps.app.goo.gl/TVPH1DHdm4jCRJ4A7?g_st=ac',
   };
 
   const containerVariants = {
