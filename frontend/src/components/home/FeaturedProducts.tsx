@@ -140,11 +140,11 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl font-bold text-primary-600">
-                        ${product.price}
+                        KSh {product.price}
                       </span>
                       {product.compare_at_price && (
                         <span className="text-sm text-gray-400 line-through">
-                          ${product.compare_at_price}
+                          KSh {product.compare_at_price}
                         </span>
                       )}
                     </div>

@@ -3,9 +3,9 @@
  */
 export const formatPrice = (price: string | number): string => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-KE', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'KES',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(numPrice);

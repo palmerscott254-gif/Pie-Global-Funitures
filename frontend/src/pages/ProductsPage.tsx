@@ -90,10 +90,10 @@ const ProductsPage = () => {
                 {product.short_description}
               </p>
               <div className="flex items-center gap-2">
-                <span className="text-primary-600 font-bold">${product.price}</span>
+                <span className="text-primary-600 font-bold">KSh {product.price}</span>
                 {product.compare_at_price && (
                   <span className="text-gray-400 line-through text-sm">
-                    ${product.compare_at_price}
+                    KSh {product.compare_at_price}
                   </span>
                 )}
               </div>
