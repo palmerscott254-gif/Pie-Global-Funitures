@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { productsApi } from '@/services/api';
 import type { Product } from '@/types';
+import { useSEO } from '@/hooks';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ImageWithFallback from '@/components/common/ImageWithFallback';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  useSEO({
+    title: 'Shop Furniture - Pie Global Furniture',
+    description: 'Browse our wide selection of quality furniture. Sofas, beds, tables, wardrobes, and more. Affordable prices and fast delivery in Nairobi.',
+    keywords: 'furniture shop, buy furniture Nairobi, sofas, beds, office furniture, dining tables',
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -36,11 +46,7 @@ const ProductsPage = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="container-custom py-12 text-center">
-        <div className="spinner mx-auto"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   return (
@@ -66,42 +72,81 @@ const ProductsPage = () => {
 
       {/* Products Grid */}
       {products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Link
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          {products.map((product, index) => (
+            <motion.div
               key={product.id}
-              to={`/products/${product.slug}`}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
             >
-              <div className="relative">
-                <img
-                  src={product.main_image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded-md mb-4"
-                />
-                {product.on_sale && (
-                  <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                    Sale
-                  </span>
-                )}
-              </div>
-              <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-              <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                {product.short_description}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-primary-600 font-bold">KSh {product.price}</span>
-                {product.compare_at_price && (
-                  <span className="text-gray-400 line-through text-sm">
-                    KSh {product.compare_at_price}
-                  </span>
-                )}
-              </div>
-            </Link>
+              <Link
+                to={`/products/${product.slug}`}
+                className="block bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+              >
+                <div className="relative h-56 overflow-hidden bg-gray-100">
+                  <ImageWithFallback
+                    src={product.main_image}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  {product.on_sale && (
+                    <span className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
+                      SALE
+                    </span>
+                  )}
+                  {product.featured && (
+                    <span className="absolute top-3 left-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
+                      ⭐ Featured
+                    </span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-lg mb-2 text-gray-800 group-hover:text-primary-600 transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {product.short_description}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-primary-600 font-bold text-xl">KSh {product.price}</span>
+                    {product.compare_at_price && (
+                      <span className="text-gray-400 line-through text-sm">
+                        KSh {product.compare_at_price}
+                      </span>
+                    )}
+                  </div>
+                  {product.discount_percentage && (
+                    <div className="mt-2">
+                      <span className="text-green-600 text-sm font-semibold">
+                        Save {product.discount_percentage}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
-        <p className="text-center text-gray-600">No products found.</p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-20"
+        >
+          <p className="text-gray-600 text-lg">No products found in this category.</p>
+          <button
+            onClick={() => setSelectedCategory('')}
+            className="mt-4 btn-primary"
+          >
+            View All Products
+          </button>
+        </motion.div>
       )}
     </div>
   );

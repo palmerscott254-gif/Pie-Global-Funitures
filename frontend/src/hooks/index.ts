@@ -133,3 +133,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   return [storedValue, setValue] as const;
 }
+
+// Export new advanced hooks
+export { default as useSEO } from './useSEO';
+export { usePerformanceMonitoring, reportWebVitals } from './usePerformance';
