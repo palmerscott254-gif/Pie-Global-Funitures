@@ -95,6 +95,11 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
                   <img
                     src={product.main_image}
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder-product.jpg';
+                    }}
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                   />
                   

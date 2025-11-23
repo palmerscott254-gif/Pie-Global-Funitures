@@ -12,11 +12,25 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Ensure video plays smoothly on mount
+    // Ensure video plays smoothly on mount with retry logic
+    const playVideo = async () => {
+      if (videoRef.current) {
+        try {
+          await videoRef.current.play();
+        } catch (err) {
+          console.log('Video autoplay failed, retrying...', err);
+          // Retry after a short delay
+          setTimeout(() => {
+            videoRef.current?.play().catch(e => console.log('Retry failed:', e));
+          }, 1000);
+        }
+      }
+    };
+    playVideo();
+
+    // Optimize video loading
     if (videoRef.current) {
-      videoRef.current.play().catch(err => {
-        console.log('Video autoplay failed:', err);
-      });
+      videoRef.current.playbackRate = 1.0;
     }
   }, []);
 
@@ -32,11 +46,15 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           muted
           playsInline
           preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             willChange: 'transform',
             transform: 'translateZ(0)',
           }}
+          onLoadedData={() => console.log('Video loaded successfully')}
+          onError={(e) => console.error('Video error:', e)}
         />
       ) : slider ? (
         <img

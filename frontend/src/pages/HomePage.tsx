@@ -8,6 +8,7 @@ import Slider from '@/components/home/Slider';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import LocationSection from '@/components/home/LocationSection';
 import CallToAction from '@/components/home/CallToAction';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const HomePage = () => {
   const [sliders, setSliders] = useState<SliderImage[]>([]);
@@ -61,15 +62,7 @@ const HomePage = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full"
-        />
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   return (
