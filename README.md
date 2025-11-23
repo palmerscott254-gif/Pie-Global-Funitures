@@ -97,10 +97,31 @@ Pie Global Furniture/
    # source venv/bin/activate  # macOS/Linux
    ```
 
-3. **Install dependencies**
+3. **Install dependencies (Python 3.11+ compatible)**
+   
+   **Option A - Automated Installation (Recommended):**
    ```bash
+   # Windows
+   install.bat
+   
+   # Linux/macOS
+   chmod +x install.sh
+   ./install.sh
+   
+   # Or use Python script
+   python install.py
+   ```
+   
+   **Option B - Manual Installation:**
+   ```bash
+   # Upgrade build tools first (critical for Python 3.11+)
+   python -m pip install --upgrade pip setuptools>=65.0.0 wheel>=0.38.0
+   
+   # Install dependencies
    pip install -r requirements.txt
    ```
+   
+   > **Note:** The installation process ensures proper dependency ordering to avoid `__version__` errors during wheel building.
 
 4. **Configure environment variables**
    ```bash

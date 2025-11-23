@@ -1,3 +1,7 @@
+# Build tools (install these first)
+setuptools>=65.0.0
+wheel>=0.38.0
+
 # Django Core
 Django==5.0.0
 djangorestframework==3.14.0
@@ -10,7 +14,7 @@ psycopg2-binary==2.9.9
 # Media/File handling
 Pillow==10.2.0
 
-# Environment variables
+# Environment variables - Fixed for Python 3.11+ compatibility
 python-decouple==3.8
 
 # Security
