@@ -5,7 +5,7 @@ from .models import UserMessage
 
 @admin.register(UserMessage)
 class UserMessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'email', 'phone', 'reply_status', 'created_at')
+    list_display = ('id', 'name', 'email', 'phone', 'replied', 'reply_status', 'created_at')
     list_filter = ('replied', 'created_at')
     search_fields = ('name', 'email', 'phone', 'message')
     readonly_fields = ('created_at', 'formatted_message')

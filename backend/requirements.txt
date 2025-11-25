@@ -1,5 +1,6 @@
 # Build tools (install these first)
-setuptools>=65.0.0
+# Pin upper bound to avoid setuptools 75+ build-time '__version__' issues
+setuptools>=65,<75
 wheel>=0.38.0
 
 # Django Core
