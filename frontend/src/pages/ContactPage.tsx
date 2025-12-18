@@ -117,8 +117,8 @@ const ContactPage = () => {
                 <FaPhone className="text-primary-600 text-xl" />
                 <div>
                   <p className="font-medium">Phone</p>
-                  <a href="tel:+254706271001" className="text-gray-600 hover:text-primary-600">
-                    +254 706 271 001
+                  <a href="tel:+254704456788" className="text-gray-600 hover:text-primary-600">
+                    +254 704 456 788
                   </a>
                 </div>
               </div>
@@ -128,7 +128,7 @@ const ContactPage = () => {
                 <div>
                   <p className="font-medium">WhatsApp</p>
                   <a
-                    href="https://wa.me/254706271001"
+                    href="https://wa.me/254704456788?text=hello%20pie%20funitures"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-green-600"
@@ -142,8 +142,8 @@ const ContactPage = () => {
                 <FaEnvelope className="text-primary-600 text-xl" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <a href="mailto:Murimip55@gmail.com" className="text-gray-600 hover:text-primary-600">
-                    Murimip55@gmail.com
+                  <a href="mailto:muthikej392@gmail.com" className="text-gray-600 hover:text-primary-600">
+                    muthikej392@gmail.com
                   </a>
                 </div>
               </div>

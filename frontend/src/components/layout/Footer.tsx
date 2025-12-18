@@ -60,11 +60,11 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2">
                 <FaPhone className="text-primary-500" />
-                <span>+254 706 271 001</span>
+                <span>+254704456788</span>
               </li>
               <li className="flex items-center space-x-2">
                 <FaEnvelope className="text-primary-500" />
-                <span>Murimip55@gmail.com</span>
+                <span>muthikej392@gmail.com</span>
               </li>
             </ul>
           </div>

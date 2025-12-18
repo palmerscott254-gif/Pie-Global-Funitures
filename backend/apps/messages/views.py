@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import UserMessage
 from .serializers import UserMessageSerializer
 
@@ -34,7 +36,33 @@ class UserMessageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         
-        # TODO: Send notification to admin
+        # Send notification email to admin
+        try:
+            message_data = serializer.data
+            email_body = f"""
+New Contact Form Submission
+
+Name: {message_data.get('name', 'N/A')}
+Email: {message_data.get('email', 'N/A')}
+Phone: {message_data.get('phone', 'N/A')}
+
+Message:
+{message_data.get('message', 'N/A')}
+
+---
+Received at: {message_data.get('created_at', 'N/A')}
+"""
+            
+            send_mail(
+                subject=f"New Contact Form Message from {message_data.get('name', 'Customer')}",
+                message=email_body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=['muthikej392@gmail.com'],
+                fail_silently=True,
+            )
+        except Exception as e:
+            # Log error but don't fail the request
+            print(f"Failed to send notification email: {e}")
         
         return Response(
             {
