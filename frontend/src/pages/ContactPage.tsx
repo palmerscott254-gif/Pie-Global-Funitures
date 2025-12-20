@@ -142,8 +142,8 @@ const ContactPage = () => {
                 <FaEnvelope className="text-primary-600 text-xl" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <a href="mailto:muthikej392@gmail.com" className="text-gray-600 hover:text-primary-600">
-                    muthikej392@gmail.com
+                  <a href="mailto:pieglobal308@gmail.com" className="text-gray-600 hover:text-primary-600">
+                    pieglobal308@gmail.com
                   </a>
                 </div>
               </div>

@@ -57,7 +57,7 @@ Received at: {message_data.get('created_at', 'N/A')}
                 subject=f"New Contact Form Message from {message_data.get('name', 'Customer')}",
                 message=email_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=['muthikej392@gmail.com'],
+                recipient_list=['pieglobal308@gmail.com'],
                 fail_silently=True,
             )
         except Exception as e:

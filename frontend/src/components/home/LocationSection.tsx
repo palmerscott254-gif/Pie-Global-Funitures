@@ -5,7 +5,7 @@ const LocationSection = () => {
   const locationData = {
     address: 'Kayole Spine Rd, Nairobi',
     phone: '+254 704 456 788',
-    email: 'muthikej392@gmail.com',
+    email: 'pieglobal308@gmail.com',
     hours: [
       { day: 'Monday - Friday', time: '8:00 AM - 6:00 PM' },
       { day: 'Saturday', time: '9:00 AM - 4:00 PM' },
