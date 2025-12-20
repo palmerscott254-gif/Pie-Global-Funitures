@@ -4,6 +4,7 @@ import { FaShoppingCart, FaBars, FaTimes, FaSearch } from 'react-icons/fa';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useScrollPosition } from '@/hooks';
+import logoImage from './logo photo.jpeg';
 
 const Header = () => {
   const totalItems = useCartStore((state) => state.getTotalItems());
@@ -30,8 +31,9 @@ const Header = () => {
     >
       <div className="container-custom">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
+          {/* Brand */}
           <Link to="/" className="flex items-center space-x-2">
+            <img src={logoImage} alt="PieGlobal logo" className="h-7 md:h-9 w-auto object-contain" />
             <div className="text-2xl font-bold text-primary-600">
               Pie<span className="text-secondary-600">Global</span>
             </div>
