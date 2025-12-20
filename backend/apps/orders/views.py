@@ -40,9 +40,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         
-        # TODO: Send confirmation email
-        # TODO: Integrate payment gateway
-        
         return Response(
             {
                 'message': 'Order created successfully',
@@ -65,8 +62,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         order.status = new_status
         order.save()
-        
-        # TODO: Send status update email to customer
         
         return Response(OrderSerializer(order).data)
     

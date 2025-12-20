@@ -88,6 +88,4 @@ Received at: {message_data.get('created_at', 'N/A')}
         msg.reply_text = reply_text
         msg.save()
         
-        # TODO: Send email to customer with reply
-        
         return Response(self.get_serializer(msg).data)
