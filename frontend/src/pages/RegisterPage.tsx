@@ -17,8 +17,21 @@ const RegisterPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: wire to real signup endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Simple client-side registry to prevent logins with unknown emails
+      const existingRaw = localStorage.getItem('pgf-auth-users');
+      const existingUsers: Array<{ name: string; email: string; password: string }> = existingRaw ? JSON.parse(existingRaw) : [];
+
+      const emailExists = existingUsers.some((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (emailExists) {
+        toast.error('An account with this email already exists.');
+        return;
+      }
+
+      const newUsers = [...existingUsers, { name, email, password }];
+      localStorage.setItem('pgf-auth-users', JSON.stringify(newUsers));
+      localStorage.setItem('pgf-auth-current', JSON.stringify({ email }));
+      window.dispatchEvent(new Event('pgf-auth-changed'));
+
       toast.success('Account created — welcome!');
       const redirectTo = (location.state as { from?: string } | null)?.from || '/';
       navigate(redirectTo, { replace: true });

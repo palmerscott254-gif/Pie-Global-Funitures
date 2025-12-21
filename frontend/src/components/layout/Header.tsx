@@ -23,6 +23,7 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
@@ -31,6 +32,17 @@ const Header = () => {
   useEffect(() => {
     setIsScrolled(scrollY > 50);
   }, [scrollY]);
+
+  useEffect(() => {
+    const readAuth = () => {
+      const raw = localStorage.getItem('pgf-auth-current');
+      setIsAuthenticated(!!raw);
+    };
+    readAuth();
+    const handler = () => readAuth();
+    window.addEventListener('pgf-auth-changed', handler as EventListener);
+    return () => window.removeEventListener('pgf-auth-changed', handler as EventListener);
+  }, []);
 
   const navLinks = useMemo(
     () => [
@@ -144,7 +156,12 @@ const Header = () => {
                 className="text-gray-700 hover:text-primary-600 transition-colors"
                 aria-label="User account menu"
               >
-                <FaUser size={22} />
+                <span className="relative inline-block">
+                  <FaUser size={22} />
+                  {isAuthenticated && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-white" aria-hidden />
+                  )}
+                </span>
               </button>
               
               {isUserMenuOpen && (
@@ -165,6 +182,11 @@ const Header = () => {
                   </Link>
                   <hr className="my-2" />
                   <button
+                    onClick={() => {
+                      localStorage.removeItem('pgf-auth-current');
+                      window.dispatchEvent(new Event('pgf-auth-changed'));
+                      closeUserMenu();
+                    }}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors flex items-center gap-2"
                   >
                     <FaSignOutAlt size={14} /> Sign out

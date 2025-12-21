@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaCheckCircle, FaShieldAlt, FaUser } from 'react-icons/fa';
@@ -12,14 +12,58 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const registeredEmails = useMemo(() => {
+    const raw = localStorage.getItem('pgf-auth-users');
+    if (!raw) return [];
+    const users: Array<{ email: string; name?: string }> = JSON.parse(raw);
+    return users.map((u) => u.email);
+  }, []);
+
+  const filteredSuggestions = useMemo(() => {
+    if (!email.trim()) return registeredEmails;
+    const term = email.toLowerCase();
+    return registeredEmails.filter((e) => e.toLowerCase().includes(term));
+  }, [email, registeredEmails]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        emailInputRef.current && !emailInputRef.current.contains(e.target as Node) &&
+        suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: wire to real auth endpoint
-      await new Promise((resolve) => setTimeout(resolve, 900));
+      const existingRaw = localStorage.getItem('pgf-auth-users');
+      const existingUsers: Array<{ email: string; password: string; name?: string }> = existingRaw ? JSON.parse(existingRaw) : [];
+
+      const user = existingUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        toast.error('No account found for this email. Please register first.');
+        return;
+      }
+
+      if (user.password !== password) {
+        toast.error('Incorrect password.');
+        return;
+      }
+
       toast.success('Signed in — welcome back!');
+      // Persist current user and notify header
+      localStorage.setItem('pgf-auth-current', JSON.stringify({ email: user.email }));
+      window.dispatchEvent(new Event('pgf-auth-changed'));
       const redirectTo = (location.state as { from?: string } | null)?.from || '/';
       navigate(redirectTo, { replace: true });
     } catch (err) {
@@ -80,16 +124,40 @@ const LoginPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
+                ref={emailInputRef}
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
                 className="input-field"
                 placeholder="scott@example.com"
+                autoComplete="off"
               />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                >
+                  {filteredSuggestions.map((suggestionEmail) => (
+                    <button
+                      key={suggestionEmail}
+                      type="button"
+                      onClick={() => {
+                        setEmail(suggestionEmail);
+                        setShowSuggestions(false);
+                        emailInputRef.current?.focus();
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors"
+                    >
+                      {suggestionEmail}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
