@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { shallow } from 'zustand/shallow';
 import { useCartStore } from '@/store/cartStore';
@@ -21,7 +21,11 @@ const Header = () => {
   const scrollY = useScrollPosition();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLFormElement>(null);
+  const navigate = useNavigate();
   const closeUserMenu = useCallback(() => setIsUserMenuOpen(false), []);
 
   useEffect(() => {
@@ -39,6 +43,18 @@ const Header = () => {
   );
 
   useOnClickOutside(userMenuRef, closeUserMenu);
+  useOnClickOutside(searchRef, () => setIsSearchOpen(false));
+
+  const handleSearchSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const term = searchTerm.trim();
+      if (!term) return;
+      navigate(`/products?q=${encodeURIComponent(term)}`);
+      setIsSearchOpen(false);
+    },
+    [navigate, searchTerm]
+  );
 
   return (
     <header
@@ -74,11 +90,39 @@ const Header = () => {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 relative">
             {/* Search Icon */}
-            <button className="hidden md:block text-gray-700 hover:text-primary-600 transition-colors">
-              <FaSearch size={20} />
-            </button>
+            <div className="hidden md:block">
+              <button
+                onClick={() => setIsSearchOpen((prev) => !prev)}
+                className="text-gray-700 hover:text-primary-600 transition-colors"
+                aria-label="Search products"
+              >
+                <FaSearch size={20} />
+              </button>
+
+              {isSearchOpen && (
+                <form
+                  ref={searchRef}
+                  onSubmit={handleSearchSubmit}
+                  className="absolute right-0 mt-3 w-72 bg-white shadow-xl border border-gray-200 rounded-xl p-3 flex items-center gap-2"
+                >
+                  <input
+                    autoFocus
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search products..."
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  >
+                    Go
+                  </button>
+                </form>
+              )}
+            </div>
 
             {/* Cart Icon */}
             <button

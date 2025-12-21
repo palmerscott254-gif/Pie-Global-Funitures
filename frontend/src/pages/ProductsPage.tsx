@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { productsApi } from '@/services/api';
 import type { Product } from '@/types';
@@ -11,6 +11,8 @@ const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('q') || '');
 
   useSEO({
     title: 'Shop Furniture - Pie Global Furniture',
@@ -34,6 +36,30 @@ const ProductsPage = () => {
     fetchProducts();
   }, [selectedCategory]);
 
+  useEffect(() => {
+    setSearchTerm(searchParams.get('q') || '');
+  }, [searchParams]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    const params = new URLSearchParams(searchParams);
+    if (value.trim()) {
+      params.set('q', value.trim());
+    } else {
+      params.delete('q');
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) return products;
+    const term = searchTerm.toLowerCase();
+    return products.filter((product) =>
+      product.name.toLowerCase().includes(term) ||
+      (product.short_description || '').toLowerCase().includes(term)
+    );
+  }, [products, searchTerm]);
+
   const categories = [
     { value: '', label: 'All Products' },
     { value: 'sofa', label: 'Sofas' },
@@ -53,6 +79,16 @@ const ProductsPage = () => {
     <div className="container-custom py-12">
       <h1 className="section-title">Our Products</h1>
 
+      {/* Search bar */}
+      <div className="max-w-2xl mx-auto mb-8">
+        <input
+          value={searchTerm}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search products by name or description"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
       {/* Category Filter */}
       <div className="flex flex-wrap gap-2 justify-center mb-8">
         {categories.map((cat) => (
@@ -71,14 +107,14 @@ const ProductsPage = () => {
       </div>
 
       {/* Products Grid */}
-      {products.length > 0 ? (
+      {filteredProducts.length > 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {products.map((product, index) => (
+          {filteredProducts.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
@@ -139,7 +175,7 @@ const ProductsPage = () => {
           animate={{ opacity: 1 }}
           className="text-center py-20"
         >
-          <p className="text-gray-600 text-lg">No products found in this category.</p>
+          <p className="text-gray-600 text-lg">No products found{searchTerm ? ` for "${searchTerm}"` : ''} in this category.</p>
           <button
             onClick={() => setSelectedCategory('')}
             className="mt-4 btn-primary"
