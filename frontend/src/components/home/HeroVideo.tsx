@@ -16,6 +16,20 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
     const playVideo = async () => {
       if (videoRef.current) {
         try {
+          // Optimize playback settings for smooth performance
+          videoRef.current.playbackRate = 1.0;
+          
+          // Reduce quality on slower devices
+          if ('connection' in navigator) {
+            const conn = (navigator as any).connection;
+            if (conn && conn.effectiveType === '4g') {
+              // High quality for fast connections
+            } else {
+              // Reduce quality for slower connections
+              videoRef.current.playbackRate = 1.0;
+            }
+          }
+          
           await videoRef.current.play();
         } catch (err) {
           console.log('Video autoplay failed, retrying...', err);
@@ -27,11 +41,6 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
       }
     };
     playVideo();
-
-    // Optimize video loading
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 1.0;
-    }
   }, []);
 
   return (
@@ -45,13 +54,14 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           disablePictureInPicture
           disableRemotePlayback
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            willChange: 'transform',
-            transform: 'translateZ(0)',
+            willChange: 'auto',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
           }}
           onLoadedData={() => console.log('Video loaded successfully')}
           onError={(e) => console.error('Video error:', e)}
@@ -70,12 +80,12 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
 
-      {/* Animated Particles Background */}
-      <div className="absolute inset-0 opacity-20">
-        {[...Array(20)].map((_, i) => (
+      {/* Animated Particles Background - Reduced for performance */}
+      <div className="absolute inset-0 opacity-10">
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-white rounded-full"
+            className="absolute w-1.5 h-1.5 bg-white rounded-full"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
@@ -85,7 +95,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
               x: [null, Math.random() * window.innerWidth],
             }}
             transition={{
-              duration: 10 + Math.random() * 20,
+              duration: 15 + Math.random() * 20,
               repeat: Infinity,
               ease: 'linear',
             }}

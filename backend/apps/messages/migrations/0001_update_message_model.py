@@ -15,6 +15,7 @@ def migrate_replied_to_status(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('user_messages', '0001_initial'),
     ]
 
     operations = [
