@@ -35,7 +35,26 @@ const LocationSection = () => {
     },
   };
 
+  const testimonials = [
+    {
+      name: 'Amina K.',
+      role: 'Homeowner, Kilimani',
+      quote: 'Delivery was fast, and the sofa feels custom-made for my living room.',
+    },
+    {
+      name: 'Victor O.',
+      role: 'Office Fitout, Westlands',
+      quote: 'Their team guided us to ergonomic desks that look premium and fit our budget.',
+    },
+    {
+      name: 'Sarah N.',
+      role: 'Repeat Customer',
+      quote: 'Second order in six months. Quality and service stay consistently high.',
+    },
+  ];
+
   return (
+    <>
     <section className="relative py-20 overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-secondary-50">
@@ -180,6 +199,44 @@ const LocationSection = () => {
         </motion.div>
       </div>
     </section>
+
+    {/* Customer Comments */}
+    <section className="relative pb-20">
+      <div className="container-custom relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h3 className="text-3xl md:text-4xl font-bold text-gray-900">What customers say</h3>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            Real feedback from people who visited or ordered from Pie Global Furniture.
+          </p>
+        </motion.div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {testimonials.map((t, idx) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.05 }}
+              className="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-lg border border-gray-100"
+            >
+              <p className="text-gray-800 leading-relaxed">“{t.quote}”</p>
+              <div className="mt-4">
+                <p className="font-semibold text-gray-900">{t.name}</p>
+                <p className="text-sm text-gray-600">{t.role}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+    </>
   );
 };
 

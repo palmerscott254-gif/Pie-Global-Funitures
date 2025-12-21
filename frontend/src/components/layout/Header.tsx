@@ -1,27 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { FaShoppingCart, FaBars, FaTimes, FaSearch } from 'react-icons/fa';
+import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { shallow } from 'zustand/shallow';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
-import { useScrollPosition } from '@/hooks';
+import { useOnClickOutside, useScrollPosition } from '@/hooks';
 import logoImage from './logo photo.jpeg';
 
 const Header = () => {
   const totalItems = useCartStore((state) => state.getTotalItems());
-  const { isMobileMenuOpen, isCartOpen, toggleMobileMenu, toggleCart, closeMobileMenu } = useUIStore();
+  const { isMobileMenuOpen, toggleMobileMenu, toggleCart, closeMobileMenu } = useUIStore(
+    (state) => ({
+      isMobileMenuOpen: state.isMobileMenuOpen,
+      toggleMobileMenu: state.toggleMobileMenu,
+      closeMobileMenu: state.closeMobileMenu,
+      toggleCart: state.toggleCart,
+    }),
+    shallow
+  );
   const scrollY = useScrollPosition();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const closeUserMenu = useCallback(() => setIsUserMenuOpen(false), []);
 
   useEffect(() => {
     setIsScrolled(scrollY > 50);
   }, [scrollY]);
 
-  const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/products', label: 'Products' },
-    { to: '/about', label: 'About' },
-    { to: '/contact', label: 'Contact' },
-  ];
+  const navLinks = useMemo(
+    () => [
+      { to: '/', label: 'Home' },
+      { to: '/products', label: 'Products' },
+      { to: '/about', label: 'About' },
+      { to: '/contact', label: 'Contact' },
+    ],
+    []
+  );
+
+  useOnClickOutside(userMenuRef, closeUserMenu);
 
   return (
     <header
@@ -76,6 +93,42 @@ const Header = () => {
               )}
             </button>
 
+            {/* User Account Menu */}
+            <div className="relative hidden md:block" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="text-gray-700 hover:text-primary-600 transition-colors"
+                aria-label="User account menu"
+              >
+                <FaUser size={22} />
+              </button>
+              
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <Link
+                    to="/login"
+                    onClick={closeUserMenu}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={closeUserMenu}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Create account
+                  </Link>
+                  <hr className="my-2" />
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                  >
+                    <FaSignOutAlt size={14} /> Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Mobile Menu Toggle */}
             <button
               onClick={toggleMobileMenu}
@@ -105,6 +158,23 @@ const Header = () => {
                 {link.label}
               </NavLink>
             ))}
+
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+              <Link
+                to="/login"
+                onClick={closeMobileMenu}
+                className="flex-1 text-center py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:text-primary-600"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                onClick={closeMobileMenu}
+                className="flex-1 text-center py-2 bg-primary-600 text-white rounded-lg font-semibold shadow hover:bg-primary-700"
+              >
+                Create account
+              </Link>
+            </div>
           </nav>
         </div>
       )}

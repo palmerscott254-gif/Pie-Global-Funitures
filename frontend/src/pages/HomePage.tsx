@@ -42,11 +42,6 @@ const HomePage = () => {
           ? productsData 
           : (productsData as any).results || [];
         
-        console.log('Sliders:', slidersData);
-        console.log('Videos:', videosData);
-        console.log('Featured Products:', products);
-        console.log('About:', aboutData);
-        
         setSliders(slidersData);
         setVideos(videosData);
         setFeaturedProducts(products);

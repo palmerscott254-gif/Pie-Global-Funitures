@@ -50,7 +50,6 @@ const TermsOfServicePage = () => {
           </p>
           <ul className="list-disc pl-6 mb-4 text-gray-700">
             <li>Delivery is available within Nairobi and surrounding areas </li>
-            <li>Derivary fees are the responsibility of the buyer & are charged low,affordable rate depending on the derivery location</li>
             <li>Delivery times are estimates and not guaranteed</li>
             <li>You must be available to receive the delivery</li>
             <li>Risk of loss transfers to you upon delivery</li>
