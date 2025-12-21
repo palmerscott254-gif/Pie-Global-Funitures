@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaArrowUp } from 'react-icons/fa';
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -20,6 +22,11 @@ const ScrollToTop = () => {
       window.removeEventListener('scroll', toggleVisibility);
     };
   }, []);
+
+  useEffect(() => {
+    // Reset scroll position when navigation occurs so pages start at the top
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
 
   const scrollToTop = () => {
     window.scrollTo({

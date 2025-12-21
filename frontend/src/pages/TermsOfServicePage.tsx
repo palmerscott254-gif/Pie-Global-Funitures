@@ -39,6 +39,7 @@ const TermsOfServicePage = () => {
             <li>Prices are in Kenyan Shillings (KES) unless otherwise stated</li>
             <li>We reserve the right to cancel orders due to pricing errors</li>
             <li>All sales are subject to product availability</li>
+            <li>Payment is made upon delivery of goods unless the customer visits the shop, in which case payment is made at the point of purchase</li>
           </ul>
         </section>
 
@@ -48,11 +49,13 @@ const TermsOfServicePage = () => {
             Delivery terms:
           </p>
           <ul className="list-disc pl-6 mb-4 text-gray-700">
-            <li>Delivery is available within Nairobi and surrounding areas</li>
+            <li>Delivery is available within Nairobi and surrounding areas </li>
+            <li>Derivary fees are the responsibility of the buyer & are charged low,affordable rate depending on the derivery location</li>
             <li>Delivery times are estimates and not guaranteed</li>
             <li>You must be available to receive the delivery</li>
             <li>Risk of loss transfers to you upon delivery</li>
             <li>Additional charges may apply for remote locations</li>
+            <li>If you decline delivery after dispatch,you will be required to cover the return delivery costs</li>
           </ul>
         </section>
 
