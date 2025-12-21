@@ -73,6 +73,32 @@ const HomePage = () => {
         <HeroVideo />
       )}
 
+      {/* Slider Image Gallery Below Video */}
+      {sliders.length > 0 && (
+        <section className="bg-gray-50 py-8">
+          <div className="container-custom">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+              {sliders.map((slider, index) => (
+                <motion.div
+                  key={slider.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="flex-shrink-0 w-40 h-28 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
+                >
+                  <img
+                    src={slider.image}
+                    alt={slider.title || `Slider ${index + 1}`}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Featured Products Section */}
       <FeaturedProducts products={featuredProducts} />
 
