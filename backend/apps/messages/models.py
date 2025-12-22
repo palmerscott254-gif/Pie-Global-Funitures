@@ -30,7 +30,7 @@ class UserMessage(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['status', '-created_at'], name='user_messag_status_idx'),
         ]
 
     def __str__(self):

@@ -37,17 +37,17 @@ const LocationSection = () => {
 
   const testimonials = [
     {
-      name: 'Amina K.',
+      name: 'James Asubo',
       role: 'Homeowner, Kilimani',
       quote: 'Delivery was fast, and the sofa feels custom-made for my living room.',
     },
     {
-      name: 'Victor O.',
+      name: 'Anthony Kiragu',
       role: 'Office Fitout, Westlands',
       quote: 'Their team guided us to ergonomic desks that look premium and fit our budget.',
     },
     {
-      name: 'Sarah N.',
+      name: 'Dennis Omodi',
       role: 'Repeat Customer',
       quote: 'Second order in six months. Quality and service stay consistently high.',
     },

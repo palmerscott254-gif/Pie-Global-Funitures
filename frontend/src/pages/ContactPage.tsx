@@ -128,7 +128,7 @@ const ContactPage = () => {
                 <div>
                   <p className="font-medium">WhatsApp</p>
                   <a
-                    href="https://wa.me/254704456788?text=hello%20pie%20funitures"
+                    href="https://wa.me/254704456788?text=Hello%20pie%20funitures"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-green-600"
