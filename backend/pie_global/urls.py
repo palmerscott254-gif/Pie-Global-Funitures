@@ -8,8 +8,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import permissions
 from django.views.generic import RedirectView
+from django.http import JsonResponse
+
+def health_check(request):
+    """Health check endpoint for Render and monitoring."""
+    return JsonResponse({'status': 'healthy', 'service': 'pie-global-backend'})
 
 urlpatterns = [
+    # Health check
+    path('api/health/', health_check, name='health_check'),
+    
     # Admin
     path('admin/', admin.site.urls),
     
