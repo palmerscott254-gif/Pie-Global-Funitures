@@ -169,10 +169,20 @@ REST_FRAMEWORK = {
 # Should normalize CORS origins (remove trailing slashes and paths)
 CORS_ALLOWED_ORIGINS = [
     f"{urlparse(origin).scheme}://{urlparse(origin).netloc}" if '://' in origin else origin
-    for origin in config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:5173', cast=Csv())
+    for origin in config(
+        'CORS_ALLOWED_ORIGINS',
+        default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app',
+        cast=Csv()
+    )
 ]
+
+# Allow Vercel preview deployments (e.g., *-palmerscott254-gifs-projects.vercel.app)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.vercel\.app$',  # Matches all Vercel preview URLs
+]
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=DEBUG, cast=bool)
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
 
 # Additional CORS headers for media files
 CORS_ALLOW_HEADERS = [

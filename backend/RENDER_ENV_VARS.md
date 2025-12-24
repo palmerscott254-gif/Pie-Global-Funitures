@@ -16,10 +16,10 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 |----------|-------|-------|
 | `DJANGO_SECRET_KEY` | `<generated-key>` | Generate using command above |
 | `DJANGO_DEBUG` | `False` | MUST be False in production |
-| `DJANGO_ALLOWED_HOSTS` | `your-app.onrender.com` | Your Render app URL (without https://) |
+| `DJANGO_ALLOWED_HOSTS` | `pie-global-funitures.onrender.com` | Your Render app URL (without https://) |
 | `DATABASE_URL` | `<from-render-db>` | Automatically set when you link database |
-| `BACKEND_URL` | `https://your-app.onrender.com` | Full URL with https:// |
-| `CORS_ALLOWED_ORIGINS` | `https://frontend.vercel.app` | Your frontend URL(s), comma-separated |
+| `BACKEND_URL` | `https://pie-global-funitures.onrender.com` | Full URL with https:// |
+| `CORS_ALLOWED_ORIGINS` | `https://pie-global-funitures.vercel.app` | Your production frontend URL (Vercel previews auto-allowed) |
 | `CORS_ALLOW_ALL_ORIGINS` | `False` | Security - keep False in production |
 
 ---
@@ -61,12 +61,14 @@ DJANGO_DEBUG = False
 
 **Multiple Values (comma-separated):**
 ```
-DJANGO_ALLOWED_HOSTS = myapp.onrender.com,www.mysite.com
+DJANGO_ALLOWED_HOSTS = pie-global-funitures.onrender.com,www.mysite.com
 ```
 
 ```
-CORS_ALLOWED_ORIGINS = https://frontend.vercel.app,https://www.mysite.com
+CORS_ALLOWED_ORIGINS = https://pie-global-funitures.vercel.app,https://www.mysite.com
 ```
+
+**Note:** Vercel preview deployments (e.g., `*-palmerscott254-gifs-projects.vercel.app`) are automatically allowed via regex pattern. You only need to add your production Vercel domain.
 
 ---
 
