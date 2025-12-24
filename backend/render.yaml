@@ -5,7 +5,7 @@ services:
     env: python
     region: oregon
     buildCommand: "bash ./build.sh"
-    startCommand: "python manage.py migrate && gunicorn pie_global.wsgi:application --workers 1 --threads 2 --timeout 120 --graceful-timeout 30 --max-requests 200 --max-requests-jitter 50"
+    startCommand: "python manage.py migrate && python manage.py sync_media_to_disk && python manage.py seed_media && gunicorn pie_global.wsgi:application --workers 1 --threads 2 --timeout 120 --graceful-timeout 30 --max-requests 200 --max-requests-jitter 50"
     disks:
       # Persistent storage for user uploads (media files, images, videos)
       # This ensures media files persist across deployments
