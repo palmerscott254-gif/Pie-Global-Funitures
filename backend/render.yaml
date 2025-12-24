@@ -5,7 +5,7 @@ services:
     env: python
     region: oregon
     buildCommand: "bash ./build.sh"
-    startCommand: "python manage.py migrate && gunicorn pie_global.wsgi:application"
+    startCommand: "python manage.py migrate && gunicorn pie_global.wsgi:application --workers 1 --threads 2 --timeout 120 --graceful-timeout 30 --max-requests 200 --max-requests-jitter 50"
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.4
