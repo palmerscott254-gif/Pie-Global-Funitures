@@ -14,7 +14,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // Increased to 30s for slow Render startup
   headers: {
     'Content-Type': 'application/json',
   },
@@ -30,14 +30,31 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor with retry logic
+let retryCount = 0;
+const maxRetries = 1;
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    retryCount = 0; // Reset on success
+    return response;
+  },
   (error: AxiosError) => {
     if (error.response) {
       console.error('API Error:', error.response.data);
     } else if (error.request) {
       console.error('Network Error:', error.message);
+      
+      // Retry once on timeout for cold starts
+      if (error.code === 'ECONNABORTED' && retryCount < maxRetries) {
+        retryCount++;
+        console.log(`Retrying request (attempt ${retryCount}/${maxRetries})...`);
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(api(error.config as any));
+          }, 2000); // Wait 2s before retry
+        });
+      }
     }
     return Promise.reject(error);
   }

@@ -11,17 +11,17 @@ import ScrollToTop from './components/common/ScrollToTop';
 // Lazy load pages for better performance
 import { lazy, Suspense } from 'react';
 
-const HomePage = lazy(() => import('./pages/HomePage'));
-const ProductsPage = lazy(() => import('./pages/ProductsPage'));
-const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
-const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
-const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const HomePage = lazy(() => import('./pages/HomePage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const ProductsPage = lazy(() => import('./pages/ProductsPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const AboutPage = lazy(() => import('./pages/AboutPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const ContactPage = lazy(() => import('./pages/ContactPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const LoginPage = lazy(() => import('./pages/LoginPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').catch(() => ({ default: () => <div>Failed to load page</div> })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').catch(() => ({ default: () => <div>404 - Page not found</div> })));
 
 function App() {
   return (
