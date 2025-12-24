@@ -100,13 +100,17 @@ export const ordersApi = {
 // Home API
 export const homeApi = {
   getSliders: async () => {
-    const response = await api.get<SliderImage[]>('/sliders/');
-    return response.data;
+    const response = await api.get<SliderImage[] | { results: SliderImage[] }>('/sliders/');
+    // Handle both array and paginated responses
+    const data = Array.isArray(response.data) ? response.data : (response.data as any).results || [];
+    return data;
   },
 
   getVideos: async () => {
-    const response = await api.get<HomeVideo[]>('/videos/');
-    return response.data;
+    const response = await api.get<HomeVideo[] | { results: HomeVideo[] }>('/videos/');
+    // Handle both array and paginated responses
+    const data = Array.isArray(response.data) ? response.data : (response.data as any).results || [];
+    return data;
   },
 };
 
@@ -121,8 +125,15 @@ export const messagesApi = {
 // About API
 export const aboutApi = {
   get: async () => {
-    const response = await api.get<AboutPage[]>('/about/');
-    return response.data[0]; // Assuming single about page
+    const response = await api.get<AboutPage[] | AboutPage | { results: AboutPage[] }>('/about/');
+    // Handle different response formats
+    if (Array.isArray(response.data)) {
+      return response.data[0] || null;
+    } else if ((response.data as any).results && Array.isArray((response.data as any).results)) {
+      return (response.data as any).results[0] || null;
+    } else {
+      return (response.data as AboutPage) || null;
+    }
   },
 };
 
