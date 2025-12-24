@@ -22,7 +22,7 @@ services:
       - key: BACKEND_URL
         sync: false
       - key: CORS_ALLOWED_ORIGINS
-        value: https://pie-global-funitures.vercel.app,https://*.vercel.app
+        value: https://pie-global-funitures.vercel.app,https://pie-global-funitures-git-main-palmerscott254-gifs-projects.vercel.app
       - key: CORS_ALLOW_ALL_ORIGINS
         value: False
       - key: EMAIL_HOST
