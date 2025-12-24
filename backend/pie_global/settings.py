@@ -14,11 +14,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security Settings
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-production-use-strong-random-key')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
-# Parse ALLOWED_HOSTS and strip any scheme/path to ensure only hostnames
-_raw_allowed_hosts = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1,pie-global-funitures.onrender.com,*.onrender.com', cast=Csv())
+# Should strip the scheme from ALLOWED_HOSTS
 ALLOWED_HOSTS = [
-    urlparse(f"http://{h}").netloc if "://" not in h else urlparse(h).netloc
-    for h in _raw_allowed_hosts
+    urlparse(host).netloc if '://' in host else host 
+    for host in config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1,pie-global-funitures.onrender.com,*.onrender.com', cast=Csv())
 ]
 
 # Application definition
@@ -167,16 +166,10 @@ REST_FRAMEWORK = {
 }
 
 # CORS Settings
-_raw_cors_origins = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173',
-    cast=Csv()
-)
-# Remove any path segments Render might supply (must be scheme://host[:port])
-from urllib.parse import urlparse
+# Should normalize CORS origins (remove trailing slashes and paths)
 CORS_ALLOWED_ORIGINS = [
-    f"{p.scheme}://{p.netloc}" for p in (urlparse(o) for o in _raw_cors_origins)
-    if p.scheme and p.netloc
+    f"{urlparse(origin).scheme}://{urlparse(origin).netloc}" if '://' in origin else origin
+    for origin in config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:5173', cast=Csv())
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=DEBUG, cast=bool)
