@@ -10,7 +10,7 @@ django-filter==23.5
 django-cors-headers==4.3.1
 
 # Database
-psycopg[binary]==3.1.12
+psycopg[binary]==3.2.12
 dj-database-url==2.1.0
 
 # Media/File handling
