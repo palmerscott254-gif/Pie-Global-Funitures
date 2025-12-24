@@ -161,11 +161,17 @@ REST_FRAMEWORK = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS', 
-    default='http://localhost:3000,http://localhost:5173', 
+_raw_cors_origins = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://localhost:5173',
     cast=Csv()
 )
+# Remove any path segments Render might supply (must be scheme://host[:port])
+from urllib.parse import urlparse
+CORS_ALLOWED_ORIGINS = [
+    f"{p.scheme}://{p.netloc}" for p in (urlparse(o) for o in _raw_cors_origins)
+    if p.scheme and p.netloc
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=DEBUG, cast=bool)
 
