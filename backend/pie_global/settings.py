@@ -127,11 +127,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (User uploads)
-# IMPORTANT: In production, these must be served by a cloud storage provider (AWS S3, etc.)
-# or through a reverse proxy. Django should NOT serve these directly.
-# For now, configure them for local development and cloud storage integration
 MEDIA_URL = config('MEDIA_URL', default='/media/')
+# Use local folder in development; use Render persistent disk in production
 MEDIA_ROOT = BASE_DIR / 'media'
+if not DEBUG:
+    # On Render, the persistent disk is mounted at /media
+    # This ensures user-uploaded files survive deployments
+    MEDIA_ROOT = Path('/media')
 
 # WhiteNoise Configuration for Static Files
 # WhiteNoise ONLY serves static files, not media files
@@ -143,6 +145,8 @@ WHITENOISE_MIMETYPES = {
     '.webm': 'video/webm',
     '.mov': 'video/quicktime',
 }
+# Align WhiteNoise static prefix with STATIC_URL (defaults to '/static/')
+WHITENOISE_STATIC_PREFIX = STATIC_URL
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
