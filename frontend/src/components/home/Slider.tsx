@@ -4,10 +4,12 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import type { SliderImage } from '@/types';
 
 interface SliderProps {
-  images: SliderImage[];
+  // Accept the prop name used by callers; default to empty list to avoid runtime crashes
+  sliders?: SliderImage[];
 }
 
-const Slider = ({ images }: SliderProps) => {
+const Slider = ({ sliders }: SliderProps) => {
+  const images = sliders ?? [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
