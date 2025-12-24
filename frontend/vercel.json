@@ -4,5 +4,9 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "VITE_API_URL": "https://pie-global-funitures.onrender.com/api",
+    "VITE_API_BASE_URL": "https://pie-global-funitures.onrender.com"
+  }
 }
