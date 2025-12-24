@@ -14,7 +14,7 @@ services:
       - key: DJANGO_DEBUG
         value: False
       - key: DJANGO_ALLOWED_HOSTS
-        sync: false
+        value: localhost,127.0.0.1,pie-global-funitures.onrender.com,*.onrender.com
       - key: DATABASE_URL
         fromDatabase:
           name: pie-global-db
