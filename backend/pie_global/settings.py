@@ -73,8 +73,9 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 
 # Database
 # Use DATABASE_URL if available (Render), otherwise use individual settings
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
-if DATABASE_URL:
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+# Only use dj_database_url if DATABASE_URL is set AND contains a valid scheme (://)
+if DATABASE_URL and '://' in DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
