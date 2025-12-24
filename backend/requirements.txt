@@ -14,7 +14,7 @@ psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 
 # Media/File handling
-Pillow==10.2.0
+Pillow==11.0.0
 
 # Environment variables - Fixed for Python 3.11+ compatibility
 python-decouple==3.8
