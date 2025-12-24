@@ -90,17 +90,13 @@ if DATABASE_URL and '://' in DATABASE_URL:
         # If parsing fails (e.g., empty URL), use manual config
         DATABASES = {}
 
-# Fall back to manual PostgreSQL configuration if not using dj_database_url
+# Fall back to SQLite during build if DATABASE_URL is missing/invalid
+# Render sets DATABASE_URL at runtime; builds (collectstatic) can run without Postgres
 if not DATABASES:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('POSTGRES_DB', default='pie_global_db'),
-            'USER': config('POSTGRES_USER', default='postgres'),
-            'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
-            'HOST': config('POSTGRES_HOST', default='localhost'),
-            'PORT': config('POSTGRES_PORT', default='5432'),
-            'CONN_MAX_AGE': 600,  # Connection pooling
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
