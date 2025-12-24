@@ -74,16 +74,24 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 # Database
 # Use DATABASE_URL if available (Render), otherwise use individual settings
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
-# Only use dj_database_url if DATABASE_URL is set AND contains a valid scheme (://)
+
+# Try to use dj_database_url if DATABASE_URL is properly set, otherwise fall back to manual config
+DATABASES = {}
 if DATABASE_URL and '://' in DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
+    try:
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+    except ValueError:
+        # If parsing fails (e.g., empty URL), use manual config
+        DATABASES = {}
+
+# Fall back to manual PostgreSQL configuration if not using dj_database_url
+if not DATABASES:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
