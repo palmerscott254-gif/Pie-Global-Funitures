@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-interface UIState {
+export interface UIState {
   isMobileMenuOpen: boolean;
   isCartOpen: boolean;
   toggleMobileMenu: () => void;

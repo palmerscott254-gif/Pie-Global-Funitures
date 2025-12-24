@@ -21,7 +21,7 @@ interface CheckoutFormData {
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CheckoutFormData>({
     first_name: '',
@@ -55,14 +55,22 @@ const CheckoutPage = () => {
 
     try {
       const orderData = {
-        ...formData,
+        name: `${formData.first_name} ${formData.last_name}`,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        postal_code: '',
         items: items.map((item) => ({
-          product: item.id,
-          quantity: item.quantity,
-          price: item.price.toString(),
+          product_id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.quantity,
+          image: item.image,
         })),
-        total_price: totalPrice.toFixed(2),
+        total_amount: getTotalPrice().toFixed(2),
         status: 'pending',
+        notes: formData.delivery_notes,
       };
 
       await ordersApi.create(orderData);
@@ -232,7 +240,7 @@ const CheckoutPage = () => {
             <div className="space-y-3 mb-6 pt-4 border-t">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>{formatPrice(totalPrice)}</span>
+                <span>{formatPrice(getTotalPrice())}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Delivery</span>
@@ -242,7 +250,7 @@ const CheckoutPage = () => {
 
             <div className="flex justify-between text-xl font-bold pt-4 border-t">
               <span>Total</span>
-              <span className="text-primary-600">{formatPrice(totalPrice)}</span>
+              <span className="text-primary-600">{formatPrice(getTotalPrice())}</span>
             </div>
 
             <p className="text-sm text-gray-500 mt-4 text-center">

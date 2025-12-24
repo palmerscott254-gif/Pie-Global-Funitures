@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUser, FaSignOutAlt } from 'react-icons/fa';
-import { shallow } from 'zustand/shallow';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useOnClickOutside, useScrollPosition } from '@/hooks';
@@ -9,15 +8,10 @@ import logoImage from './logo photo.jpeg';
 
 const Header = () => {
   const totalItems = useCartStore((state) => state.getTotalItems());
-  const { isMobileMenuOpen, toggleMobileMenu, toggleCart, closeMobileMenu } = useUIStore(
-    (state) => ({
-      isMobileMenuOpen: state.isMobileMenuOpen,
-      toggleMobileMenu: state.toggleMobileMenu,
-      closeMobileMenu: state.closeMobileMenu,
-      toggleCart: state.toggleCart,
-    }),
-    shallow
-  );
+  const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
+  const toggleMobileMenu = useUIStore((state) => state.toggleMobileMenu);
+  const toggleCart = useUIStore((state) => state.toggleCart);
+  const closeMobileMenu = useUIStore((state) => state.closeMobileMenu);
   const scrollY = useScrollPosition();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);

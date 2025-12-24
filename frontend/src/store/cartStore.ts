@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem } from '@/types';
 
-interface CartState {
+export interface CartState {
   items: CartItem[];
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: number) => void;
