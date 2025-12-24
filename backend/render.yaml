@@ -20,26 +20,9 @@ services:
           name: pie-global-db
           property: connectionString
       - key: BACKEND_URL
-        sync: false
+        value: https://pie-global-funitures.onrender.com
       - key: CORS_ALLOWED_ORIGINS
         value: https://pie-global-funitures.vercel.app,https://pie-global-funitures-git-main-palmerscott254-gifs-projects.vercel.app
       - key: CORS_ALLOW_ALL_ORIGINS
         value: False
-      - key: EMAIL_HOST
-        sync: false
-      - key: EMAIL_PORT
-        value: 587
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
-      - key: DEFAULT_FROM_EMAIL
-        sync: false
-    healthCheckPath: /api/health/
-
-  # PostgreSQL Database
-databases:
-  - name: pie-global-db
-    databaseName: pie_global_db
-    user: pie_global_user
-    region: oregon
+      - key: WHITENOISE_AUTOREFRESH

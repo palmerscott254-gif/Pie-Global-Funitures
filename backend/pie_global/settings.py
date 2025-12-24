@@ -121,21 +121,23 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
+# WhiteNoise serves these from STATIC_ROOT during production
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files (uploads)
+# Media files (User uploads)
+# IMPORTANT: In production, these must be served by a cloud storage provider (AWS S3, etc.)
+# or through a reverse proxy. Django should NOT serve these directly.
+# For now, configure them for local development and cloud storage integration
 MEDIA_URL = config('MEDIA_URL', default='/media/')
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Base URL for serving media in production/development
-# This should be your backend URL
-BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
-
-# Add media to WhiteNoise for serving in production
+# WhiteNoise Configuration for Static Files
+# WhiteNoise ONLY serves static files, not media files
+# Media files must be handled separately (cloud storage recommended for production)
 WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = True  # Only for development
+WHITENOISE_AUTOREFRESH = config('WHITENOISE_AUTOREFRESH', default=DEBUG, cast=bool)
 WHITENOISE_MIMETYPES = {
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
@@ -175,7 +177,7 @@ REST_FRAMEWORK = {
 }
 
 # CORS Settings
-# Should normalize CORS origins (remove trailing slashes and paths)
+# Configure CORS to allow media and API requests from frontend domains
 CORS_ALLOWED_ORIGINS = [
     f"{urlparse(origin).scheme}://{urlparse(origin).netloc}" if '://' in origin else origin
     for origin in config(
@@ -186,6 +188,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Allow Vercel preview deployments (e.g., *-palmerscott254-gifs-projects.vercel.app)
+# This enables previews from any Vercel preview branch
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r'^https://.*\.vercel\.app$',  # Matches all Vercel preview URLs
 ]
@@ -193,7 +196,8 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
 
-# Additional CORS headers for media files
+# CORS Headers - IMPORTANT for media file requests
+# These headers are needed for cross-origin media file access and proper streaming
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -204,9 +208,21 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'range',  # Required for video range requests (seeking)
+]
+
+# CORS Expose Headers - Necessary for media file operations
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'content-length',
+    'content-range',  # Required for video streaming byte-range requests
+    'accept-ranges',  # Advertise support for range requests
+    'access-control-allow-origin',
 ]
 
 # Security settings for production
+# NOTE: These settings enforce HTTPS and security best practices
+# IMPORTANT: Ensure your reverse proxy (Render) is properly configured
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
@@ -215,8 +231,16 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Allow Content-Type detection for media files (needed for video/file streaming)
+    SECURE_CONTENT_TYPE_NOSNIFF = False  # Changed from True to allow proper media streaming
     X_FRAME_OPTIONS = 'DENY'
+    # Allow same-origin frames for embedded media
+    CSRF_TRUSTED_ORIGINS = [
+        'https://pie-global-funitures.onrender.com',
+        'https://*.onrender.com',
+        'https://pie-global-funitures.vercel.app',
+        'https://*.vercel.app',
+    ]
 
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB

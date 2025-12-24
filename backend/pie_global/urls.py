@@ -6,7 +6,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework import permissions
 from django.views.generic import RedirectView
 from django.http import JsonResponse
 
@@ -32,20 +31,10 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/admin/', permanent=False)),
 ]
 
-# Serve media files in all environments (including production)
-# WhiteNoise doesn't serve media by default, so we need to add it explicitly
-from django.views.static import serve
-from django.urls import re_path
-
-if not settings.DEBUG:
-    # In production, serve media files directly
-    urlpatterns += [
-        re_path(r'^media/(?P<path>.*)$', serve, {
-            'document_root': settings.MEDIA_ROOT,
-        }),
-    ]
-else:
-    # In development, use standard static serve
+# DEVELOPMENT ONLY: Serve static and media files via Django development server
+# In production, these are served by WhiteNoise (static) and reverse proxy (media)
+if settings.DEBUG:
+    # Development server serves both static and media files
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
