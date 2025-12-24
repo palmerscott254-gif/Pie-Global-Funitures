@@ -34,6 +34,21 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE(f"Source: {source_root}"))
         self.stdout.write(self.style.NOTICE(f"Destination: {dest_root}"))
 
+        # If source and destination are the same (typical in local dev where
+        # MEDIA_ROOT == BASE_DIR/media), there is nothing to copy.
+        try:
+            if source_root.resolve() == dest_root.resolve():
+                self.stdout.write(self.style.WARNING(
+                    "Source and destination are identical; nothing to sync."
+                ))
+                self.stdout.write(self.style.NOTICE(
+                    "This is expected locally. On Render, MEDIA_ROOT is /media (persistent disk), so files will be copied there."
+                ))
+                return
+        except Exception:
+            # If resolve() fails (e.g., missing path), continue to handle below
+            pass
+
         if not source_root.exists():
             self.stdout.write(self.style.WARNING(f"Source path does not exist: {source_root}"))
             return
