@@ -133,6 +133,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # This should be your backend URL
 BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
 
+# Add media to WhiteNoise for serving in production
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True  # Only for development
+WHITENOISE_MIMETYPES = {
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mov': 'video/quicktime',
+}
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
