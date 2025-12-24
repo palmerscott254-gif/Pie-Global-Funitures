@@ -6,6 +6,7 @@ import os
 import dj_database_url
 from pathlib import Path
 from decouple import config, Csv
+from urllib.parse import urlparse
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +14,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security Settings
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-production-use-strong-random-key')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1,pie-global-funitures.onrender.com,*.onrender.com', cast=Csv())
+# Parse ALLOWED_HOSTS and strip any scheme/path to ensure only hostnames
+_raw_allowed_hosts = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1,pie-global-funitures.onrender.com,*.onrender.com', cast=Csv())
+ALLOWED_HOSTS = [
+    urlparse(f"http://{h}").netloc if "://" not in h else urlparse(h).netloc
+    for h in _raw_allowed_hosts
+]
 
 # Application definition
 INSTALLED_APPS = [
