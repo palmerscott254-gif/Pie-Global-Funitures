@@ -7,12 +7,6 @@ class UserMessageCreateSerializer(serializers.ModelSerializer):
         model = UserMessage
         fields = ('name', 'email', 'phone', 'message')
     
-    def validate_email(self, value):
-        """Validate email is provided."""
-        if not value:
-            raise serializers.ValidationError("Email is required.")
-        return value
-    
     def validate_message(self, value):
         """Validate message is not empty."""
         if not value or len(value.strip()) < 5:
