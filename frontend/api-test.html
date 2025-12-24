@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pie Global Furniture - API Connection Test</h1>
+    <p>Click the button below to test the connection between Vercel frontend and Render backend.</p>
+    
+    <button onclick="testConnection()">Test API Connection</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'https://pie-global-funitures.onrender.com/api';
+        
+        async function testEndpoint(name, url) {
+            const result = document.createElement('div');
+            result.className = 'test-result loading';
+            result.innerHTML = `<strong>${name}</strong>: Testing...`;
+            document.getElementById('results').appendChild(result);
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.className = 'test-result success';
+                    result.innerHTML = `
+                        <strong>✅ ${name}</strong>: Success (${duration}ms)<br>
+                        <small>Status: ${response.status} ${response.statusText}</small><br>
+                        <details>
+                            <summary>Response Data</summary>
+                            <pre>${JSON.stringify(data, null, 2).substring(0, 500)}...</pre>
+                        </details>
+                    `;
+                } else {
+                    result.className = 'test-result error';
+                    result.innerHTML = `
+                        <strong>❌ ${name}</strong>: Failed<br>
+                        <small>Status: ${response.status} ${response.statusText}</small>
+                    `;
+                }
+            } catch (error) {
+                result.className = 'test-result error';
+                result.innerHTML = `
+                    <strong>❌ ${name}</strong>: Error<br>
+                    <small>${error.message}</small>
+                `;
+            }
+        }
+        
+        async function testConnection() {
+            document.getElementById('results').innerHTML = '<h2>Testing API Endpoints...</h2>';
+            
+            await testEndpoint('Sliders API', `${API_URL}/sliders/`);
+            await testEndpoint('Videos API', `${API_URL}/videos/`);
+            await testEndpoint('Products API', `${API_URL}/products/`);
+            await testEndpoint('Featured Products', `${API_URL}/products/featured/`);
+            await testEndpoint('About Page', `${API_URL}/about/`);
+            
+            const summary = document.createElement('div');
+            summary.className = 'test-result success';
+            summary.innerHTML = '<strong>✅ All tests completed!</strong> If all tests show success, your Vercel frontend can successfully connect to your Render backend.';
+            document.getElementById('results').appendChild(summary);
+        }
+    </script>
+</body>
+</html>
