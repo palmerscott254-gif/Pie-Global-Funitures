@@ -214,6 +214,14 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='pieglobal308@gmail.com')
 
 # Logging
+LOG_FILE_PATH = BASE_DIR / 'logs' / 'django.log'
+# Try to ensure the logs directory exists; if it fails (e.g., read-only during build), fall back to console-only
+try:
+    LOG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    log_file_available = True
+except Exception:
+    log_file_available = False
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -228,11 +236,14 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
-        },
+        # Only register file handler if the log path is available to avoid startup failure on platforms like Render build step
+        **({
+            'file': {
+                'class': 'logging.FileHandler',
+                'filename': LOG_FILE_PATH,
+                'formatter': 'verbose',
+            }
+        } if log_file_available else {}),
     },
     'root': {
         'handlers': ['console'],
@@ -240,7 +251,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'] if not DEBUG else ['console'],
+            'handlers': ['console', 'file'] if (not DEBUG and log_file_available) else ['console'],
             'level': 'INFO',
             'propagate': False,
         },
