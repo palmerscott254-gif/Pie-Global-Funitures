@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.utils.html import escape
+import re
 from .models import UserMessage
 
 class UserMessageCreateSerializer(serializers.ModelSerializer):
@@ -7,17 +9,40 @@ class UserMessageCreateSerializer(serializers.ModelSerializer):
         model = UserMessage
         fields = ('name', 'email', 'phone', 'message')
     
+    def validate_name(self, value):
+        """Validate and sanitize name input."""
+        if not value or len(value.strip()) < 2:
+            raise serializers.ValidationError("Name must be at least 2 characters long.")
+        # Sanitize to prevent XSS - escape HTML characters
+        return escape(value.strip()[:100])  # Limit length
+    
     def validate_email(self, value):
-        """Validate email is provided."""
+        """Validate email is provided and properly formatted."""
         if not value:
             raise serializers.ValidationError("Email is required.")
+        # Additional email format validation (DRF does basic validation)
+        value = value.strip().lower()
+        if len(value) > 254:  # RFC 5321
+            raise serializers.ValidationError("Email address is too long.")
+        return value
+    
+    def validate_phone(self, value):
+        """Validate and sanitize phone number."""
+        if value:
+            # Remove non-numeric characters except + and -
+            cleaned = re.sub(r'[^0-9+\-\s()]', '', value)
+            return cleaned[:20]  # Limit length
         return value
     
     def validate_message(self, value):
-        """Validate message is not empty."""
+        """Validate and sanitize message content."""
         if not value or len(value.strip()) < 5:
             raise serializers.ValidationError("Message must be at least 5 characters long.")
-        return value
+        # Sanitize to prevent XSS - escape HTML characters
+        cleaned = escape(value.strip())
+        if len(cleaned) > 2000:  # Limit message length
+            raise serializers.ValidationError("Message is too long (max 2000 characters).")
+        return cleaned
 
 class UserMessageReplySerializer(serializers.ModelSerializer):
     """Serializer for admin replies."""

@@ -11,18 +11,40 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
+// Validate API URL to prevent SSRF attacks
+const isValidApiUrl = (url: string): boolean => {
+  try {
+    const parsedUrl = new URL(url);
+    // Only allow http and https protocols
+    return ['http:', 'https:'].includes(parsedUrl.protocol);
+  } catch {
+    return false;
+  }
+};
+
+if (!isValidApiUrl(API_BASE_URL)) {
+  throw new Error('Invalid API URL configuration');
+}
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for better UX
   headers: {
     'Content-Type': 'application/json',
   },
+  // Security: Prevent credentials from being sent to untrusted origins
+  withCredentials: false,
 });
 
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Add CSRF token if available (for session-based auth)
+    const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+    if (csrfToken) {
+      config.headers['X-CSRFToken'] = csrfToken;
+    }
     return config;
   },
   (error) => {
@@ -30,15 +52,24 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor with improved error handling
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response) {
-      console.error('API Error:', error.response.data);
-    } else if (error.request) {
-      console.error('Network Error:', error.message);
+    // Don't log sensitive error details in production
+    if (import.meta.env.DEV) {
+      if (error.response) {
+        console.error('API Error:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('Network Error:', error.message);
+      }
     }
+    
+    // Sanitize error messages before throwing
+    if (error.response?.status === 429) {
+      return Promise.reject(new Error('Too many requests. Please try again later.'));
+    }
+    
     return Promise.reject(error);
   }
 );

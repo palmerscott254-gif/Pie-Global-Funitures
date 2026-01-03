@@ -4,16 +4,22 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from .models import Order
 from .serializers import OrderSerializer, OrderListSerializer
 
 
+# Rate limiting: prevent abuse - 10 orders per hour per IP
+@method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True), name='create')
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Order management.
     
-    Create: Public (for customers)
+    Create: Public (for customers) with rate limiting
     List/Update/Delete: Admin only
+    
+    Security: Rate limited to prevent order spam/abuse
     """
     queryset = Order.objects.all()
     serializer_class = OrderSerializer

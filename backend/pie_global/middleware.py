@@ -2,22 +2,27 @@
 Custom middleware for Pie Global Furniture project.
 """
 import mimetypes
-from django.utils.deprecation import MiddlewareMixin
 
 
-class VideoMimeTypeMiddleware(MiddlewareMixin):
+class VideoMimeTypeMiddleware:
     """
     Middleware to ensure video files are served with correct MIME types.
     This prevents video playback issues in browsers.
+    Updated to use modern middleware pattern (no MiddlewareMixin).
     """
     
     def __init__(self, get_response):
-        super().__init__(get_response)
+        self.get_response = get_response
         # Register common video MIME types
         mimetypes.add_type('video/mp4', '.mp4')
         mimetypes.add_type('video/webm', '.webm')
         mimetypes.add_type('video/ogg', '.ogv')
         mimetypes.add_type('video/quicktime', '.mov')
+    
+    def __call__(self, request):
+        """Process the request and response."""
+        response = self.get_response(request)
+        return self.process_response(request, response)
     
     def process_response(self, request, response):
         """

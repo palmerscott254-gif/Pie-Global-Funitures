@@ -101,7 +101,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Updated to use modern storage backend (CompressedManifestStaticFilesStorage is deprecated)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (uploads)
 MEDIA_URL = config('MEDIA_URL', default='/media/')
@@ -167,21 +175,51 @@ CORS_ALLOW_HEADERS = [
 
 # Security settings for production
 if not DEBUG:
+    # HTTPS/SSL settings
     SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    
+    # Cookie security
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+    SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
     CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    
+    # Browser security headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
+    X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
+    
+    # Referrer policy for privacy
+    SECURE_REFERRER_POLICY = 'same-origin'
+    
+    # Cross-origin policy
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
-# File Upload Settings
+# Session security (applies to both DEBUG and production)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in database
+SESSION_COOKIE_AGE = 86400  # 1 day in seconds
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# File Upload Settings - Enhanced security
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+FILE_UPLOAD_PERMISSIONS = 0o644  # Secure file permissions
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755  # Secure directory permissions
 ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'svg']
 ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov']
+
+# CSRF Protection - Add trusted origins for production
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:3000,http://localhost:5173',
+    cast=Csv()
+)
 
 # Email Configuration (optional)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

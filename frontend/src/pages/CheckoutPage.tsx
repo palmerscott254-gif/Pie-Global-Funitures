@@ -50,19 +50,48 @@ const CheckoutPage = () => {
       toast.error('Your cart is empty');
       return;
     }
+    
+    // Client-side validation
+    if (formData.first_name.trim().length < 2) {
+      toast.error('First name must be at least 2 characters');
+      return;
+    }
+    
+    if (formData.last_name.trim().length < 2) {
+      toast.error('Last name must be at least 2 characters');
+      return;
+    }
+    
+    if (formData.phone.trim().length < 8) {
+      toast.error('Please provide a valid phone number');
+      return;
+    }
+    
+    if (formData.address.trim().length < 5) {
+      toast.error('Please provide a complete address');
+      return;
+    }
 
     setLoading(true);
 
     try {
+      // Sanitize and validate order data
       const orderData = {
-        ...formData,
+        name: `${formData.first_name.trim()} ${formData.last_name.trim()}`.slice(0, 100),
+        email: formData.email.trim().toLowerCase().slice(0, 254),
+        phone: formData.phone.trim().slice(0, 20),
+        address: formData.address.trim().slice(0, 200),
+        city: formData.city.trim().slice(0, 100),
+        postal_code: '', // Optional field
+        notes: formData.delivery_notes.trim().slice(0, 500),
+        payment_method: 'Cash on Delivery',
         items: items.map((item) => ({
-          product: item.id,
-          quantity: item.quantity,
-          price: item.price.toString(),
+          product_id: item.id,
+          name: item.name.slice(0, 200),
+          price: parseFloat(item.price.toFixed(2)),
+          qty: Math.max(1, Math.min(1000, item.quantity)), // Limit quantity range
         })),
-        total_price: totalPrice.toFixed(2),
-        status: 'pending',
+        total_amount: parseFloat(totalPrice.toFixed(2)),
       };
 
       await ordersApi.create(orderData);
@@ -71,8 +100,15 @@ const CheckoutPage = () => {
       toast.success('Order placed successfully! We will contact you shortly.');
       navigate('/');
     } catch (error: any) {
-      console.error('Order error:', error);
-      toast.error(error.response?.data?.detail || 'Failed to place order. Please try again.');
+      // Handle rate limiting
+      if (error.message?.includes('Too many requests')) {
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to place order. Please try again.');
+      }
+      if (import.meta.env.DEV) {
+        console.error('Order error:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -112,6 +148,7 @@ const CheckoutPage = () => {
                   value={formData.first_name}
                   onChange={handleInputChange}
                   required
+                  maxLength={50}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -123,6 +160,7 @@ const CheckoutPage = () => {
                   value={formData.last_name}
                   onChange={handleInputChange}
                   required
+                  maxLength={50}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -137,6 +175,7 @@ const CheckoutPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
+                  maxLength={254}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -148,6 +187,7 @@ const CheckoutPage = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
+                  maxLength={20}
                   placeholder="0712345678"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
@@ -162,6 +202,7 @@ const CheckoutPage = () => {
                 value={formData.address}
                 onChange={handleInputChange}
                 required
+                maxLength={200}
                 placeholder="Street address, building, apartment"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
@@ -175,6 +216,7 @@ const CheckoutPage = () => {
                 value={formData.city}
                 onChange={handleInputChange}
                 required
+                maxLength={100}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -186,6 +228,7 @@ const CheckoutPage = () => {
                 value={formData.delivery_notes}
                 onChange={handleInputChange}
                 rows={3}
+                maxLength={500}
                 placeholder="Special instructions for delivery"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />

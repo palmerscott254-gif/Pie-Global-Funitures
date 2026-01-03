@@ -1,29 +1,29 @@
 # Build tools (install these first)
-# Pin upper bound to avoid setuptools 75+ build-time '__version__' issues
-setuptools>=65,<75
-wheel>=0.38.0
+# Updated setuptools to latest stable version
+setuptools>=70.0.0,<76
+wheel>=0.44.0
 
-# Django Core
-Django==5.0.0
-djangorestframework==3.14.0
-django-filter==23.5
-django-cors-headers==4.3.1
+# Django Core - Updated to latest LTS version (5.1.x is latest stable as of Jan 2026)
+Django==5.1.4
+djangorestframework==3.15.2
+django-filter==24.3
+django-cors-headers==4.6.0
 
-# Database
-psycopg2-binary==2.9.9
+# Database - Updated to latest stable
+psycopg2-binary==2.9.10
 
-# Media/File handling
-Pillow==10.2.0
+# Media/File handling - Updated for security patches
+Pillow==11.0.0
 
-# Environment variables - Fixed for Python 3.11+ compatibility
+# Environment variables
 python-decouple==3.8
 
-# Security
-django-ratelimit==4.1.0
+# Security - Updated rate limiting
+django-ratelimit==4.2.0
 
-# Production server
-gunicorn==21.2.0
-whitenoise==6.6.0
+# Production server - Updated for performance and security
+gunicorn==23.0.0
+whitenoise==6.8.2
 
-# Development
+# Development tools
 django-extensions==3.2.3

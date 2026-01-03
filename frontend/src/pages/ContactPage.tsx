@@ -14,15 +14,42 @@ const ContactPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (formData.name.trim().length < 2) {
+      toast.error('Name must be at least 2 characters long');
+      return;
+    }
+    
+    if (formData.message.trim().length < 5) {
+      toast.error('Message must be at least 5 characters long');
+      return;
+    }
+    
+    // Sanitize inputs (trim whitespace)
+    const sanitizedData = {
+      name: formData.name.trim().slice(0, 100),
+      email: formData.email.trim().toLowerCase().slice(0, 254),
+      phone: formData.phone.trim().slice(0, 20),
+      message: formData.message.trim().slice(0, 2000),
+    };
+    
     setSubmitting(true);
 
     try {
-      await messagesApi.create(formData);
+      await messagesApi.create(sanitizedData);
       toast.success('Thank you! We will get back to you soon.');
       setFormData({ name: '', email: '', phone: '', message: '' });
-    } catch (error) {
-      toast.error('Failed to send message. Please try again.');
-      console.error('Error sending message:', error);
+    } catch (error: any) {
+      // Handle rate limiting
+      if (error.message?.includes('Too many requests')) {
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        toast.error('Failed to send message. Please try again.');
+      }
+      if (import.meta.env.DEV) {
+        console.error('Error sending message:', error);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -54,19 +81,22 @@ const ContactPage = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
+                maxLength={100}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                Email *
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                required
+                maxLength={254}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -80,6 +110,7 @@ const ContactPage = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                maxLength={20}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -94,6 +125,7 @@ const ContactPage = () => {
                 onChange={handleChange}
                 required
                 rows={5}
+                maxLength={2000}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>

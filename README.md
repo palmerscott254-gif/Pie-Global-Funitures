@@ -2,12 +2,14 @@
 
 A modern, full-stack furniture e-commerce website built with **Django REST Framework** (backend) and **React + TypeScript + Vite** (frontend).
 
+**🔐 Security Update (January 2026)**: All dependencies updated to latest stable versions with comprehensive security enhancements. See [SECURITY.md](SECURITY.md) and [UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) for details.
+
 ---
 
 ## 🚀 Features
 
-### Backend (Django)
-- ✅ RESTful API with Django REST Framework
+### Backend (Django 5.1.4 LTS)
+- ✅ RESTful API with Django REST Framework 3.15.2
 - ✅ PostgreSQL database with optimized indexes
 - ✅ Product management with categories, images, inventory
 - ✅ Order management with status tracking
@@ -15,25 +17,49 @@ A modern, full-stack furniture e-commerce website built with **Django REST Frame
 - ✅ Homepage sliders and video hero
 - ✅ About page content management
 - ✅ Admin panel with enhanced interfaces
-- ✅ Secure file uploads
-- ✅ Input validation and error handling
+- ✅ **NEW**: Comprehensive input validation and sanitization
+- ✅ **NEW**: Rate limiting (5 contacts/hour, 10 orders/hour per IP)
+- ✅ **NEW**: Enhanced security headers (HSTS, CSP, XSS protection)
+- ✅ **NEW**: CSRF protection with trusted origins
+- ✅ **NEW**: Email header injection protection
+- ✅ Secure file uploads with permissions
 - ✅ Pagination and filtering
 - ✅ CORS configured for frontend
-- ✅ Rate limiting and throttling
 
-### Frontend (React)
-- ✅ Modern React 18 with TypeScript
-- ✅ Vite for ultra-fast development
-- ✅ Tailwind CSS for styling
-- ✅ React Router for navigation
-- ✅ Zustand for state management
+### Frontend (React 18.3)
+- ✅ Modern React 18.3 with TypeScript 5.7
+- ✅ Vite 6 for ultra-fast development
+- ✅ Tailwind CSS 3.4 for styling
+- ✅ React Router 7 for navigation
+- ✅ Zustand 5 for state management
 - ✅ Shopping cart with persistence
 - ✅ Responsive design (mobile-first)
 - ✅ Lazy loading and code splitting
-- ✅ Smooth animations with Framer Motion
+- ✅ Smooth animations with Framer Motion 11
 - ✅ Toast notifications
+- ✅ **NEW**: Client-side input validation and sanitization
+- ✅ **NEW**: API URL validation to prevent SSRF
+- ✅ **NEW**: Enhanced error handling with rate limit support
 - ✅ SEO optimized
 - ✅ TypeScript for type safety
+
+---
+
+## 🔒 Security Features
+
+This application implements comprehensive security measures:
+
+- ✅ **OWASP Top 10 Protection**: All major vulnerabilities addressed
+- ✅ **XSS Prevention**: Input sanitization and output escaping
+- ✅ **SQL Injection Prevention**: ORM-only queries
+- ✅ **CSRF Protection**: Token-based protection
+- ✅ **IDOR Prevention**: Permission checks on all endpoints
+- ✅ **Rate Limiting**: Prevents spam and abuse
+- ✅ **Secure Headers**: HSTS, CSP, X-Frame-Options, etc.
+- ✅ **Input Validation**: Length limits and type checking
+- ✅ **No Hardcoded Secrets**: Environment variables only
+
+See [SECURITY.md](SECURITY.md) for complete security documentation.
 
 ---
 
