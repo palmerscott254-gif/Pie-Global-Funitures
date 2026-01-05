@@ -1,19 +1,19 @@
 # Build tools (install these first)
 # Pin upper bound to avoid setuptools 75+ build-time '__version__' issues
 setuptools>=65,<75
-wheel>=0.38.0
+wheel>=0.42.0
 
 # Django Core
-Django==5.0.0
-djangorestframework==3.14.0
-django-filter==23.5
-django-cors-headers==4.3.1
+Django==5.1.4
+djangorestframework==3.15.2
+django-filter==24.3
+django-cors-headers==4.6.0
 
 # Database
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 
 # Media/File handling
-Pillow==10.2.0
+Pillow==11.0.0
 
 # Environment variables - Fixed for Python 3.11+ compatibility
 python-decouple==3.8
@@ -22,8 +22,8 @@ python-decouple==3.8
 django-ratelimit==4.1.0
 
 # Production server
-gunicorn==21.2.0
-whitenoise==6.6.0
+gunicorn==23.0.0
+whitenoise==6.8.2
 
 # Development
 django-extensions==3.2.3
