@@ -47,42 +47,38 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   return (
     <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
-      {video ? (
-        video.video ? (
-          <video
-            ref={videoRef}
-            src={getVideoUrl(video.video)}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            disablePictureInPicture
-            disableRemotePlayback
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              willChange: 'auto',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-            }}
-            onLoadedData={() => console.log('Video loaded successfully')}
-            onError={(e) => console.error('Video error:', e)}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
-        )
-      ) : slider ? (
-        slider.image ? (
-          <img
-            src={getImageUrl(slider.image)}
-            alt={slider.title}
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="eager"
-            onError={(e) => console.error('Slider image failed to load:', slider.image, e)}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
-        )
+      {video && video.video ? (
+        <video
+          ref={videoRef}
+          src={getVideoUrl(video.video) || undefined}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          disablePictureInPicture
+          disableRemotePlayback
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            willChange: 'auto',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          onLoadedData={() => console.log('Video loaded successfully')}
+          onError={(e) => {
+            console.error('Video error:', e);
+            console.error('Video src:', video.video);
+            console.error('Attempted URL:', getVideoUrl(video.video));
+          }}
+        />
+      ) : slider && slider.image ? (
+        <img
+          src={getImageUrl(slider.image)}
+          alt={slider.title}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          onError={(e) => console.error('Slider image failed to load:', slider.image, e)}
+        />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
       )}

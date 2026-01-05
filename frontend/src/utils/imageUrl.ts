@@ -24,9 +24,10 @@ export const getImageUrl = (url: string | null | undefined): string => {
 /**
  * Utility function to ensure video URLs are absolute and properly formatted
  */
-export const getVideoUrl = (url: string | null | undefined): string | null => {
+export const getVideoUrl = (url: string | null | undefined): string => {
   if (!url) {
-    return null;
+    console.warn('Video URL is null or undefined');
+    return ''; // Return empty string instead of null to prevent video element errors
   }
 
   // If already absolute URL, return as-is
@@ -41,5 +42,7 @@ export const getVideoUrl = (url: string | null | undefined): string | null => {
   // Ensure URL starts with /
   const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
   
-  return `${baseUrl}${normalizedUrl}`;
+  const fullUrl = `${baseUrl}${normalizedUrl}`;
+  console.log('Video URL constructed:', fullUrl);
+  return fullUrl;
 };
