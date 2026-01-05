@@ -29,7 +29,12 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     - Reply: Admin only
     
     Security: Rate limited to prevent spam/abuse
-    \"\"\"\n    queryset = UserMessage.objects.all()\n    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]\n    filterset_fields = ['status']\n    ordering_fields = ['created_at', 'updated_at']\n    ordering = ['-created_at']
+    """
+    queryset = UserMessage.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['status']
+    ordering_fields = ['created_at', 'updated_at']
+    ordering = ['-created_at']
     
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
