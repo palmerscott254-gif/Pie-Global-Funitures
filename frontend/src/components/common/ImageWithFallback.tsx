@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { getImageUrl } from '@/utils/imageUrl';
 
 interface ImageWithFallbackProps {
   src: string;
@@ -16,7 +17,7 @@ const ImageWithFallback = ({
   fallbackSrc = '/placeholder-product.jpg',
   loading = 'lazy',
 }: ImageWithFallbackProps) => {
-  const [imgSrc, setImgSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState(getImageUrl(src));
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 

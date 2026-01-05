@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { getImageUrl } from '@/utils/imageUrl';
 import type { SliderImage } from '@/types';
 
 interface SliderProps {
@@ -56,6 +57,9 @@ const Slider = ({ images }: SliderProps) => {
 
   if (images.length === 0) return null;
 
+  const currentImage = images[currentIndex];
+  if (!currentImage) return null;
+
   return (
     <section className="relative h-[600px] bg-gray-900 overflow-hidden">
       <AnimatePresence initial={false} custom={direction}>
@@ -84,17 +88,26 @@ const Slider = ({ images }: SliderProps) => {
           }}
           className="absolute inset-0"
         >
-          <img
-            src={images[currentIndex].image}
-            alt={images[currentIndex].title}
-            className="w-full h-full object-cover"
-          />
+          {currentImage.image ? (
+            <img
+              src={getImageUrl(currentImage.image)}
+              alt={currentImage.title || 'Slide image'}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Image failed to load:', currentImage.image, e);
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+              <p className="text-gray-400">Image not available</p>
+            </div>
+          )}
           
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
           {/* Slide Content */}
-          {images[currentIndex].title && (
+          {currentImage.title && (
             <div className="absolute bottom-20 left-0 right-0 text-center">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
@@ -102,7 +115,7 @@ const Slider = ({ images }: SliderProps) => {
                 transition={{ delay: 0.2, duration: 0.6 }}
                 className="text-4xl md:text-6xl font-bold text-white mb-4"
               >
-                {images[currentIndex].title}
+                {currentImage.title}
               </motion.h2>
             </div>
           )}

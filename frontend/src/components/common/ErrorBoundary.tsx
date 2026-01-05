@@ -23,6 +23,9 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log error details for debugging
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
   }
 
   render() {
@@ -47,9 +50,19 @@ class ErrorBoundary extends Component<Props, State> {
               <span className="text-4xl">⚠️</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Oops! Something went wrong</h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               We're sorry for the inconvenience. Please refresh the page or try again later.
             </p>
+            {this.state.error && (
+              <details className="mb-4 text-left bg-gray-50 p-3 rounded text-xs max-h-40 overflow-auto">
+                <summary className="font-semibold cursor-pointer text-gray-700 mb-2">
+                  Error Details (for debugging)
+                </summary>
+                <p className="text-red-600 font-mono break-all">
+                  {this.state.error.message}
+                </p>
+              </details>
+            )}
             <button
               onClick={() => window.location.reload()}
               className="btn-primary"

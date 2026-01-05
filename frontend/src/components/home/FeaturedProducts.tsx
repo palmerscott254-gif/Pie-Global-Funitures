@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaShoppingCart, FaEye } from 'react-icons/fa';
+import { getImageUrl } from '@/utils/imageUrl';
 import type { Product } from '@/types';
 import { useCartStore } from '@/store/cartStore';
 import toast from 'react-hot-toast';
@@ -93,7 +94,7 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
                 {/* Image Container */}
                 <div className="relative h-64 overflow-hidden bg-gray-100">
                   <img
-                    src={product.main_image}
+                    src={getImageUrl(product.main_image)}
                     alt={product.name}
                     loading="lazy"
                     decoding="async"

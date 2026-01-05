@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaShoppingCart, FaArrowLeft, FaCheck, FaTimes } from 'react-icons/fa';
 import { productsApi } from '@/services/api';
+import { getImageUrl } from '@/utils/imageUrl';
 import { useCartStore } from '@/store/cartStore';
 import { useSEO } from '@/hooks';
 import type { Product } from '@/types';
@@ -104,7 +105,7 @@ const ProductDetailPage = () => {
                     selectedImage === img ? 'border-primary-600' : 'border-transparent'
                   }`}
                 >
-                  <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-20 object-cover" />
+                  <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="w-full h-20 object-cover" />
                 </button>
               ))}
             </div>

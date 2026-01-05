@@ -3,11 +3,16 @@ import { FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
-import { formatPrice, getMediaUrl } from '@/utils/helpers';
+import { formatPrice } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const CartDrawer = () => {
-  const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
-  const { isCartOpen, closeCart } = useUIStore();
+  const items = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const totalPrice = useCartStore((state) => state.totalPrice);
+  const isCartOpen = useUIStore((state) => state.isCartOpen);
+  const closeCart = useUIStore((state) => state.closeCart);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -61,7 +66,7 @@ const CartDrawer = () => {
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4 border-b pb-4">
                   <img
-                    src={getMediaUrl(item.image)}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded"
                   />
@@ -103,7 +108,7 @@ const CartDrawer = () => {
           <div className="border-t p-6 space-y-4">
             <div className="flex justify-between text-xl font-bold">
               <span>Total:</span>
-              <span className="text-primary-600">{formatPrice(getTotalPrice())}</span>
+              <span className="text-primary-600">{formatPrice(totalPrice)}</span>
             </div>
             <Link
               to="/checkout"

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { memo, useRef, useEffect } from 'react';
+import { getImageUrl, getVideoUrl } from '@/utils/imageUrl';
 import type { HomeVideo, SliderImage } from '@/types';
 
 interface HeroVideoProps {
@@ -47,32 +48,41 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
     <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
       {video ? (
-        <video
-          ref={videoRef}
-          src={video.video}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          disablePictureInPicture
-          disableRemotePlayback
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{
-            willChange: 'auto',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-          }}
-          onLoadedData={() => console.log('Video loaded successfully')}
-          onError={(e) => console.error('Video error:', e)}
-        />
+        video.video ? (
+          <video
+            ref={videoRef}
+            src={getVideoUrl(video.video)}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            disablePictureInPicture
+            disableRemotePlayback
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              willChange: 'auto',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+            }}
+            onLoadedData={() => console.log('Video loaded successfully')}
+            onError={(e) => console.error('Video error:', e)}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
+        )
       ) : slider ? (
-        <img
-          src={slider.image}
-          alt={slider.title}
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-        />
+        slider.image ? (
+          <img
+            src={getImageUrl(slider.image)}
+            alt={slider.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+            onError={(e) => console.error('Slider image failed to load:', slider.image, e)}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
+        )
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
       )}

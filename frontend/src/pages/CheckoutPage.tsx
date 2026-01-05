@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FaLock, FaShoppingBag } from 'react-icons/fa';
 import { useCartStore } from '@/store/cartStore';
 import { ordersApi } from '@/services/api';
+import { getImageUrl } from '@/utils/imageUrl';
 import { useSEO } from '@/hooks';
 import { formatPrice } from '@/utils/helpers';
 import toast from 'react-hot-toast';
@@ -21,7 +22,9 @@ interface CheckoutFormData {
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCartStore();
+  const items = useCartStore((state) => state.items);
+  const totalPrice = useCartStore((state) => state.totalPrice);
+  const clearCart = useCartStore((state) => state.clearCart);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CheckoutFormData>({
     first_name: '',
@@ -257,7 +260,7 @@ const CheckoutPage = () => {
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4 pb-4 border-b">
                   <img
-                    src={item.image}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     className="w-16 h-16 object-cover rounded-lg"
                   />

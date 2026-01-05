@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { homeApi, productsApi, aboutApi } from '@/services/api';
+import { getImageUrl } from '@/utils/imageUrl';
 import type { SliderImage, Product, HomeVideo, AboutPage } from '@/types';
 import HeroVideo from '@/components/home/HeroVideo';
 import Slider from '@/components/home/Slider';
@@ -48,6 +49,10 @@ const HomePage = () => {
         setAbout(aboutData);
       } catch (error) {
         console.error('Error fetching homepage data:', error);
+        if (error instanceof Error) {
+          console.error('Error message:', error.message);
+          console.error('Error stack:', error.stack);
+        }
       } finally {
         setLoading(false);
       }
@@ -66,7 +71,7 @@ const HomePage = () => {
       {videos.length > 0 ? (
         <HeroVideo video={videos[0]} />
       ) : sliders.length > 1 ? (
-        <Slider sliders={sliders} />
+        <Slider images={sliders} />
       ) : sliders.length === 1 ? (
         <HeroVideo slider={sliders[0]} />
       ) : (
@@ -88,7 +93,7 @@ const HomePage = () => {
                   className="flex-shrink-0 w-40 h-28 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
                 >
                   <img
-                    src={slider.image}
+                    src={getImageUrl(slider.image)}
                     alt={slider.title || `Slider ${index + 1}`}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                   />

@@ -4,39 +4,47 @@ import type { CartItem } from '@/types';
 
 interface CartState {
   items: CartItem[];
+  totalItems: number;
+  totalPrice: number;
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   clearCart: () => void;
-  getTotalItems: () => number;
-  getTotalPrice: () => number;
 }
+
+const computeTotals = (items: CartItem[]) => {
+  const totalItems = items.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  return { totalItems, totalPrice };
+};
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      totalItems: 0,
+      totalPrice: 0,
 
       addItem: (item) => {
         const existingItem = get().items.find((i) => i.id === item.id);
         
+        let newItems: CartItem[];
         if (existingItem) {
-          set({
-            items: get().items.map((i) =>
-              i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-            ),
-          });
+          newItems = get().items.map((i) =>
+            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          );
         } else {
-          set({
-            items: [...get().items, { ...item, quantity: 1 }],
-          });
+          newItems = [...get().items, { ...item, quantity: 1 }];
         }
+        
+        const { totalItems, totalPrice } = computeTotals(newItems);
+        set({ items: newItems, totalItems, totalPrice });
       },
 
       removeItem: (id) => {
-        set({
-          items: get().items.filter((item) => item.id !== id),
-        });
+        const newItems = get().items.filter((item) => item.id !== id);
+        const { totalItems, totalPrice } = computeTotals(newItems);
+        set({ items: newItems, totalItems, totalPrice });
       },
 
       updateQuantity: (id, quantity) => {
@@ -45,26 +53,15 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        set({
-          items: get().items.map((item) =>
-            item.id === id ? { ...item, quantity } : item
-          ),
-        });
+        const newItems = get().items.map((item) =>
+          item.id === id ? { ...item, quantity } : item
+        );
+        const { totalItems, totalPrice } = computeTotals(newItems);
+        set({ items: newItems, totalItems, totalPrice });
       },
 
       clearCart: () => {
-        set({ items: [] });
-      },
-
-      getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0);
-      },
-
-      getTotalPrice: () => {
-        return get().items.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        );
+        set({ items: [], totalItems: 0, totalPrice: 0 });
       },
     }),
     {
