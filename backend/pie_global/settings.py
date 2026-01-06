@@ -78,12 +78,15 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 # Database Configuration
 # Use DATABASE_URL if available (Railway, Render, Heroku, etc.), otherwise fall back to individual config
 database_url = config('DATABASE_URL', default=None)
-if database_url:
-    database_url = database_url.strip()
 
-if database_url and str(database_url).strip():
-    # Production: Use DATABASE_URL
-    # Explicitly check for non-empty string to avoid "No support for ''" error
+# Normalize empty/whitespace strings to None
+if database_url is not None:
+    database_url = database_url.strip()
+    if not database_url:  # If empty string after strip, set to None
+        database_url = None
+
+if database_url:
+    # Production: Use DATABASE_URL (e.g., from Railway, Render, Heroku)
     DATABASES = {
         'default': dj_database_url.parse(database_url, conn_max_age=600)
     }
