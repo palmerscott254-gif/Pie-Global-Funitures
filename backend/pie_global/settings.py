@@ -78,7 +78,9 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 
 # Database Configuration
 # Use DATABASE_URL if available (Railway, Render, Heroku, etc.), otherwise fall back to individual config
-database_url = config('DATABASE_URL', default='').strip()
+database_url = config('DATABASE_URL', default=None)
+if database_url:
+    database_url = database_url.strip()
 
 if database_url:
     # Production: Use DATABASE_URL (e.g., from Railway, Render, Heroku)
@@ -88,7 +90,9 @@ if database_url:
 else:
     # Development: Use individual PostgreSQL settings or SQLite fallback
     # This allows collectstatic and builds to work without a database URL
-    postgres_db = config('POSTGRES_DB', default='').strip()
+    postgres_db = config('POSTGRES_DB', default='')
+    if postgres_db:
+        postgres_db = postgres_db.strip()
     
     if postgres_db:
         # Use PostgreSQL with individual settings
