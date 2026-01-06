@@ -14,7 +14,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-producti
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config(
     'DJANGO_ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,railway.app,.railway.app',
+    default='localhost,127.0.0.1,railway.app,.railway.app,pie-global-funitures.onrender.com',
     cast=Csv(),
 )
 
@@ -158,7 +158,7 @@ REST_FRAMEWORK = {
 # CORS Settings
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS', 
-    default='http://localhost:3000,http://localhost:5173', 
+    default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app', 
     cast=Csv()
 )
 CORS_ALLOW_CREDENTIALS = True
@@ -221,7 +221,7 @@ ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov']
 # CSRF Protection - Add trusted origins for production
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173',
+    default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app',
     cast=Csv()
 )
 
