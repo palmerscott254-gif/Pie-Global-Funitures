@@ -19,7 +19,7 @@ Pillow==11.0.0
 python-decouple==3.8
 
 # Security - Updated rate limiting
-django-ratelimit==4.2.0
+django-ratelimit==4.1.0
 
 # Production server - Updated for performance and security
 gunicorn==23.0.0
