@@ -79,6 +79,11 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 # Database Configuration
 # Use DATABASE_URL if available (Railway, Render, Heroku, etc.), otherwise fall back to individual config
 database_url = config('DATABASE_URL', default=None)
+<<<<<<< HEAD
+=======
+if database_url:
+    database_url = database_url.strip()
+>>>>>>> 5aa0e400f422540d33434a3abad75e9718dc02a4
 
 if database_url and str(database_url).strip():
     # Production: Use DATABASE_URL
@@ -89,6 +94,8 @@ if database_url and str(database_url).strip():
 else:
     # Development: Use individual PostgreSQL settings or SQLite fallback
     postgres_db = config('POSTGRES_DB', default='')
+    if postgres_db:
+        postgres_db = postgres_db.strip()
     
     if postgres_db:
         # Use PostgreSQL with individual settings
