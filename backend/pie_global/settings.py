@@ -4,6 +4,7 @@ Django settings for Pie Global Furniture project.
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 import dj_database_url
 from decouple import config, Csv
 
@@ -13,11 +14,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security Settings
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-production-use-strong-random-key')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config(
-    'DJANGO_ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,.railway.app,.onrender.com',
-    cast=Csv(),
-)
+
+# Allowed hosts: prefer env var; also auto-include Render domain from RENDER_EXTERNAL_URL
+_default_hosts = 'localhost,127.0.0.1,.onrender.com,.railway.app'
+allowed_hosts = list(config('DJANGO_ALLOWED_HOSTS', default=_default_hosts, cast=Csv()))
+
+# Render provides RENDER_EXTERNAL_URL (e.g., https://your-app.onrender.com)
+render_url = os.getenv('RENDER_EXTERNAL_URL', '') or config('RENDER_EXTERNAL_URL', default='')
+if render_url:
+    try:
+        parsed = urlparse(render_url if '://' in render_url else f'https://{render_url}')
+        host = parsed.netloc
+        if host:
+            allowed_hosts.append(host)
+    except Exception:
+        # Ignore malformed values
+        pass
+
+ALLOWED_HOSTS = sorted(set(allowed_hosts))
 
 # Application definition
 INSTALLED_APPS = [
