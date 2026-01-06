@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import dj_database_url
 from decouple import config, Csv
+import dj_database_url
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,6 +76,43 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pie_global.wsgi.application'
 
+<<<<<<< HEAD
+# Database Configuration
+# Use DATABASE_URL if available (Railway, Render, Heroku, etc.), otherwise fall back to individual config
+database_url = config('DATABASE_URL', default='')
+
+if database_url:
+    # Production: Use DATABASE_URL (e.g., from Railway, Render, Heroku)
+    DATABASES = {
+        'default': dj_database_url.parse(database_url, conn_max_age=600)
+    }
+else:
+    # Development: Use individual PostgreSQL settings or SQLite fallback
+    # This allows collectstatic and builds to work without a database URL
+    postgres_db = config('POSTGRES_DB', default='')
+    
+    if postgres_db:
+        # Use PostgreSQL with individual settings
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': postgres_db,
+                'USER': config('POSTGRES_USER', default='postgres'),
+                'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
+                'HOST': config('POSTGRES_HOST', default='localhost'),
+                'PORT': config('POSTGRES_PORT', default='5432'),
+                'CONN_MAX_AGE': 600,
+            }
+        }
+    else:
+        # Fallback to SQLite for builds/collectstatic when no database configured
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+=======
 # Database
 # Use DATABASE_URL if available (Render provides this), otherwise fall back to local settings
 DATABASES = {
@@ -86,6 +124,7 @@ DATABASES = {
         conn_max_age=600
     )
 }
+>>>>>>> aada0b3728cdbc82afc14da34ddd3ed7c307f58d
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
