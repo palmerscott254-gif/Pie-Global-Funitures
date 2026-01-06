@@ -16,7 +16,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-producti
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 
 # Allowed hosts: prefer env var; also auto-include Render domain from RENDER_EXTERNAL_URL
-_default_hosts = 'localhost,127.0.0.1,.onrender.com,.railway.app'
+_default_hosts = 'localhost,127.0.0.1,.onrender.com,.railway.app,.vercel.app'
 allowed_hosts = list(config('DJANGO_ALLOWED_HOSTS', default=_default_hosts, cast=Csv()))
 
 # Render provides RENDER_EXTERNAL_URL (e.g., https://your-app.onrender.com)
@@ -274,7 +274,7 @@ ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov']
 # CSRF Protection - Add trusted origins for production
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app',
+    default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app,https://pie-global-funitures.onrender.com',
     cast=Csv()
 )
 
