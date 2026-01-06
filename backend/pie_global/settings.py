@@ -76,7 +76,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pie_global.wsgi.application'
 
 # Database
-# Database
 # Use DATABASE_URL if available (Render provides this), otherwise fall back to local settings
 DATABASES = {
     'default': dj_database_url.config(
