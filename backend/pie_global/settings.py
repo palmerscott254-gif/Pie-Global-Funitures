@@ -77,21 +77,29 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 
 # Database Configuration
 # Use DATABASE_URL if available (Railway, Render, Heroku, etc.), otherwise fall back to individual config
-database_url = config('DATABASE_URL', default=None)
+database_url = config('DATABASE_URL', default='')
 
-# Normalize empty/whitespace strings to None
-if database_url is not None:
-    database_url = database_url.strip()
-    if not database_url:  # If empty string after strip, set to None
-        database_url = None
-
+# Sanitize: convert any empty/whitespace-only string to empty string for consistency
 if database_url:
+    database_url = str(database_url).strip()
+
+# Only use DATABASE_URL if it's a non-empty string with actual content
+if database_url and len(database_url) > 0:
     # Production: Use DATABASE_URL (e.g., from Railway, Render, Heroku)
-    DATABASES = {
-        'default': dj_database_url.parse(database_url, conn_max_age=600)
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(database_url, conn_max_age=600)
+        }
+    except ValueError:
+        # If parsing fails, fall back to SQLite
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
-    # Development: Use individual PostgreSQL settings or SQLite fallback
+    # Development/Build: Use individual PostgreSQL settings or SQLite fallback
     postgres_db = config('POSTGRES_DB', default='')
     if postgres_db:
         postgres_db = postgres_db.strip()
