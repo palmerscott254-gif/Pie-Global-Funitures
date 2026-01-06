@@ -9,11 +9,17 @@ import type {
   PaginatedResponse,
 } from '@/types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Use Vercel rewrites for /api in production, full URL for dev/other environments
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+    ? 'http://localhost:8000/api'
+    : '/api');
 
 // Validate API URL to prevent SSRF attacks
 const isValidApiUrl = (url: string): boolean => {
   try {
+    // Allow relative paths (used with Vercel rewrites)
+    if (url.startsWith('/')) return true;
     const parsedUrl = new URL(url);
     // Only allow http and https protocols
     return ['http:', 'https:'].includes(parsedUrl.protocol);
