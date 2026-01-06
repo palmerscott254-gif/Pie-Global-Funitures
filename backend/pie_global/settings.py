@@ -15,7 +15,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-producti
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config(
     'DJANGO_ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,railway.app,.railway.app,pie-global-funitures.onrender.com',
+    default='localhost,127.0.0.1,.railway.app,.onrender.com',
     cast=Csv(),
 )
 
