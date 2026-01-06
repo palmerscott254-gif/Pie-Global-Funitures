@@ -11,6 +11,7 @@ django-cors-headers==4.6.0
 
 # Database - Updated to latest stable
 psycopg2-binary==2.9.10
+dj-database-url==2.3.0
 
 # Media/File handling - Updated for security patches
 Pillow==11.0.0

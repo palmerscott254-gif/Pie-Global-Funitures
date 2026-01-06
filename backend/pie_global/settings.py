@@ -4,6 +4,7 @@ Django settings for Pie Global Furniture project.
 
 import os
 from pathlib import Path
+import dj_database_url
 from decouple import config, Csv
 
 # Build paths
@@ -75,16 +76,16 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pie_global.wsgi.application'
 
 # Database
+# Database
+# Use DATABASE_URL if available (Render provides this), otherwise fall back to local settings
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='pie_global_db'),
-        'USER': config('POSTGRES_USER', default='postgres'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
-        'HOST': config('POSTGRES_HOST', default='localhost'),
-        'PORT': config('POSTGRES_PORT', default='5432'),
-        'CONN_MAX_AGE': 600,  # Connection pooling
-    }
+    'default': dj_database_url.config(
+        default=config(
+            'DATABASE_URL',
+            default=f"postgres://{config('POSTGRES_USER', default='postgres')}:{config('POSTGRES_PASSWORD', default='postgres')}@{config('POSTGRES_HOST', default='localhost')}:{config('POSTGRES_PORT', default='5432')}/{config('POSTGRES_DB', default='pie_global_db')}"
+        ),
+        conn_max_age=600
+    )
 }
 
 # Password validation
