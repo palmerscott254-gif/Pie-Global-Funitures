@@ -3,6 +3,7 @@ Management command to sync S3 files with database records.
 This creates database entries for files that exist in S3 but not in the database.
 """
 import boto3
+from botocore.config import Config
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.home.models import SliderImage, HomeVideo
@@ -32,11 +33,14 @@ class Command(BaseCommand):
 
         # Initialize S3 client
         try:
+            s3_config = Config(signature_version='s3v4', s3={'addressing_style': 'virtual'})
             s3_client = boto3.client(
                 's3',
                 aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_S3_REGION_NAME
+                region_name=settings.AWS_S3_REGION_NAME,
+                endpoint_url='https://s3.amazonaws.com',
+                config=s3_config,
             )
             bucket_name = settings.AWS_STORAGE_BUCKET_NAME
             self.stdout.write(f'Connected to S3 bucket: {bucket_name}')
