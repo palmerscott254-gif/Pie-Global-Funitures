@@ -65,3 +65,7 @@ yarn-error.log*
 
 # OS
 Thumbs.db
+# Documentation & Junk Files (keep only README.md)
+*.md
+!README.md
+*.html
