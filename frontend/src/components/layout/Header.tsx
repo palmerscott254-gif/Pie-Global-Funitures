@@ -230,21 +230,38 @@ const Header = () => {
               </NavLink>
             ))}
 
-            <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
-              <Link
-                to="/login"
-                onClick={closeMobileMenu}
-                className="flex-1 text-center py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:text-primary-600"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/register"
-                onClick={closeMobileMenu}
-                className="flex-1 text-center py-2 bg-primary-600 text-white rounded-lg font-semibold shadow hover:bg-primary-700"
-              >
-                Create account
-              </Link>
+            <div className="pt-4 border-t border-gray-200">
+              {isAuthenticated ? (
+                /* Authenticated Mobile Menu */
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('pgf-auth-current');
+                    window.dispatchEvent(new Event('pgf-auth-changed'));
+                    closeMobileMenu();
+                  }}
+                  className="w-full py-2 bg-red-600 text-white rounded-lg font-semibold shadow hover:bg-red-700 flex items-center justify-center gap-2"
+                >
+                  <FaSignOutAlt size={14} /> Sign out
+                </button>
+              ) : (
+                /* Guest Mobile Menu */
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/login"
+                    onClick={closeMobileMenu}
+                    className="flex-1 text-center py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:text-primary-600"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={closeMobileMenu}
+                    className="flex-1 text-center py-2 bg-primary-600 text-white rounded-lg font-semibold shadow hover:bg-primary-700"
+                  >
+                    Create account
+                  </Link>
+                </div>
+              )}
             </div>
           </nav>
         </div>
