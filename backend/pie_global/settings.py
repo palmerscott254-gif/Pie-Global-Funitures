@@ -185,18 +185,21 @@ APPEND_SLASH = True  # Automatically redirect /products to /products/, but use t
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# AWS S3 Configuration - Load credentials unconditionally for boto3 access
-# Credentials are loaded even if USE_S3=False so migration scripts can use them
+# AWS S3 Configuration - credentials loaded for boto3 access
+# Keep credentials and bucket from environment; normalize S3 behavior explicitly
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='pieglobal')
-AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1').replace('=', '-')
-AWS_S3_CUSTOM_DOMAIN = config('AWS_S3_CUSTOM_DOMAIN', default=f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com')
+
+# Force us-east-1 and global S3 endpoint behavior (no regional overrides)
+AWS_S3_REGION_NAME = 'us-east-1'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_QUERYSTRING_AUTH = config('AWS_QUERYSTRING_AUTH', default=False, cast=bool)
-# AWS_DEFAULT_ACL removed - bucket uses bucket policy instead of ACLs
+AWS_S3_ADDRESSING_STYLE = 'virtual'
+AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = None  # Disable ACLs; rely on bucket policy
 AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',  # Cache for 1 day
+    'CacheControl': 'max-age=86400',
 }
 AWS_S3_VERIFY = True
 
@@ -211,19 +214,13 @@ if USE_S3 and HAS_AWS_CREDS:
     # S3 Storage backend for media and static files
     # S3 static settings
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     
     # S3 media settings
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     
     STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        },
-        "staticfiles": {
-            "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
-        },
+        "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
     }
 else:
     # Local file storage (development or when S3 disabled)

@@ -3,6 +3,7 @@ Core views for file uploads and utilities.
 """
 import logging
 import boto3
+from botocore.config import Config
 from datetime import datetime, timedelta
 from django.conf import settings
 from rest_framework import status, viewsets
@@ -106,11 +107,15 @@ class S3PresignedURLViewSet(viewsets.ViewSet):
         Returns:
             Presigned URL string
         """
+        # Force s3v4 signing and global endpoint for us-east-1
+        s3_config = Config(signature_version='s3v4', s3={'addressing_style': 'virtual'})
         s3_client = boto3.client(
             's3',
             region_name=settings.AWS_S3_REGION_NAME,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            endpoint_url='https://s3.amazonaws.com',
+            config=s3_config,
         )
         
         presigned_url = s3_client.generate_presigned_url(
@@ -119,7 +124,6 @@ class S3PresignedURLViewSet(viewsets.ViewSet):
                 'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
                 'Key': file_key,
                 'ContentType': file_type,
-                'ACL': getattr(settings, 'AWS_DEFAULT_ACL', 'public-read'),
             },
             ExpiresIn=expiration,
         )
