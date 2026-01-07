@@ -107,14 +107,13 @@ class S3PresignedURLViewSet(viewsets.ViewSet):
         Returns:
             Presigned URL string
         """
-        # Force s3v4 signing and global endpoint for us-east-1
+        # Force s3v4 signing with virtual addressing for us-east-1
         s3_config = Config(signature_version='s3v4', s3={'addressing_style': 'virtual'})
         s3_client = boto3.client(
             's3',
             region_name=settings.AWS_S3_REGION_NAME,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            endpoint_url='https://s3.amazonaws.com',
             config=s3_config,
         )
         
