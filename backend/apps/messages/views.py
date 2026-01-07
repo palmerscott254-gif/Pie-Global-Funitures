@@ -39,8 +39,8 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     
     Permissions:
     - Create: Public (contact form) with rate limiting
-    - List/Detail: Admin only
-    - Reply: Admin only
+    - List/Detail: Public read access
+    - Reply/Resolve: Admin only
     
     Security: Rate limited to prevent spam/abuse
     """
@@ -60,7 +60,7 @@ class UserMessageViewSet(viewsets.ModelViewSet):
         return UserMessageListSerializer
     
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ['create', 'list', 'retrieve']:
             return [AllowAny()]
         return [IsAdminUser()]
     
