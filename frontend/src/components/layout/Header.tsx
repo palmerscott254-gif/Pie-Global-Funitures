@@ -143,8 +143,8 @@ const Header = () => {
               )}
             </button>
 
-            {/* User Account Menu */}
-            <div className="relative hidden md:block" ref={userMenuRef}>
+            {/* User Account Menu - Now visible on all screen sizes */}
+            <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="text-gray-700 hover:text-primary-600 transition-colors"
