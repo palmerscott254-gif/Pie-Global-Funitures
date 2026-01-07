@@ -48,11 +48,23 @@ class Command(BaseCommand):
             )
             return
 
-        # Get local media root
-        media_root = Path(settings.MEDIA_ROOT)
+        # Get local media root - ensure it's absolute and only the media folder
+        if hasattr(settings, 'MEDIA_ROOT') and settings.MEDIA_ROOT:
+            media_root = Path(settings.MEDIA_ROOT).resolve()
+        else:
+            # Fallback: use BASE_DIR/media
+            media_root = Path(settings.BASE_DIR) / 'media'
+        
         if not media_root.exists():
             self.stdout.write(
                 self.style.WARNING(f'Media directory does not exist: {media_root}')
+            )
+            return
+        
+        # Ensure we're only uploading from media directory
+        if not str(media_root).endswith('media'):
+            self.stdout.write(
+                self.style.ERROR(f'MEDIA_ROOT is not pointing to media directory: {media_root}')
             )
             return
 
