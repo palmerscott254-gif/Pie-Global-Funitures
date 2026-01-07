@@ -180,20 +180,23 @@ APPEND_SLASH = True  # Automatically redirect /products to /products/, but use t
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# AWS S3 Configuration - Auto-detect environment
-USE_S3 = config('USE_S3', default=not DEBUG, cast=bool)
+# AWS S3 Configuration - Only enable if credentials are present
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
+# Only use S3 if both credentials exist AND USE_S3 is not explicitly False
+HAS_AWS_CREDS = bool(AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY)
+USE_S3 = config('USE_S3', default=HAS_AWS_CREDS, cast=bool) if HAS_AWS_CREDS else False
 
-if USE_S3:
+if USE_S3 and HAS_AWS_CREDS:
     # S3 Storage backend for media and static files
     AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='pieglobal')
-    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
+    # Sanitize region name: replace '=' with '-' in case of typo in env var
+    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1').replace('=', '-')
     AWS_S3_CUSTOM_DOMAIN = config('AWS_S3_CUSTOM_DOMAIN', default=f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com')
     AWS_S3_SIGNATURE_VERSION = 's3v4'  # Use SigV4 for security
     AWS_QUERYSTRING_AUTH = config('AWS_QUERYSTRING_AUTH', default=False, cast=bool)  # No auth in URL
     AWS_DEFAULT_ACL = 'public-read'  # Make uploads publicly readable
     AWS_S3_VERIFY = True  # Verify SSL certificates
-    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
-    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
     
     # S3 static settings
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
@@ -212,7 +215,8 @@ if USE_S3:
         },
     }
 else:
-    # Local file storage (development)
+    # Local file storage (development or when S3 creds missing)
+    USE_S3 = False
     MEDIA_URL = config('MEDIA_URL', default='/media/')
     MEDIA_ROOT = BASE_DIR / 'media'
     STORAGES = {
