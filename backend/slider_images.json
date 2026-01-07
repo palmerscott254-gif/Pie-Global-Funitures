@@ -1,0 +1,90 @@
+[
+{
+  "model": "home.sliderimage",
+  "pk": 2,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0000.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:42:11.079Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 3,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0012.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:42:30.484Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 4,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0011.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:42:53.819Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 5,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0010.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:43:11.939Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 6,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0008.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:43:46.552Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 7,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0002.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:44:05.028Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 8,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0005.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:44:30.502Z"
+  }
+},
+{
+  "model": "home.sliderimage",
+  "pk": 9,
+  "fields": {
+    "title": "",
+    "image": "home/sliders/IMG-20251218-WA0004.jpg",
+    "order": 0,
+    "active": true,
+    "uploaded_at": "2026-01-05T10:45:00.721Z"
+  }
+}
+]

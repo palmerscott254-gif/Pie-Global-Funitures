@@ -134,7 +134,7 @@ class Command(BaseCommand):
                             Key=s3_key,
                             Body=f,
                             ContentType=content_type,
-                            ACL=getattr(settings, 'AWS_DEFAULT_ACL', 'public-read'),
+                            # ACL removed - bucket doesn't support ACLs (uses bucket policy instead)
                         )
                         self.stdout.write(
                             self.style.SUCCESS(f'Uploaded: {s3_key}')
