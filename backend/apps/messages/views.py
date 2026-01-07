@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -88,7 +89,8 @@ class UserMessageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        email_sent = self._send_admin_notification_safe(message)
+        # Send admin notification in background to avoid delaying response
+        email_sent = self._send_admin_notification_async(message)
 
         return Response(
             {
@@ -147,6 +149,19 @@ Message ID: {message.id}
             return True
         except Exception:
             logger.exception("Failed to send notification email for message #%s", message.id)
+            return False
+
+    def _send_admin_notification_async(self, message):
+        try:
+            thread = threading.Thread(
+                target=self._send_admin_notification_safe,
+                args=(message,),
+                daemon=True,
+            )
+            thread.start()
+            return True
+        except Exception:
+            logger.exception("Failed to schedule async notification email for message #%s", message.id)
             return False
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
