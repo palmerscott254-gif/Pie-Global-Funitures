@@ -192,8 +192,13 @@ MEDIA_URL = config('MEDIA_URL', default='/media/')
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Base URL for serving media in production/development
-# This should be your backend URL
-BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
+# Priority: 1. RENDER_EXTERNAL_URL (Render auto-set), 2. BACKEND_URL env var, 3. localhost default
+if render_url:
+    # Use Render's external URL if available
+    BACKEND_URL = render_url if '://' in render_url else f'https://{render_url}'
+else:
+    # Use explicit BACKEND_URL if set, otherwise default to localhost for dev
+    BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
