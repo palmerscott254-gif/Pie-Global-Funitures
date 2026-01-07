@@ -1,21 +1,28 @@
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser, AllowAny
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import action
+import logging
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from django_ratelimit.decorators import ratelimit
-from django.utils.decorators import method_decorator
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.response import Response
+
 from .models import UserMessage
 from .serializers import (
-    UserMessageCreateSerializer, 
+    UserMessageCreateSerializer,
     UserMessageListSerializer,
-    UserMessageReplySerializer
+    UserMessageReplySerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # CSRF-exempt SessionAuthentication for public API POST (contact form)
@@ -38,8 +45,7 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     Security: Rate limited to prevent spam/abuse
     """
     queryset = UserMessage.objects.all()
-    # No auth/CSRF required for public contact form submissions
-    authentication_classes = []
+    authentication_classes = [CsrfExemptSessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['status']
     ordering_fields = ['created_at', 'updated_at']
@@ -54,60 +60,56 @@ class UserMessageViewSet(viewsets.ModelViewSet):
         return UserMessageListSerializer
     
     def get_permissions(self):
-        """
-        Permission model:
-        - list/retrieve: Public read access (AllowAny) - Shows submitted messages to anyone
-        - create: Public write access (AllowAny) - Contact form, rate limited
-        - reply/mark_resolved: Admin only (IsAdminUser) - Admin actions
-        
-        This allows public access to view messages (non-sensitive data)
-        while protecting admin-only actions with authentication.
-        """
-        if self.action in ['create', 'list', 'retrieve']:
-            # Public can submit and view messages
+        if self.action == 'create':
             return [AllowAny()]
-        # All other actions (reply, mark_resolved) require admin authentication
         return [IsAdminUser()]
     
     def create(self, request, *args, **kwargs):
-        """Create a new contact message and notify admin."""
         serializer = self.get_serializer(data=request.data)
+
         try:
             serializer.is_valid(raise_exception=True)
-            message = self.perform_create(serializer)
-            # Send admin notification
-            self._send_admin_notification(message)
-        except Exception as exc:
-            # Return clear error details to the client for visibility
+        except ValidationError as exc:
+            logger.info("Contact form validation failed: %s", exc.detail)
             return Response(
-                {'success': False, 'error': str(exc)},
-                status=status.HTTP_400_BAD_REQUEST
+                {'success': False, 'errors': exc.detail},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
+        try:
+            message = serializer.save()
+        except Exception:
+            logger.exception("Failed to save contact message")
+            return Response(
+                {
+                    'success': False,
+                    'error': 'Unable to save your message right now. Please try again later.',
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        email_sent = self._send_admin_notification_safe(message)
+
         return Response(
             {
                 'success': True,
                 'message': 'Thank you! We will get back to you soon.',
-                'id': message.id
+                'id': message.id,
+                'email_sent': email_sent,
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
     
     def perform_create(self, serializer):
         """Save the message and return instance."""
         return serializer.save()
     
-    def _send_admin_notification(self, message):
-        """
-        Send email notification to admin about new message.
-        Sanitized to prevent email header injection attacks.
-        """
+    def _send_admin_notification_safe(self, message):
         try:
-            # Sanitize inputs to prevent email header injection
-            safe_name = message.name.replace('\n', '').replace('\r', '')[:100]
-            safe_email = message.email.replace('\n', '').replace('\r', '')[:254]
+            safe_name = (message.name or '').replace('\n', '').replace('\r', '')[:100]
+            safe_email = (message.email or '').replace('\n', '').replace('\r', '')[:254]
             safe_phone = (message.phone or 'N/A').replace('\n', '').replace('\r', '')[:20]
-            
+
             email_body = f"""
 New Customer Message
 {'='*50}
@@ -123,11 +125,9 @@ Message:
 Received: {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}
 Message ID: {message.id}
             """
-            
-            # Sanitize subject line to prevent injection
-            safe_subject = f"New Message from {safe_name}"
-            safe_subject = safe_subject.replace('\n', '').replace('\r', '')[:200]
-            
+
+            safe_subject = f"New Message from {safe_name}".replace('\n', '').replace('\r', '')[:200]
+
             send_mail(
                 subject=safe_subject,
                 message=email_body,
@@ -135,10 +135,10 @@ Message ID: {message.id}
                 recipient_list=['pieglobal308@gmail.com'],
                 fail_silently=False,
             )
-            print(f"Notification email sent successfully for message #{message.id}")
-        except Exception as e:
-            # Log error but don't expose details to user
-            print(f"Error sending notification email: {str(e)[:100]}")
+            return True
+        except Exception:
+            logger.exception("Failed to send notification email for message #%s", message.id)
+            return False
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def reply(self, request, pk=None):
