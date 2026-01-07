@@ -340,6 +340,7 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='pieglobal308@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=5, cast=int)
 
 # Notification recipients for contact form (CSV list)
 EMAIL_NOTIFICATIONS_TO = list(

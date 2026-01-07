@@ -106,6 +106,15 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     
     def _send_admin_notification_safe(self, message):
         try:
+            # Skip sending if SMTP is not properly configured to avoid long hangs
+            email_backend = getattr(settings, 'EMAIL_BACKEND', '') or ''
+            is_smtp_backend = 'smtp' in email_backend.lower()
+            missing_creds = not getattr(settings, 'EMAIL_HOST_USER', None) or not str(getattr(settings, 'EMAIL_HOST_PASSWORD', '')).strip()
+
+            if is_smtp_backend and missing_creds:
+                logger.warning("Skipping admin notification email: SMTP credentials missing or not configured.")
+                return False
+
             safe_name = (message.name or '').replace('\n', '').replace('\r', '')[:100]
             safe_email = (message.email or '').replace('\n', '').replace('\r', '')[:254]
             safe_phone = (message.phone or 'N/A').replace('\n', '').replace('\r', '')[:20]
@@ -133,7 +142,7 @@ Message ID: {message.id}
                 message=email_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=getattr(settings, 'EMAIL_NOTIFICATIONS_TO', [settings.DEFAULT_FROM_EMAIL]),
-                fail_silently=False,
+                fail_silently=True,
             )
             return True
         except Exception:
