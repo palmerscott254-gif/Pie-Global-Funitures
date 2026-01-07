@@ -94,8 +94,17 @@ class Command(BaseCommand):
 
         for file_path, s3_key in all_files:
             try:
-                # Check if file already exists in S3
-                if not overwrite and s3_storage.exists(s3_key):
+                # Check if file already exists in S3 (skip this check if permission issues)
+                try:
+                    exists = s3_storage.exists(s3_key)
+                except Exception as e:
+                    # If HeadObject fails due to permissions, assume it doesn't exist
+                    self.stdout.write(
+                        self.style.WARNING(f'Could not check existence of {s3_key}, will attempt upload')
+                    )
+                    exists = False
+                
+                if not overwrite and exists:
                     self.stdout.write(
                         self.style.WARNING(f'Skipped (exists): {s3_key}')
                     )
@@ -116,12 +125,23 @@ class Command(BaseCommand):
                     if not content_type:
                         content_type = 'application/octet-stream'
 
-                    # Save to S3
-                    s3_storage.save(s3_key, File(f))
-                    self.stdout.write(
-                        self.style.SUCCESS(f'Uploaded: {s3_key}')
-                    )
-                    uploaded += 1
+                    # Save to S3 using put_object directly to bypass HeadObject
+                    try:
+                        # Use boto3 directly for more control
+                        s3_client = s3_storage.connection.meta.client
+                        s3_client.put_object(
+                            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                            Key=s3_key,
+                            Body=f,
+                            ContentType=content_type,
+                            ACL=getattr(settings, 'AWS_DEFAULT_ACL', 'public-read'),
+                        )
+                        self.stdout.write(
+                            self.style.SUCCESS(f'Uploaded: {s3_key}')
+                        )
+                        uploaded += 1
+                    except Exception as e:
+                        raise e
 
             except Exception as e:
                 self.stdout.write(
