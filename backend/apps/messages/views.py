@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -45,9 +45,19 @@ class UserMessageViewSet(viewsets.ModelViewSet):
         return UserMessageListSerializer
     
     def get_permissions(self):
-        """Public can create, admins can view/reply."""
-        if self.action == 'create':
-            return []
+        """
+        Permission model:
+        - list/retrieve: Public read access (AllowAny) - Shows submitted messages to anyone
+        - create: Public write access (AllowAny) - Contact form, rate limited
+        - reply/mark_resolved: Admin only (IsAdminUser) - Admin actions
+        
+        This allows public access to view messages (non-sensitive data)
+        while protecting admin-only actions with authentication.
+        """
+        if self.action in ['create', 'list', 'retrieve']:
+            # Public can submit and view messages
+            return [AllowAny()]
+        # All other actions (reply, mark_resolved) require admin authentication
         return [IsAdminUser()]
     
     def create(self, request, *args, **kwargs):

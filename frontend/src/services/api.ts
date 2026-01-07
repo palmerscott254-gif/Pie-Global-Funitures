@@ -9,14 +9,51 @@ import type {
   PaginatedResponse,
 } from '@/types';
 
-// CRITICAL: API URL configuration
-// - Development: http://localhost:8000/api
-// - Production: Full URL to Render backend (from environment variable)
-// - Always include trailing slash (Django expects it)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000/api/'  // Local dev: full URL
-    : 'https://pie-global-funitures.onrender.com/api/');  // Production: full backend URL
+// CRITICAL: API URL configuration with explicit fallback hierarchy
+// Priority: 1. import.meta.env.VITE_API_URL (set at build time by Vite/Vercel)
+//           2. Browser localhost detection (for local development)
+//           3. Hardcoded production URL (final fallback)
+
+const getApiUrl = (): string => {
+  // Priority 1: Use build-time environment variable (VITE_API_URL)
+  // This is set from:
+  // - .env file (local dev)
+  // - Vercel Environment Variables (production)
+  // - vite.config.ts define option (as fallback)
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+    return envUrl;
+  }
+
+  // Priority 2: Check if we're in browser and detect local environment
+  if (typeof window !== 'undefined') {
+    const isLocal =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.');
+
+    if (isLocal) {
+      return 'http://localhost:8000/api/';
+    }
+  }
+
+  // Priority 3: Production fallback (only if env var not set and not localhost)
+  // This assumes Render backend is always available in production
+  return 'https://pie-global-funitures.onrender.com/api/';
+};
+
+const API_BASE_URL = getApiUrl();
+
+// Log API URL in development for debugging (helps troubleshoot env var issues)
+if (import.meta.env.DEV) {
+  console.debug(
+    '[API Configuration] Using API URL:',
+    API_BASE_URL,
+    'from env:',
+    import.meta.env.VITE_API_URL || '(not set, using fallback)'
+  );
+}
 
 // Validate API URL to prevent SSRF attacks
 const isValidApiUrl = (url: string): boolean => {
@@ -32,7 +69,10 @@ const isValidApiUrl = (url: string): boolean => {
 };
 
 if (!isValidApiUrl(API_BASE_URL)) {
-  throw new Error('Invalid API URL configuration');
+  throw new Error(
+    `[API Configuration Error] Invalid API URL: "${API_BASE_URL}". ` +
+    `Check VITE_API_URL environment variable.`
+  );
 }
 
 // Create axios instance with default config
