@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -17,6 +18,12 @@ from .serializers import (
 )
 
 
+# CSRF-exempt SessionAuthentication for public API POST (contact form)
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return None
+
+
 # Rate limiting: prevent spam - 5 messages per hour per IP
 @method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='create')
 class UserMessageViewSet(viewsets.ModelViewSet):
@@ -31,6 +38,8 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     Security: Rate limited to prevent spam/abuse
     """
     queryset = UserMessage.objects.all()
+    # No auth/CSRF required for public contact form submissions
+    authentication_classes = []
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['status']
     ordering_fields = ['created_at', 'updated_at']
@@ -63,11 +72,17 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Create a new contact message and notify admin."""
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        message = self.perform_create(serializer)
-        
-        # Send admin notification
-        self._send_admin_notification(message)
+        try:
+            serializer.is_valid(raise_exception=True)
+            message = self.perform_create(serializer)
+            # Send admin notification
+            self._send_admin_notification(message)
+        except Exception as exc:
+            # Return clear error details to the client for visibility
+            return Response(
+                {'success': False, 'error': str(exc)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         return Response(
             {
