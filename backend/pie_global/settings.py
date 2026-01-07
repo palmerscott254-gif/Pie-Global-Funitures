@@ -15,21 +15,37 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-production-use-strong-random-key')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 
-# Allowed hosts: prefer env var; also auto-include Render domain from RENDER_EXTERNAL_URL
-_default_hosts = 'localhost,127.0.0.1,.onrender.com,.railway.app,.vercel.app'
+# Allowed hosts: MUST include full domains (not wildcards) for production security
+# Development defaults
+_development_hosts = ['localhost', '127.0.0.1']
+
+# Production defaults - Add your Render backend domain here
+_production_hosts = [
+    'pie-global-funitures.onrender.com',  # Replace with your actual Render domain
+]
+
+# Build ALLOWED_HOSTS from env or defaults
+if DEBUG:
+    _default_hosts = ','.join(_development_hosts)
+else:
+    _default_hosts = ','.join(_production_hosts)
+
 allowed_hosts = list(config('DJANGO_ALLOWED_HOSTS', default=_default_hosts, cast=Csv()))
 
-# Render provides RENDER_EXTERNAL_URL (e.g., https://your-app.onrender.com)
-render_url = os.getenv('RENDER_EXTERNAL_URL', '') or config('RENDER_EXTERNAL_URL', default='')
+# Parse Render's auto-provided RENDER_EXTERNAL_URL (e.g., https://pie-global-funitures.onrender.com)
+render_url = os.getenv('RENDER_EXTERNAL_URL', '')
 if render_url:
     try:
-        parsed = urlparse(render_url if '://' in render_url else f'https://{render_url}')
-        host = parsed.netloc
-        if host:
+        # Ensure URL has protocol
+        url_to_parse = render_url if '://' in render_url else f'https://{render_url}'
+        parsed = urlparse(url_to_parse)
+        host = parsed.netloc  # Extract domain only (pie-global-funitures.onrender.com)
+        if host and host not in allowed_hosts:
             allowed_hosts.append(host)
-    except Exception:
-        # Ignore malformed values
-        pass
+    except Exception as e:
+        # Log parsing errors for debugging
+        import logging
+        logging.warning(f"Failed to parse RENDER_EXTERNAL_URL: {render_url}, Error: {e}")
 
 ALLOWED_HOSTS = sorted(set(allowed_hosts))
 
@@ -147,13 +163,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 # Internationalization
 # No trailing whitespace in this docstring or in this file
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
+
+# URL Configuration - CRITICAL for API endpoint consistency
+APPEND_SLASH = True  # Automatically redirect /products to /products/, but use trailing slashes in frontend
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
@@ -208,14 +226,22 @@ REST_FRAMEWORK = {
     },
 }
 
-# CORS Settings
+# CORS Settings - CRITICAL: Explicitly list all allowed origins (don't rely on DEBUG)
+# Development: localhost on multiple ports
+# Production: Vercel frontend domain
+_default_cors_origins = 'http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app'
+
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS', 
-    default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app', 
+    default=_default_cors_origins, 
     cast=Csv()
 )
+
+# Credentials: Required for session-based auth (if using LoginView, etc.)
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=DEBUG, cast=bool)
+
+# CRITICAL: Set to False for production. Only True if you explicitly need to allow ALL origins (not recommended)
+CORS_ALLOW_ALL_ORIGINS = False  # Never auto-inherit from DEBUG in production
 
 # Additional CORS headers for media files
 CORS_ALLOW_HEADERS = [
@@ -272,9 +298,13 @@ ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'svg']
 ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov']
 
 # CSRF Protection - Add trusted origins for production
+# CRITICAL: Include BOTH frontend (Vercel) and backend (Render) domains
+# Format: https://domain (no trailing slash)
+_default_csrf_origins = 'http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app,https://pie-global-funitures.onrender.com'
+
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app,https://pie-global-funitures.onrender.com',
+    default=_default_csrf_origins,
     cast=Csv()
 )
 

@@ -9,11 +9,14 @@ import type {
   PaginatedResponse,
 } from '@/types';
 
-// Use Vercel rewrites for /api in production, full URL for dev/other environments
+// CRITICAL: API URL configuration
+// - Development: http://localhost:8000/api
+// - Production: Full URL to Render backend (from environment variable)
+// - Always include trailing slash (Django expects it)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000/api'
-    : '/api');
+    ? 'http://localhost:8000/api/'  // Local dev: full URL
+    : 'https://pie-global-funitures.onrender.com/api/');  // Production: full backend URL
 
 // Validate API URL to prevent SSRF attacks
 const isValidApiUrl = (url: string): boolean => {
@@ -39,8 +42,9 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // Security: Prevent credentials from being sent to untrusted origins
-  withCredentials: false,
+  // CRITICAL for CORS: Allow credentials when calling cross-origin backend
+  // Must match CORS_ALLOW_CREDENTIALS = True on Django backend
+  withCredentials: true,
 });
 
 // Request interceptor
