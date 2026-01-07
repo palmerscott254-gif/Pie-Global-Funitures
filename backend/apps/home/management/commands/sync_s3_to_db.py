@@ -33,15 +33,28 @@ class Command(BaseCommand):
 
         # Initialize S3 client
         try:
+            # Trim credentials to remove whitespace that might cause signature issues
+            access_key = str(settings.AWS_ACCESS_KEY_ID).strip()
+            secret_key = str(settings.AWS_SECRET_ACCESS_KEY).strip()
+            bucket_name = str(settings.AWS_STORAGE_BUCKET_NAME).strip()
+            region = str(settings.AWS_S3_REGION_NAME).strip()
+            
+            # Validate credentials are present
+            if not access_key or not secret_key:
+                self.stdout.write(self.style.ERROR('AWS credentials not configured. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in environment.'))
+                return
+            
+            self.stdout.write(f'Using region: {region}, bucket: {bucket_name}')
+            self.stdout.write(f'Access key: {access_key[:8]}... (length: {len(access_key)})')
+            
             s3_config = Config(signature_version='s3v4', s3={'addressing_style': 'virtual'})
             s3_client = boto3.client(
                 's3',
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_S3_REGION_NAME,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                region_name=region,
                 config=s3_config,
             )
-            bucket_name = settings.AWS_STORAGE_BUCKET_NAME
             self.stdout.write(f'Connected to S3 bucket: {bucket_name}')
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Failed to connect to S3: {e}'))
