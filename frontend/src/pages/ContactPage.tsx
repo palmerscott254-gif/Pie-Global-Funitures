@@ -37,18 +37,32 @@ const ContactPage = () => {
     setSubmitting(true);
 
     try {
-      await messagesApi.create(sanitizedData);
+      const response = await messagesApi.create(sanitizedData);
       toast.success('Thank you! We will get back to you soon.');
       setFormData({ name: '', email: '', phone: '', message: '' });
     } catch (error: any) {
-      // Handle rate limiting
-      if (error.message?.includes('Too many requests')) {
+      // Log full error for debugging
+      if (import.meta.env.DEV) {
+        console.error('Message submission error:', error);
+        if (error.response?.data) {
+          console.error('Backend response:', error.response.data);
+        }
+      }
+      
+      // Handle specific error cases
+      if (error.response?.status === 429 || error.message?.includes('Too many requests')) {
         toast.error('Too many requests. Please try again later.');
+      } else if (error.response?.status === 400) {
+        // Validation error
+        const errors = error.response?.data?.errors || error.response?.data;
+        const errorMessage = typeof errors === 'string' 
+          ? errors 
+          : Object.values(errors).flat()[0] || 'Invalid form data';
+        toast.error(errorMessage as string);
+      } else if (error.response?.status === 0 || error.message?.includes('Network')) {
+        toast.error('Network error. Please check your connection and try again.');
       } else {
         toast.error('Failed to send message. Please try again.');
-      }
-      if (import.meta.env.DEV) {
-        console.error('Error sending message:', error);
       }
     } finally {
       setSubmitting(false);

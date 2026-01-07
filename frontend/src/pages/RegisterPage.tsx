@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaGift, FaHeart, FaUserPlus } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { API_URL } from '../services/api';
 
 // Registration is optional. We highlight the upside but keep a guest-friendly stance.
 const RegisterPage = () => {
@@ -11,31 +12,59 @@ const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate passwords match
+    if (password !== passwordConfirm) {
+      toast.error('Passwords do not match.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Simple client-side registry to prevent logins with unknown emails
-      const existingRaw = localStorage.getItem('pgf-auth-users');
-      const existingUsers: Array<{ name: string; email: string; password: string }> = existingRaw ? JSON.parse(existingRaw) : [];
+      const response = await fetch(`${API_URL}/auth/users/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for session
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          password_confirm: passwordConfirm,
+        }),
+      });
 
-      const emailExists = existingUsers.some((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (emailExists) {
-        toast.error('An account with this email already exists.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat();
+          toast.error(errorMessages[0] as string || 'Registration failed. Please try again.');
+        } else {
+          toast.error(data.error || 'Registration failed. Please try again.');
+        }
         return;
       }
 
-      const newUsers = [...existingUsers, { name, email, password }];
-      localStorage.setItem('pgf-auth-users', JSON.stringify(newUsers));
-      localStorage.setItem('pgf-auth-current', JSON.stringify({ email }));
+      // Store user info in localStorage for frontend use
+      localStorage.setItem('pgf-auth-current', JSON.stringify({ 
+        email: data.user.email,
+        name: data.user.name,
+        id: data.user.id,
+      }));
       window.dispatchEvent(new Event('pgf-auth-changed'));
 
       toast.success('Account created — welcome!');
       const redirectTo = (location.state as { from?: string } | null)?.from || '/';
       navigate(redirectTo, { replace: true });
     } catch (err) {
+      console.error('Registration error:', err);
       toast.error('Could not create account. Please try again.');
     } finally {
       setLoading(false);
@@ -126,6 +155,18 @@ const RegisterPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field"
                 placeholder="Create a strong password"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <input
+                type="password"
+                required
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                className="input-field"
+                placeholder="Confirm your password"
               />
             </div>
 

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaCheckCircle, FaShieldAlt, FaUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { API_URL } from '../services/api';
 
 // This page is intentionally optional: browsing and checkout do not require login.
 // We provide a soft opt-in experience with social proof and low friction.
@@ -12,61 +13,47 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const emailInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-
-  const registeredEmails = useMemo(() => {
-    const raw = localStorage.getItem('pgf-auth-users');
-    if (!raw) return [];
-    const users: Array<{ email: string; name?: string }> = JSON.parse(raw);
-    return users.map((u) => u.email);
-  }, []);
-
-  const filteredSuggestions = useMemo(() => {
-    if (!email.trim()) return registeredEmails;
-    const term = email.toLowerCase();
-    return registeredEmails.filter((e) => e.toLowerCase().includes(term));
-  }, [email, registeredEmails]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        emailInputRef.current && !emailInputRef.current.contains(e.target as Node) &&
-        suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const existingRaw = localStorage.getItem('pgf-auth-users');
-      const existingUsers: Array<{ email: string; password: string; name?: string }> = existingRaw ? JSON.parse(existingRaw) : [];
+      const response = await fetch(`${API_URL}/auth/users/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for session
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
-      const user = existingUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (!user) {
-        toast.error('No account found for this email. Please register first.');
-        return;
-      }
+      const data = await response.json();
 
-      if (user.password !== password) {
-        toast.error('Incorrect password.');
+      if (!response.ok) {
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat();
+          toast.error(errorMessages[0] as string || 'Login failed. Please try again.');
+        } else {
+          toast.error(data.error || 'Login failed. Please try again.');
+        }
         return;
       }
 
       toast.success('Signed in — welcome back!');
-      // Persist current user and notify header
-      localStorage.setItem('pgf-auth-current', JSON.stringify({ email: user.email }));
+      // Store user info in localStorage for frontend use
+      localStorage.setItem('pgf-auth-current', JSON.stringify({ 
+        email: data.user.email,
+        name: data.user.name,
+        id: data.user.id,
+      }));
       window.dispatchEvent(new Event('pgf-auth-changed'));
       const redirectTo = (location.state as { from?: string } | null)?.from || '/';
       navigate(redirectTo, { replace: true });
     } catch (err) {
+      console.error('Login error:', err);
       toast.error('Could not sign in. Please try again.');
     } finally {
       setLoading(false);
@@ -124,40 +111,17 @@ const LoginPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="relative">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
-                ref={emailInputRef}
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
                 className="input-field"
                 placeholder="scott@example.com"
                 autoComplete="off"
               />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div
-                  ref={suggestionsRef}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
-                >
-                  {filteredSuggestions.map((suggestionEmail) => (
-                    <button
-                      key={suggestionEmail}
-                      type="button"
-                      onClick={() => {
-                        setEmail(suggestionEmail);
-                        setShowSuggestions(false);
-                        emailInputRef.current?.focus();
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors"
-                    >
-                      {suggestionEmail}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div>

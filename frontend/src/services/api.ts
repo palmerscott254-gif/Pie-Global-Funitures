@@ -189,4 +189,10 @@ export const aboutApi = {
   },
 };
 
+// Export API_URL for use in manual fetch calls (like in auth components)
+// This removes the /api/ suffix to get the base backend URL for auth endpoints
+export const API_URL = API_BASE_URL.endsWith('/api/') 
+  ? API_BASE_URL.slice(0, -5)  // Remove '/api/' (5 characters)
+  : API_BASE_URL;
+
 export default api;

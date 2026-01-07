@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'apps.messages.apps.MessagesConfig',
     'apps.orders',
     'apps.about',
+    'apps.users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -228,14 +229,21 @@ REST_FRAMEWORK = {
 
 # CORS Settings - CRITICAL: Explicitly list all allowed origins (don't rely on DEBUG)
 # Development: localhost on multiple ports
-# Production: Vercel frontend domain
-_default_cors_origins = 'http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app'
+# Production: Vercel frontend domain (including all preview/staging deployments)
+_default_cors_origins = 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://pie-global-funitures.vercel.app'
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS', 
     default=_default_cors_origins, 
     cast=Csv()
 )
+
+# Also allow all Vercel preview domains (*.vercel.app)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",  # Allow all Vercel preview/staging deployments
+    r"^http://localhost:\d+$",      # Allow localhost on any port
+    r"^http://127\.0\.0\.1:\d+$",   # Allow 127.0.0.1 on any port
+]
 
 # Explicitly allow all HTTP methods including OPTIONS (critical for preflight)
 CORS_ALLOW_METHODS = [
