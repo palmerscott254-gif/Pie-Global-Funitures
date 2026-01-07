@@ -132,7 +132,7 @@ Message ID: {message.id}
                 subject=safe_subject,
                 message=email_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=['pieglobal308@gmail.com'],
+                recipient_list=getattr(settings, 'EMAIL_NOTIFICATIONS_TO', [settings.DEFAULT_FROM_EMAIL]),
                 fail_silently=False,
             )
             return True

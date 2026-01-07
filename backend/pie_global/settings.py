@@ -308,14 +308,20 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=Csv()
 )
 
-# Email Configuration (optional)
+# Email Configuration (SMTP via env)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='pieglobal308@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='pieglobal308@gmail.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+
+# Notification recipients for contact form (CSV list)
+EMAIL_NOTIFICATIONS_TO = list(
+    config('EMAIL_NOTIFICATIONS_TO', default=DEFAULT_FROM_EMAIL, cast=Csv())
+)
 
 # Safer development default: avoid SMTP failures when credentials are missing locally
 if DEBUG and not str(EMAIL_HOST_PASSWORD).strip():
