@@ -160,31 +160,42 @@ const Header = () => {
               
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                  <Link
-                    to="/login"
-                    onClick={closeUserMenu}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={closeUserMenu}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Create account
-                  </Link>
-                  <hr className="my-2" />
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem('pgf-auth-current');
-                      window.dispatchEvent(new Event('pgf-auth-changed'));
-                      closeUserMenu();
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                  >
-                    <FaSignOutAlt size={14} /> Sign out
-                  </button>
+                  {isAuthenticated ? (
+                    /* Authenticated User Menu */
+                    <>
+                      <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-200">
+                        Signed in
+                      </div>
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem('pgf-auth-current');
+                          window.dispatchEvent(new Event('pgf-auth-changed'));
+                          closeUserMenu();
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                      >
+                        <FaSignOutAlt size={14} /> Sign out
+                      </button>
+                    </>
+                  ) : (
+                    /* Guest User Menu */
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={closeUserMenu}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        to="/register"
+                        onClick={closeUserMenu}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Create account
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>
