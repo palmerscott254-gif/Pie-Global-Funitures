@@ -14,6 +14,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # API endpoints
+    path('api/', include('apps.core.urls')),
     path('api/', include('apps.products.urls')),
     path('api/', include('apps.home.urls')),
     path('api/', include('apps.messages.urls')),

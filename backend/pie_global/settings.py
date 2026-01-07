@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'storages',  # AWS S3 storage backend
 
     # Local apps
+    'apps.core',  # Core utilities (file uploads, etc.)
     'apps.products',
     'apps.home',
     'apps.messages.apps.MessagesConfig',
