@@ -16,6 +16,10 @@ dj-database-url==2.3.0
 # Media/File handling - Updated for security patches
 Pillow==11.0.0
 
+# AWS S3 Storage - For production media/static file hosting
+boto3==1.34.46
+django-storages[s3]==1.14.2
+
 # Environment variables
 python-decouple==3.8
 

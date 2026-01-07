@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'django_filters',
+    'storages',  # AWS S3 storage backend
 
     # Local apps
     'apps.products',
@@ -177,19 +178,52 @@ APPEND_SLASH = True  # Automatically redirect /products to /products/, but use t
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-# Updated to use modern storage backend (CompressedManifestStaticFilesStorage is deprecated)
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
 
-# Media files (uploads)
-MEDIA_URL = config('MEDIA_URL', default='/media/')
-MEDIA_ROOT = BASE_DIR / 'media'
+# AWS S3 Configuration - Auto-detect environment
+USE_S3 = config('USE_S3', default=not DEBUG, cast=bool)
+
+if USE_S3:
+    # S3 Storage backend for media and static files
+    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='pieglobal')
+    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
+    AWS_S3_CUSTOM_DOMAIN = config('AWS_S3_CUSTOM_DOMAIN', default=f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com')
+    AWS_S3_SIGNATURE_VERSION = 's3v4'  # Use SigV4 for security
+    AWS_QUERYSTRING_AUTH = config('AWS_QUERYSTRING_AUTH', default=False, cast=bool)  # No auth in URL
+    AWS_DEFAULT_ACL = 'public-read'  # Make uploads publicly readable
+    AWS_S3_VERIFY = True  # Verify SSL certificates
+    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
+    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
+    
+    # S3 static settings
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    
+    # S3 media settings
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+        },
+    }
+else:
+    # Local file storage (development)
+    MEDIA_URL = config('MEDIA_URL', default='/media/')
+    MEDIA_ROOT = BASE_DIR / 'media'
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+
+# Media files (uploads) - defined in S3 or local storage config above
 
 # Base URL for serving media in production/development
 # Priority: 1. RENDER_EXTERNAL_URL (Render auto-set), 2. BACKEND_URL env var, 3. localhost default
