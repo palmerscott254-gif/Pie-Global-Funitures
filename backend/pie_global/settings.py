@@ -237,6 +237,16 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv()
 )
 
+# Explicitly allow all HTTP methods including OPTIONS (critical for preflight)
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 # Credentials: Required for session-based auth (if using LoginView, etc.)
 CORS_ALLOW_CREDENTIALS = True
 
