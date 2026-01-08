@@ -18,26 +18,26 @@ class Command(BaseCommand):
         SliderImage.objects.all().delete()
         HomeVideo.objects.all().delete()
         
-        # Create slider images
+        # Create slider images (using existing S3 images)
         sliders = [
             {
                 "title": "Premium Sofas Collection",
-                "image": "home/sliders/sofa-1.jpg",
+                "image": "home/sliders/IMG-20251218-WA0000.jpg",
                 "order": 1,
             },
             {
                 "title": "Modern Bedroom Sets",
-                "image": "home/sliders/bedroom-1.jpg",
+                "image": "home/sliders/IMG-20251218-WA0002.jpg",
                 "order": 2,
             },
             {
                 "title": "Elegant Dining Tables",
-                "image": "home/sliders/dining-1.jpg",
+                "image": "home/sliders/IMG-20251218-WA0004.jpg",
                 "order": 3,
             },
             {
                 "title": "Office Furniture Solutions",
-                "image": "home/sliders/office-1.jpg",
+                "image": "home/sliders/IMG-20251218-WA0005.jpg",
                 "order": 4,
             },
         ]
@@ -51,15 +51,11 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS(f"✓ Created slider: {slider.title}"))
         
-        # Create videos
+        # Create videos (using existing S3 video)
         videos = [
             {
                 "title": "Showroom Tour",
-                "video": "home/videos/showroom-tour.mp4",
-            },
-            {
-                "title": "Product Highlights",
-                "video": "home/videos/product-highlights.mp4",
+                "video": "home/videos/VID-20251218-WA0003.mp4",
             },
         ]
         

@@ -32,7 +32,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("55000"),
                 "description": "Luxurious full-grain leather sofa with deep seating comfort",
                 "short_description": "Premium leather seating for your living room",
-                "main_image": "products/main/sofa-leather.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 8,
                 "sku": "SOFA-LTH-001",
                 "material": "Full-grain leather",
@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("35000"),
                 "description": "Modern fabric sofa with clean lines and minimalist design",
                 "short_description": "Stylish modern sofa in neutral tones",
-                "main_image": "products/main/sofa-fabric.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 12,
                 "sku": "SOFA-FAB-001",
                 "material": "Premium fabric",
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("42000"),
                 "description": "Sturdy king-size platform bed with integrated storage",
                 "short_description": "Spacious platform bed for ultimate comfort",
-                "main_image": "products/main/bed-platform.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 6,
                 "sku": "BED-KNG-001",
                 "material": "Solid wood with upholstery",
@@ -85,7 +85,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("34000"),
                 "description": "Elegant queen-size bed with soft upholstered headboard",
                 "short_description": "Classic queen bed with modern comfort",
-                "main_image": "products/main/bed-queen.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 10,
                 "sku": "BED-QN-001",
                 "material": "Wood with fabric upholstery",
@@ -104,7 +104,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("28000"),
                 "description": "Modern glass-top dining table with sturdy metal base",
                 "short_description": "Contemporary dining table for 6-8 people",
-                "main_image": "products/main/table-dining.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 7,
                 "sku": "TBL-DIN-001",
                 "material": "Tempered glass and steel",
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("15000"),
                 "description": "Elegant marble coffee table with gold accents",
                 "short_description": "Premium coffee table for living spaces",
-                "main_image": "products/main/table-coffee.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 15,
                 "sku": "TBL-COF-001",
                 "material": "Marble and brass",
@@ -140,7 +140,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("40000"),
                 "description": "Spacious 5-door wardrobe with mirror and drawers",
                 "short_description": "Complete storage solution for bedrooms",
-                "main_image": "products/main/wardrobe-5door.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 5,
                 "sku": "WRD-5DR-001",
                 "material": "MDF wood",
@@ -157,7 +157,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("35000"),
                 "description": "Modern sliding door wardrobe with LED lighting",
                 "short_description": "Space-saving wardrobe with modern design",
-                "main_image": "products/main/wardrobe-slide.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 8,
                 "sku": "WRD-SLD-001",
                 "material": "Plywood and laminate",
@@ -176,7 +176,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("24000"),
                 "description": "Professional executive desk with storage compartments",
                 "short_description": "Premium office desk for professionals",
-                "main_image": "products/main/desk-executive.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 6,
                 "sku": "OFF-DSK-001",
                 "material": "Solid wood and steel",
@@ -193,7 +193,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("11000"),
                 "description": "Ergonomic office chair with lumbar support",
                 "short_description": "Comfortable seating for long work hours",
-                "main_image": "products/main/chair-office.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 20,
                 "sku": "OFF-CHR-001",
                 "material": "Mesh and metal",
@@ -212,7 +212,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("45000"),
                 "description": "Complete dining set with table and 6 chairs",
                 "short_description": "Full dining solution for family meals",
-                "main_image": "products/main/dining-set.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 4,
                 "sku": "DIN-SET-001",
                 "material": "Solid wood",
@@ -229,7 +229,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("8000"),
                 "description": "Set of 3 adjustable bar stools with footrest",
                 "short_description": "Modern bar seating for kitchen islands",
-                "main_image": "products/main/barstools.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 18,
                 "sku": "DIN-BST-001",
                 "material": "Metal and leather",
@@ -248,7 +248,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("32000"),
                 "description": "Weather-resistant outdoor furniture set",
                 "short_description": "Durable seating for patios and gardens",
-                "main_image": "products/main/patio-set.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 5,
                 "sku": "OUT-PAT-001",
                 "material": "Aluminum and waterproof fabric",
@@ -265,7 +265,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("12000"),
                 "description": "Teak wood garden bench with classic design",
                 "short_description": "Elegant outdoor seating for gardens",
-                "main_image": "products/main/garden-bench.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 9,
                 "sku": "OUT-BNC-001",
                 "material": "Teak wood",
@@ -284,7 +284,7 @@ class Command(BaseCommand):
                 "compare_at_price": Decimal("18000"),
                 "description": "Multi-compartment storage cabinet with shelves",
                 "short_description": "Versatile storage for any room",
-                "main_image": "products/main/storage-cabinet.jpg",
+                "main_image": "",  # Upload via admin or S3
                 "stock": 11,
                 "sku": "STR-CAB-001",
                 "material": "Engineered wood",
