@@ -51,12 +51,13 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS(f"✓ Created slider: {slider.title}"))
         
-        # Create videos (using existing S3 video)
+        # Create videos (only if files exist in S3)
         videos = [
-            {
-                "title": "Showroom Tour",
-                "video": "home/videos/VID-20251218-WA0003.mp4",
-            },
+            # Add video entries here if/when video files are added to S3
+            # {
+            #     "title": "Showroom Tour",
+            #     "video": "home/videos/VID-20251218-WA0003.mp4",
+            # },
         ]
         
         for video_data in videos:
