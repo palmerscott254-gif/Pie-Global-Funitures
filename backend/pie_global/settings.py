@@ -72,8 +72,8 @@ INSTALLED_APPS = [
 
     # Local apps
     'apps.core',  # Core utilities (file uploads, etc.)
-    'apps.products',
-    'apps.home',
+    'apps.products.apps.ProductsConfig',
+    'apps.home.apps.HomeConfig',
     'apps.messages.apps.MessagesConfig',
     'apps.orders',
     'apps.about',
@@ -200,7 +200,7 @@ AWS_S3_ADDRESSING_STYLE = 'virtual'
 AWS_QUERYSTRING_AUTH = False
 AWS_DEFAULT_ACL = None  # Disable ACLs; rely on bucket policy
 AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
+    'CacheControl': 'max-age=300',  # 5 minutes for rapid updates during development
 }
 AWS_S3_VERIFY = True
 
