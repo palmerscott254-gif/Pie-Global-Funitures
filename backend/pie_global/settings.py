@@ -184,6 +184,7 @@ APPEND_SLASH = True  # Automatically redirect /products to /products/, but use t
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = []
 
 # AWS S3 Configuration - credentials loaded for boto3 access
 # Keep credentials and bucket from environment; normalize S3 behavior explicitly
