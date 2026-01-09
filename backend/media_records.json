@@ -1,0 +1,166 @@
+{
+  "sliders": [
+    {
+      "id": 19,
+      "title": "1.h",
+      "order": 1,
+      "active": true,
+      "uploaded_at": "2026-01-09 16:59:16.639135+00:00"
+    },
+    {
+      "id": 20,
+      "title": "1.h",
+      "order": 2,
+      "active": true,
+      "uploaded_at": "2026-01-09 16:59:17.646378+00:00"
+    },
+    {
+      "id": 21,
+      "title": "1.h",
+      "order": 3,
+      "active": true,
+      "uploaded_at": "2026-01-09 16:59:19.592009+00:00"
+    },
+    {
+      "id": 22,
+      "title": "1.h",
+      "order": 4,
+      "active": true,
+      "uploaded_at": "2026-01-09 16:59:20.557258+00:00"
+    },
+    {
+      "id": 23,
+      "title": "",
+      "order": 5,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:01:07.177137+00:00"
+    },
+    {
+      "id": 24,
+      "title": "",
+      "order": 6,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:01:09.440691+00:00"
+    },
+    {
+      "id": 25,
+      "title": "",
+      "order": 7,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:01:10.155158+00:00"
+    },
+    {
+      "id": 26,
+      "title": "",
+      "order": 8,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:01:11.495123+00:00"
+    },
+    {
+      "id": 27,
+      "title": "",
+      "order": 9,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:01:13.155577+00:00"
+    },
+    {
+      "id": 28,
+      "title": "",
+      "order": 10,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:01:13.818249+00:00"
+    },
+    {
+      "id": 29,
+      "title": "",
+      "order": 11,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:02:59.031422+00:00"
+    },
+    {
+      "id": 30,
+      "title": "",
+      "order": 12,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:02:59.746762+00:00"
+    },
+    {
+      "id": 31,
+      "title": "",
+      "order": 13,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:01.353235+00:00"
+    },
+    {
+      "id": 32,
+      "title": "",
+      "order": 14,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:02.982867+00:00"
+    },
+    {
+      "id": 33,
+      "title": "",
+      "order": 15,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:04.242990+00:00"
+    },
+    {
+      "id": 34,
+      "title": "",
+      "order": 16,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:04.887536+00:00"
+    },
+    {
+      "id": 35,
+      "title": "",
+      "order": 17,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:05.864370+00:00"
+    },
+    {
+      "id": 36,
+      "title": "",
+      "order": 18,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:06.906908+00:00"
+    },
+    {
+      "id": 37,
+      "title": "",
+      "order": 19,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:08.552446+00:00"
+    },
+    {
+      "id": 38,
+      "title": "",
+      "order": 20,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:09.553100+00:00"
+    },
+    {
+      "id": 39,
+      "title": "",
+      "order": 21,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:10.222196+00:00"
+    },
+    {
+      "id": 40,
+      "title": "",
+      "order": 22,
+      "active": true,
+      "uploaded_at": "2026-01-09 17:03:11.193186+00:00"
+    }
+  ],
+  "videos": [
+    {
+      "id": 11,
+      "title": "home video 1",
+      "active": true,
+      "uploaded_at": "2026-01-09 16:51:31.323864+00:00"
+    }
+  ]
+}

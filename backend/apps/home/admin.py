@@ -31,6 +31,9 @@ class SliderImageAdminForm(forms.ModelForm):
         # Allow multi-upload without requiring the base image field
         if 'image' in self.fields:
             self.fields['image'].required = False
+        # Default new sliders to active=True
+        if not self.instance.pk and 'active' in self.fields:
+            self.fields['active'].initial = True
 
 @admin.register(SliderImage)
 class SliderImageAdmin(admin.ModelAdmin):
@@ -51,6 +54,10 @@ class SliderImageAdmin(admin.ModelAdmin):
         if not obj.order:
             obj.order = start_order
 
+        # Default new records to active=True if not explicitly set
+        if not obj.active and not change:
+            obj.active = True
+
         if 'images' in request.FILES:
             files = request.FILES.getlist('images')
             for idx, file in enumerate(files):
@@ -58,7 +65,7 @@ class SliderImageAdmin(admin.ModelAdmin):
                     title=obj.title,
                     image=file,
                     order=start_order + idx,
-                    active=obj.active
+                    active=True  # Always create new uploads as active
                 )
             # All created; skip saving the base object
             return
