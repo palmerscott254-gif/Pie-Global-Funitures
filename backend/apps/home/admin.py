@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from django.db.models import Max
 from .models import SliderImage, HomeVideo
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -25,6 +26,12 @@ class SliderImageAdminForm(forms.ModelForm):
         model = SliderImage
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Allow multi-upload without requiring the base image field
+        if 'image' in self.fields:
+            self.fields['image'].required = False
+
 @admin.register(SliderImage)
 class SliderImageAdmin(admin.ModelAdmin):
     """Admin interface for homepage slider images."""
@@ -37,17 +44,26 @@ class SliderImageAdmin(admin.ModelAdmin):
     ordering = ("order", "-uploaded_at")
 
     def save_model(self, request, obj, form, change):
+        # Compute next order starting at 1
+        start_order = (SliderImage.objects.aggregate(max_order=Max('order'))['max_order'] or 0) + 1
+
+        # If the main object lacks an explicit order, assign the next slot
+        if not obj.order:
+            obj.order = start_order
+
         if 'images' in request.FILES:
             files = request.FILES.getlist('images')
-            for file in files:
+            for idx, file in enumerate(files):
                 SliderImage.objects.create(
                     title=obj.title,
                     image=file,
-                    order=obj.order,
+                    order=start_order + idx,
                     active=obj.active
                 )
-        else:
-            super().save_model(request, obj, form, change)
+            # All created; skip saving the base object
+            return
+
+        super().save_model(request, obj, form, change)
 
 @admin.register(HomeVideo)
 class HomeVideoAdmin(admin.ModelAdmin):
