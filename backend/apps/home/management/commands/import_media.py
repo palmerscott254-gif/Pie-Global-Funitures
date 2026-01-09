@@ -84,11 +84,10 @@ class Command(BaseCommand):
                         SliderImage.objects.create(
                             id=slider['id'],
                             title=slider['title'],
+                            image=slider.get('image'),
                             order=slider['order'],
                             active=slider['active'],
-                            uploaded_at=slider['uploaded_at'],
-                            # image field will be populated by sync_s3_to_db
-                            image=None
+                            uploaded_at=slider['uploaded_at']
                         )
                         self.stdout.write(
                             self.style.SUCCESS(
@@ -131,10 +130,9 @@ class Command(BaseCommand):
                         HomeVideo.objects.create(
                             id=video['id'],
                             title=video['title'],
+                            video=video.get('video'),
                             active=video['active'],
-                            uploaded_at=video['uploaded_at'],
-                            # video field will be populated by sync_s3_to_db
-                            video=None
+                            uploaded_at=video['uploaded_at']
                         )
                         self.stdout.write(
                             self.style.SUCCESS(

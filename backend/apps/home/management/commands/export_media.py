@@ -36,7 +36,7 @@ class Command(BaseCommand):
         # Export SliderImage records
         if not videos_only:
             sliders = SliderImage.objects.all().values(
-                'id', 'title', 'order', 'active', 'uploaded_at'
+                'id', 'title', 'image', 'order', 'active', 'uploaded_at'
             )
             data['sliders'] = list(sliders)
             self.stdout.write(
@@ -46,7 +46,7 @@ class Command(BaseCommand):
         # Export HomeVideo records
         if not sliders_only:
             videos = HomeVideo.objects.all().values(
-                'id', 'title', 'active', 'uploaded_at'
+                'id', 'title', 'video', 'active', 'uploaded_at'
             )
             data['videos'] = list(videos)
             self.stdout.write(
