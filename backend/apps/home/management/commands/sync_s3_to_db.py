@@ -96,10 +96,27 @@ class Command(BaseCommand):
             return
 
         # Get existing database records
-        existing_sliders = {img.image.name: img for img in SliderImage.objects.all()}
-        self.stdout.write(f'Found {len(existing_sliders)} slider images in database')
+        existing_sliders = {img.image.name: img for img in SliderImage.objects.all() if img.image}
+        empty_sliders = list(SliderImage.objects.filter(image='') | SliderImage.objects.filter(image__isnull=True))
+        self.stdout.write(f'Found {len(existing_sliders)} slider images in database with files')
+        self.stdout.write(f'Found {len(empty_sliders)} slider images in database WITHOUT files')
 
-        # Create missing database records
+        # Update empty database records with S3 files
+        updated_count = 0
+        for s3_key in list(s3_files):
+            # Try to match with empty sliders first (by order)
+            if empty_sliders:
+                slider = empty_sliders.pop(0)
+                if dry_run:
+                    self.stdout.write(self.style.WARNING(f'Would update ID {slider.id}: {s3_key}'))
+                else:
+                    slider.image = s3_key
+                    slider.save()
+                    self.stdout.write(self.style.SUCCESS(f'Updated ID {slider.id}: {s3_key}'))
+                updated_count += 1
+                s3_files.remove(s3_key)  # Remove from set to avoid re-processing
+
+        # Create missing database records for remaining S3 files
         created_count = 0
         for s3_key in s3_files:
             if s3_key not in existing_sliders:
@@ -128,7 +145,7 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.ERROR(f'Removed: {db_key} (ID: {slider_obj.id})'))
                     removed_count += 1
 
-        self.stdout.write(f'\nSlider Summary: Created {created_count}, Removed {removed_count}')
+        self.stdout.write(f'\nSlider Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
 
     def _sync_videos(self, s3_client, bucket_name, dry_run, clean):
         """Sync home videos from S3 to database"""
@@ -152,10 +169,27 @@ class Command(BaseCommand):
             return
 
         # Get existing database records
-        existing_videos = {vid.video.name: vid for vid in HomeVideo.objects.all()}
-        self.stdout.write(f'Found {len(existing_videos)} videos in database')
+        existing_videos = {vid.video.name: vid for vid in HomeVideo.objects.all() if vid.video}
+        empty_videos = list(HomeVideo.objects.filter(video='') | HomeVideo.objects.filter(video__isnull=True))
+        self.stdout.write(f'Found {len(existing_videos)} videos in database with files')
+        self.stdout.write(f'Found {len(empty_videos)} videos in database WITHOUT files')
 
-        # Create missing database records
+        # Update empty database records with S3 files
+        updated_count = 0
+        for s3_key in list(s3_files):
+            # Try to match with empty videos first
+            if empty_videos:
+                video = empty_videos.pop(0)
+                if dry_run:
+                    self.stdout.write(self.style.WARNING(f'Would update ID {video.id}: {s3_key}'))
+                else:
+                    video.video = s3_key
+                    video.save()
+                    self.stdout.write(self.style.SUCCESS(f'Updated ID {video.id}: {s3_key}'))
+                updated_count += 1
+                s3_files.remove(s3_key)  # Remove from set to avoid re-processing
+
+        # Create missing database records for remaining S3 files
         created_count = 0
         for s3_key in s3_files:
             if s3_key not in existing_videos:
@@ -183,4 +217,4 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.ERROR(f'Removed: {db_key} (ID: {video_obj.id})'))
                     removed_count += 1
 
-        self.stdout.write(f'\nVideo Summary: Created {created_count}, Removed {removed_count}')
+        self.stdout.write(f'\nVideo Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
