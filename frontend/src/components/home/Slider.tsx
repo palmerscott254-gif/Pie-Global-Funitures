@@ -93,6 +93,9 @@ const Slider = ({ images }: SliderProps) => {
               src={getImageUrl(currentImage.image)}
               alt={currentImage.title || 'Slide image'}
               className="w-full h-full object-cover"
+              loading="eager"
+              decoding="async"
+              sizes="100vw"
               onError={(e) => {
                 console.error('Image failed to load:', currentImage.image, e);
               }}

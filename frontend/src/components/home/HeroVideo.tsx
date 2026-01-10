@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { memo, useRef, useEffect } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import { getImageUrl, getVideoUrl } from '@/utils/imageUrl';
 import type { HomeVideo, SliderImage } from '@/types';
 
@@ -11,46 +11,62 @@ interface HeroVideoProps {
 
 const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
   useEffect(() => {
-    // Ensure video plays smoothly on mount with retry logic
-    const playVideo = async () => {
-      if (videoRef.current) {
-        try {
-          // Optimize playback settings for smooth performance
-          videoRef.current.playbackRate = 1.0;
-          
-          // Reduce quality on slower devices
-          if ('connection' in navigator) {
-            const conn = (navigator as any).connection;
-            if (conn && conn.effectiveType === '4g') {
-              // High quality for fast connections
-            } else {
-              // Reduce quality for slower connections
-              videoRef.current.playbackRate = 1.0;
-            }
-          }
-          
-          await videoRef.current.play();
-        } catch (err) {
-          console.log('Video autoplay failed, retrying...', err);
-          // Retry after a short delay
-          setTimeout(() => {
-            videoRef.current?.play().catch(e => console.log('Retry failed:', e));
-          }, 1000);
+    // Defer video loading until hero is in viewport
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setShouldLoadVideo(true);
         }
+      },
+      { rootMargin: '0px', threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    } else {
+      // Fallback: load immediately
+      setShouldLoadVideo(true);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    // Ensure video plays smoothly once loaded and visible
+    const playVideo = async () => {
+      if (!shouldLoadVideo || !videoRef.current) return;
+      try {
+        videoRef.current.playbackRate = 1.0;
+
+        if ('connection' in navigator) {
+          const conn = (navigator as any).connection;
+          if (conn && conn.effectiveType !== '4g') {
+            videoRef.current.playbackRate = 1.0;
+          }
+        }
+
+        await videoRef.current.play();
+      } catch (err) {
+        setTimeout(() => {
+          videoRef.current?.play().catch(() => {});
+        }, 800);
       }
     };
     playVideo();
-  }, []);
+  }, [shouldLoadVideo]);
 
   return (
-    <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
+    <section ref={sectionRef} className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
       {video && video.video ? (
         <video
           ref={videoRef}
-          src={getVideoUrl(video.video) || undefined}
+          src={shouldLoadVideo ? getVideoUrl(video.video) || undefined : undefined}
           autoPlay
           loop
           muted

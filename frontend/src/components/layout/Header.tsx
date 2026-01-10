@@ -72,7 +72,14 @@ const Header = () => {
         <div className="flex items-center justify-between h-20">
           {/* Brand */}
           <Link to="/" className="flex items-center space-x-1">
-            <img src={logoImage} alt="PieGlobal logo" className="h-10 md:h-12 w-auto object-contain" />
+            <img
+              src={logoImage}
+              alt="PieGlobal logo"
+              className="h-10 md:h-12 w-auto object-contain"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+            />
             <div className="text-2xl font-bold text-primary-600">
               Pie<span className="text-secondary-600">Global</span>
             </div>

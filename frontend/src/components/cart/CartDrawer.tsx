@@ -69,6 +69,9 @@ const CartDrawer = () => {
                     src={getImageUrl(item.image)}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded"
+                    loading="lazy"
+                    decoding="async"
+                    sizes="80px"
                   />
                   <div className="flex-grow">
                     <h3 className="font-semibold text-sm mb-1">{item.name}</h3>

@@ -105,7 +105,14 @@ const ProductDetailPage = () => {
                     selectedImage === img ? 'border-primary-600' : 'border-transparent'
                   }`}
                 >
-                  <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="w-full h-20 object-cover" />
+                  <img
+                    src={getImageUrl(img)}
+                    alt={`${product.name} ${idx + 1}`}
+                    className="w-full h-20 object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    sizes="(max-width: 768px) 25vw, 10vw"
+                  />
                 </button>
               ))}
             </div>

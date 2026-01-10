@@ -100,6 +100,9 @@ const HomePage = () => {
                     src={getImageUrl(slider.image)}
                     alt={slider.title || `Slider ${index + 1}`}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                    sizes="160px"
                   />
                 </motion.div>
               ))}

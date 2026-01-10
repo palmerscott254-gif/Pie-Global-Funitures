@@ -200,7 +200,8 @@ AWS_S3_ADDRESSING_STYLE = 'virtual'
 AWS_QUERYSTRING_AUTH = False
 AWS_DEFAULT_ACL = None  # Disable ACLs; rely on bucket policy
 AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=300',  # 5 minutes for rapid updates during development
+    # Cache media aggressively to improve load times; adjust if you frequently update
+    'CacheControl': 'public, max-age=604800',  # 7 days
 }
 AWS_S3_VERIFY = True
 

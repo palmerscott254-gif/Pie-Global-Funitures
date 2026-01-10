@@ -263,6 +263,9 @@ const CheckoutPage = () => {
                     src={getImageUrl(item.image)}
                     alt={item.name}
                     className="w-16 h-16 object-cover rounded-lg"
+                    loading="lazy"
+                    decoding="async"
+                    sizes="64px"
                   />
                   <div className="flex-1">
                     <h3 className="font-medium">{item.name}</h3>
