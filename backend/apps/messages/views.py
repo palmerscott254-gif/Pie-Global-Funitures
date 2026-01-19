@@ -156,7 +156,7 @@ This is an automated notification from Pie Global Furniture.
                 message=email_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=recipients,
-                fail_silently=True,
+                fail_silently=False,  # bubble up SMTP errors so we can log them
             )
             logger.info(f"Admin notification email sent for message #{message.id} to {recipients}")
             return True
