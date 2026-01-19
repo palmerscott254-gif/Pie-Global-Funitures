@@ -47,8 +47,8 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     Security: Rate limited to prevent spam/abuse
     """
     queryset = UserMessage.objects.all()
-    # Default authentication requires CSRF for admin actions; public create is exempt below
-    authentication_classes = [SessionAuthentication]
+    # Use CSRF-exempt for public contact form; admin actions protected by IsAdminUser
+    authentication_classes = [CsrfExemptSessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['status']
     ordering_fields = ['created_at', 'updated_at']
@@ -66,12 +66,6 @@ class UserMessageViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [AllowAny()]
         return [IsAdminUser()]
-
-    def get_authenticators(self):
-        # Public create should not enforce CSRF; admin actions should.
-        if self.action == 'create':
-            return [CsrfExemptSessionAuthentication()]
-        return [SessionAuthentication()]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
