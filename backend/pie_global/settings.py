@@ -22,7 +22,7 @@ DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 
 # Allowed hosts: MUST include full domains (not wildcards) for production security
 # Development defaults
-_development_hosts = ['localhost', '127.0.0.1']
+_development_hosts = ['localhost', '127.0.0.1', 'testserver']
 
 # Production defaults - Add your Render backend domain here
 _production_hosts = [
