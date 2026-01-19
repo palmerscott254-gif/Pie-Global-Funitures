@@ -27,6 +27,8 @@ _development_hosts = ['localhost', '127.0.0.1', 'testserver']
 # Production defaults - Add your Render backend domain here
 _production_hosts = [
     'pie-global-funitures.onrender.com',  # Replace with your actual Render domain
+    'pieglobalfunitures.co.ke',
+    'www.pieglobalfunitures.co.ke',
 ]
 
 # Build ALLOWED_HOSTS from env or defaults
@@ -283,7 +285,7 @@ REST_FRAMEWORK = {
 # CORS Settings - CRITICAL: Explicitly list all allowed origins (don't rely on DEBUG)
 # Development: localhost on multiple ports
 # Production: Vercel frontend domain (including all preview/staging deployments)
-_default_cors_origins = 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://pie-global-funitures.vercel.app'
+_default_cors_origins = 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://pie-global-funitures.vercel.app,https://pieglobalfunitures.co.ke,https://www.pieglobalfunitures.co.ke'
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS', 
@@ -373,7 +375,7 @@ ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov']
 # CSRF Protection - Add trusted origins for production
 # CRITICAL: Include BOTH frontend (Vercel) and backend (Render) domains
 # Format: https://domain (no trailing slash)
-_default_csrf_origins = 'http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app,https://pie-global-funitures.onrender.com'
+_default_csrf_origins = 'http://localhost:3000,http://localhost:5173,https://pie-global-funitures.vercel.app,https://pie-global-funitures.onrender.com,https://pieglobalfunitures.co.ke,https://www.pieglobalfunitures.co.ke'
 
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
