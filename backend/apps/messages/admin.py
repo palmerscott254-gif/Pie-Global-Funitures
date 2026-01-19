@@ -11,7 +11,6 @@ class UserMessageAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created_at', 'replied_at')
     search_fields = ('name', 'email', 'phone', 'message')
     readonly_fields = ('id', 'created_at', 'updated_at', 'formatted_message', 'contact_info')
-    list_editable = ('status',)
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
     list_per_page = 25
