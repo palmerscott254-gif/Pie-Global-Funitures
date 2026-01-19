@@ -4,8 +4,8 @@ from .models import User
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
-    password = serializers.CharField(write_only=True, min_length=6)
-    password_confirm = serializers.CharField(write_only=True, min_length=6)
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model = User
@@ -18,10 +18,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return data
 
     def validate_email(self, value):
-        """Check if email already exists."""
-        if User.objects.filter(email=value.lower()).exists():
+        """Normalize and validate email uniqueness."""
+        normalized = value.strip().lower()
+        if User.objects.filter(email=normalized).exists():
             raise serializers.ValidationError('An account with this email already exists.')
-        return value.lower()
+        return normalized
 
     def create(self, validated_data):
         """Create a new user with hashed password."""

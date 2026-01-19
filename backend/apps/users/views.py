@@ -81,6 +81,12 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        if not user.is_active:
+            return Response(
+                {'success': False, 'error': 'Account is inactive. Please contact support.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         if not user.check_password(password):
             logger.warning(f"Failed login attempt for {email}")
             return Response(
