@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from django.utils.html import escape
 
 from .models import UserMessage
 from .serializers import (
@@ -46,7 +47,8 @@ class UserMessageViewSet(viewsets.ModelViewSet):
     Security: Rate limited to prevent spam/abuse
     """
     queryset = UserMessage.objects.all()
-    authentication_classes = [CsrfExemptSessionAuthentication]
+    # Default authentication requires CSRF for admin actions; public create is exempt below
+    authentication_classes = [SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['status']
     ordering_fields = ['created_at', 'updated_at']
@@ -61,9 +63,15 @@ class UserMessageViewSet(viewsets.ModelViewSet):
         return UserMessageListSerializer
     
     def get_permissions(self):
-        if self.action in ['create', 'list', 'retrieve']:
+        if self.action == 'create':
             return [AllowAny()]
         return [IsAdminUser()]
+
+    def get_authenticators(self):
+        # Public create should not enforce CSRF; admin actions should.
+        if self.action == 'create':
+            return [CsrfExemptSessionAuthentication()]
+        return [SessionAuthentication()]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -188,9 +196,8 @@ Message ID: {message.id}
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Sanitize reply text (basic HTML escaping is done by DRF)
-        # Update message
-        message.reply_text = reply_text
+        # Sanitize reply text to prevent XSS
+        message.reply_text = escape(reply_text)
         message.status = 'replied'
         message.replied_at = timezone.now()
         message.save()
