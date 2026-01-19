@@ -1,0 +1,11 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow admin/auth pages
+Disallow: /login
+Disallow: /register
+Disallow: /checkout
+
+# Sitemap location
+Sitemap: https://pieglobalfunitures.co.ke/sitemap.xml
