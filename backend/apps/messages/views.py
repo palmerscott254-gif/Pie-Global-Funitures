@@ -81,6 +81,7 @@ class UserMessageViewSet(viewsets.ModelViewSet):
 
         try:
             message = serializer.save()
+            logger.info(f"New contact message saved: ID={message.id}, Name={message.name}, Email={message.email}")
         except Exception:
             logger.exception("Failed to save contact message")
             return Response(
@@ -92,14 +93,13 @@ class UserMessageViewSet(viewsets.ModelViewSet):
             )
 
         # Send admin notification in background to avoid delaying response
-        email_sent = self._send_admin_notification_async(message)
+        self._send_admin_notification_async(message)
 
         return Response(
             {
                 'success': True,
                 'message': 'Thank you! We will get back to you soon.',
-                'id': message.id,
-                'email_sent': email_sent,
+                'id': str(message.id),
             },
             status=status.HTTP_201_CREATED,
         )
@@ -123,8 +123,11 @@ class UserMessageViewSet(viewsets.ModelViewSet):
             safe_email = (message.email or '').replace('\n', '').replace('\r', '')[:254]
             safe_phone = (message.phone or 'N/A').replace('\n', '').replace('\r', '')[:20]
 
+            # Admin dashboard URL
+            admin_url = f"{settings.BACKEND_URL}/admin/messages/usermessage/{message.id}/change/"
+
             email_body = f"""
-New Customer Message
+New Customer Message Received
 {'='*50}
 
 From: {safe_name}
@@ -135,19 +138,27 @@ Message:
 {message.message[:1000]}
 
 {'='*50}
-Received: {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+Received: {message.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}
 Message ID: {message.id}
+
+View in Admin: {admin_url}
+
+---
+This is an automated notification from Pie Global Furniture.
             """
 
             safe_subject = f"New Message from {safe_name}".replace('\n', '').replace('\r', '')[:200]
 
+            recipients = getattr(settings, 'EMAIL_NOTIFICATIONS_TO', [settings.DEFAULT_FROM_EMAIL])
+            
             send_mail(
                 subject=safe_subject,
                 message=email_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=getattr(settings, 'EMAIL_NOTIFICATIONS_TO', [settings.DEFAULT_FROM_EMAIL]),
+                recipient_list=recipients,
                 fail_silently=True,
             )
+            logger.info(f"Admin notification email sent for message #{message.id} to {recipients}")
             return True
         except Exception:
             logger.exception("Failed to send notification email for message #%s", message.id)
