@@ -13,3 +13,7 @@ class UserAdmin(admin.ModelAdmin):
         ('Status', {'fields': ('is_active',)}),
         ('Timestamps', {'fields': ('created_at', 'updated_at')}),
     )
+    
+    def has_add_permission(self, request):
+        """Disable direct user creation in admin; use registration form instead"""
+        return False
