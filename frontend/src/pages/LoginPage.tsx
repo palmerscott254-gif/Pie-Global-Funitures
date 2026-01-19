@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaCheckCircle, FaShieldAlt, FaUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
-import { API_URL } from '../services/api';
+import { authApi } from '@/services/api';
 
 // This page is intentionally optional: browsing and checkout do not require login.
 // We provide a soft opt-in experience with social proof and low friction.
@@ -18,29 +18,7 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/users/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for session
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          const errorMessages = Object.values(data.errors).flat();
-          toast.error(errorMessages[0] as string || 'Login failed. Please try again.');
-        } else {
-          toast.error(data.error || 'Login failed. Please try again.');
-        }
-        return;
-      }
+      const data = await authApi.login({ email, password });
 
       toast.success('Signed in — welcome back!');
       // Store user info in localStorage for frontend use
@@ -54,7 +32,8 @@ const LoginPage = () => {
       navigate(redirectTo, { replace: true });
     } catch (err) {
       console.error('Login error:', err);
-      toast.error('Could not sign in. Please try again.');
+      const message = (err as any)?.response?.data?.error || (err as Error).message || 'Could not sign in. Please try again.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

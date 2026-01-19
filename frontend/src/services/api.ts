@@ -91,9 +91,23 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Add CSRF token if available (for session-based auth)
-    const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+    // Prefer cookie 'csrftoken' (Django default); fallback to meta tag
+    const getCookie = (name: string): string | null => {
+      if (typeof document === 'undefined') return null;
+      const cookies = document.cookie.split(';').map((c) => c.trim());
+      for (const c of cookies) {
+        if (c.startsWith(name + '=')) {
+          return decodeURIComponent(c.substring(name.length + 1));
+        }
+      }
+      return null;
+    };
+
+    const csrfCookie = getCookie('csrftoken');
+    const csrfMeta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+    const csrfToken = csrfCookie || csrfMeta;
     if (csrfToken) {
-      config.headers['X-CSRFToken'] = csrfToken;
+      (config.headers as any)['X-CSRFToken'] = csrfToken;
     }
     return config;
   },
@@ -186,6 +200,26 @@ export const aboutApi = {
   get: async () => {
     const response = await api.get<AboutPage[]>('/about/');
     return response.data[0]; // Assuming single about page
+  },
+};
+
+// Auth API (session-based)
+export const authApi = {
+  register: async (payload: { name: string; email: string; password: string; password_confirm: string }) => {
+    const response = await api.post('/auth/users/register/', payload);
+    return response.data;
+  },
+  login: async (payload: { email: string; password: string }) => {
+    const response = await api.post('/auth/users/login/', payload);
+    return response.data;
+  },
+  logout: async () => {
+    const response = await api.post('/auth/users/logout/');
+    return response.data;
+  },
+  me: async () => {
+    const response = await api.get('/auth/users/me/');
+    return response.data;
   },
 };
 

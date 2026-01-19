@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaGift, FaHeart, FaUserPlus } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
-import { API_URL } from '../services/api';
+import { authApi } from '@/services/api';
 
 // Registration is optional. We highlight the upside but keep a guest-friendly stance.
 const RegisterPage = () => {
@@ -26,31 +26,12 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/users/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for session
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          password_confirm: passwordConfirm,
-        }),
+      const data = await authApi.register({
+        name,
+        email,
+        password,
+        password_confirm: passwordConfirm,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          const errorMessages = Object.values(data.errors).flat();
-          toast.error(errorMessages[0] as string || 'Registration failed. Please try again.');
-        } else {
-          toast.error(data.error || 'Registration failed. Please try again.');
-        }
-        return;
-      }
 
       // Store user info in localStorage for frontend use
       localStorage.setItem('pgf-auth-current', JSON.stringify({ 
@@ -65,7 +46,8 @@ const RegisterPage = () => {
       navigate(redirectTo, { replace: true });
     } catch (err) {
       console.error('Registration error:', err);
-      toast.error('Could not create account. Please try again.');
+      const message = (err as any)?.response?.data?.error || (err as Error).message || 'Could not create account. Please try again.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
