@@ -229,7 +229,6 @@ if USE_S3 and HAS_AWS_CREDS:
 else:
     # Local file storage (development or when S3 disabled)
     MEDIA_URL = config('MEDIA_URL', default='/media/')
-    MEDIA_ROOT = BASE_DIR / 'media'
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -238,6 +237,9 @@ else:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+
+# Always define MEDIA_ROOT for local file access (uploads script, migrations, etc.)
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Media files (uploads) - defined in S3 or local storage config above
 
