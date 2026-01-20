@@ -80,7 +80,6 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
           }}
-          onLoadedData={() => console.log('Video loaded successfully')}
           onError={(e) => {
             console.error('Video error:', e);
             console.error('Video src:', video.video);

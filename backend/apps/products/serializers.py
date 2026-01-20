@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.conf import settings
+from apps.core.media_utils import get_absolute_media_url
 from .models import Product
 
 
@@ -26,31 +28,22 @@ class ProductSerializer(serializers.ModelSerializer):
     
     def get_main_image(self, obj):
         """Return absolute URL for main image"""
-        request = self.context.get('request')
-        if obj.main_image and hasattr(obj.main_image, 'url'):
-            if request is not None:
-                return request.build_absolute_uri(obj.main_image.url)
-            # Fallback if no request in context
-            from django.conf import settings
-            return f"{settings.BACKEND_URL}{obj.main_image.url}"
+        if obj.main_image:
+            return get_absolute_media_url(obj.main_image.url)
         return None
     
     def get_gallery(self, obj):
         """Return absolute URLs for gallery images"""
-        request = self.context.get('request')
-        if obj.gallery:
-            if isinstance(obj.gallery, list):
-                gallery_urls = []
-                for image_path in obj.gallery:
-                    if image_path:
-                        # Construct absolute URL for each gallery image
-                        if request is not None:
-                            full_url = request.build_absolute_uri(f"/media/{image_path}")
-                        else:
-                            from django.conf import settings
-                            full_url = f"{settings.BACKEND_URL}/media/{image_path}"
-                        gallery_urls.append(full_url)
-                return gallery_urls
+        if obj.gallery and isinstance(obj.gallery, list):
+            gallery_urls = []
+            for image_path in obj.gallery:
+                if image_path:
+                    # gallery items are paths stored as strings
+                    gallery_url = f"{settings.MEDIA_URL.rstrip('/')}/{image_path.lstrip('/')}"
+                    absolute_url = get_absolute_media_url(gallery_url)
+                    if absolute_url:
+                        gallery_urls.append(absolute_url)
+            return gallery_urls
         return []
     
     def validate_price(self, value):
@@ -90,11 +83,6 @@ class ProductListSerializer(serializers.ModelSerializer):
     
     def get_main_image(self, obj):
         """Return absolute URL for main image"""
-        request = self.context.get('request')
-        if obj.main_image and hasattr(obj.main_image, 'url'):
-            if request is not None:
-                return request.build_absolute_uri(obj.main_image.url)
-            # Fallback if no request in context
-            from django.conf import settings
-            return f"{settings.BACKEND_URL}{obj.main_image.url}"
+        if obj.main_image:
+            return get_absolute_media_url(obj.main_image.url)
         return None

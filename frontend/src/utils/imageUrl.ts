@@ -1,64 +1,63 @@
 /**
- * Utility function to ensure media URLs are absolute and properly formatted
+ * Centralized media URL handling for frontend
+ * Handles both S3 and backend-served media
+ * 
+ * IMPORTANT: Backend serializers now return absolute URLs in production,
+ * so the frontend should trust those URLs instead of reconstructing them.
+ */
+
+/**
+ * Get image URL with proper fallback handling
+ * 
+ * @param url - Image URL from backend (absolute or relative)
+ * @returns Absolute image URL or placeholder
  */
 export const getImageUrl = (url: string | null | undefined): string => {
   if (!url) {
     return '/placeholder-product.jpg'; // Fallback placeholder
   }
 
-  // If already absolute URL, return as-is
+  // Backend sends absolute URLs in production (S3 or backend-served)
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
 
-  // If backend sent a local /media path, rewrite to S3 bucket directly
-  if (url.startsWith('/media/') || url.startsWith('media/')) {
-    const s3Base = import.meta.env.VITE_S3_BASE_URL || 'https://pieglobal.s3.amazonaws.com';
-    const normalized = url.replace(/^\/?media\//, '');
-    return `${s3Base}/${normalized}`;
-  }
-
-  // If relative URL, prepend the backend URL
+  // Development fallback: prepend backend URL for relative paths
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-  const baseUrl = backendUrl.replace('/api', ''); // Remove /api suffix if present
+  const baseUrl = backendUrl.replace('/api', '').replace(/\/$/, '');
   
-  // Ensure URL starts with /
   const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
-  
   return `${baseUrl}${normalizedUrl}`;
 };
 
 /**
- * Utility function to ensure video URLs are absolute and properly formatted
+ * Get video URL with proper fallback handling
+ * 
+ * @param url - Video URL from backend (absolute or relative)
+ * @returns Absolute video URL or empty string
  */
 export const getVideoUrl = (url: string | null | undefined): string => {
   if (!url) {
-    console.warn('Video URL is null or undefined');
-    return ''; // Return empty string instead of null to prevent video element errors
+    console.warn('[VideoUrl] Video URL is null or undefined');
+    return ''; // Empty string prevents video element errors
   }
 
-  // If already absolute URL, return as-is
+  // Backend sends absolute URLs in production (S3 or backend-served)
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
 
-  // If backend sent a local /media path, rewrite to S3 bucket directly
-  if (url.startsWith('/media/') || url.startsWith('media/')) {
-    const s3Base = import.meta.env.VITE_S3_BASE_URL || 'https://pieglobal.s3.amazonaws.com';
-    const normalized = url.replace(/^\/?media\//, '');
-    const fullUrl = `${s3Base}/${normalized}`;
-    console.log('Video URL rewritten to S3:', fullUrl);
-    return fullUrl;
-  }
-
-  // If relative URL, prepend the backend URL
+  // Development fallback: prepend backend URL for relative paths
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-  const baseUrl = backendUrl.replace('/api', ''); // Remove /api suffix if present
+  const baseUrl = backendUrl.replace('/api', '').replace(/\/$/, '');
   
-  // Ensure URL starts with /
   const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
-  
-  const fullUrl = `${baseUrl}${normalizedUrl}`;
-  console.log('Video URL constructed:', fullUrl);
-  return fullUrl;
+  return `${baseUrl}${normalizedUrl}`;
+};
+
+/**
+ * Get placeholder image URL
+ */
+export const getPlaceholderImageUrl = (): string => {
+  return '/placeholder-product.jpg';
 };

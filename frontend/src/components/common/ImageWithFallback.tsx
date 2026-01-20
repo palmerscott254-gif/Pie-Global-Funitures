@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { getImageUrl } from '@/utils/imageUrl';
+import { getImageUrl, getPlaceholderImageUrl } from '@/utils/imageUrl';
 
 interface ImageWithFallbackProps {
   src: string;
@@ -10,11 +9,15 @@ interface ImageWithFallbackProps {
   loading?: 'lazy' | 'eager';
 }
 
+/**
+ * Image component with fallback handling and loading states
+ * Optimized for performance with lazy loading support
+ */
 const ImageWithFallback = ({
   src,
   alt,
   className = '',
-  fallbackSrc = '/placeholder-product.jpg',
+  fallbackSrc,
   loading = 'lazy',
 }: ImageWithFallbackProps) => {
   const [imgSrc, setImgSrc] = useState(getImageUrl(src));
@@ -24,7 +27,8 @@ const ImageWithFallback = ({
   const handleError = () => {
     if (!hasError) {
       setHasError(true);
-      setImgSrc(fallbackSrc);
+      // Use provided fallback or default placeholder
+      setImgSrc(fallbackSrc || getPlaceholderImageUrl());
     }
   };
 
@@ -39,17 +43,14 @@ const ImageWithFallback = ({
           <div className="w-8 h-8 border-3 border-gray-400 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
-      <motion.img
+      <img
         src={imgSrc}
         alt={alt}
-        className={className}
+        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}
         loading={loading}
         decoding="async"
         onError={handleError}
         onLoad={handleLoad}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoading ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
       />
     </div>
   );

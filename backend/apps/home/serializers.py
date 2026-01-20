@@ -1,46 +1,35 @@
 from rest_framework import serializers
+from apps.core.media_utils import get_absolute_media_url
 from .models import SliderImage, HomeVideo
 
+
 class SliderImageSerializer(serializers.ModelSerializer):
+    """Serializer for slider images with proper URL construction."""
     image = serializers.SerializerMethodField()
     
     class Meta:
         model = SliderImage
-        fields = "__all__"
+        fields = ['id', 'title', 'image', 'order', 'active', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
     
     def get_image(self, obj):
         """Return absolute URL for image (S3 or local)"""
-        from django.conf import settings
         if obj.image:
-            # If using S3 storage, image.url is already the S3 URL
-            if settings.USE_S3:
-                return obj.image.url
-            
-            # Local storage: prepend BACKEND_URL
-            image_url = obj.image.url
-            if image_url.startswith('http'):
-                return image_url
-            return f"{settings.BACKEND_URL}{image_url}"
+            return get_absolute_media_url(obj.image.url)
         return None
 
+
 class HomeVideoSerializer(serializers.ModelSerializer):
+    """Serializer for hero videos with proper URL construction."""
     video = serializers.SerializerMethodField()
     
     class Meta:
         model = HomeVideo
-        fields = "__all__"
+        fields = ['id', 'title', 'video', 'active', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
     
     def get_video(self, obj):
         """Return absolute URL for video (S3 or local)"""
-        from django.conf import settings
         if obj.video:
-            # If using S3 storage, video.url is already the S3 URL
-            if settings.USE_S3:
-                return obj.video.url
-            
-            # Local storage: prepend BACKEND_URL
-            video_url = obj.video.url
-            if video_url.startswith('http'):
-                return video_url
-            return f"{settings.BACKEND_URL}{video_url}"
+            return get_absolute_media_url(obj.video.url)
         return None

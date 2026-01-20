@@ -234,6 +234,8 @@ if USE_S3 and HAS_AWS_CREDS:
     logger.info(f"✅ S3 Storage configured: {AWS_S3_CUSTOM_DOMAIN}")
 else:
     # Local file storage (development or when S3 disabled)
+    # NOTE: In production (Render), use S3. Render's filesystem is ephemeral and media won't persist.
+    # MEDIA_URL is used for constructing absolute URLs in serializers, so it MUST always be set.
     MEDIA_URL = config('MEDIA_URL', default='/media/')
     STORAGES = {
         "default": {
@@ -248,6 +250,8 @@ else:
     logger = logging.getLogger('django')
     if not HAS_AWS_CREDS:
         logger.warning("⚠️  S3 credentials not configured. Using local storage.")
+        if not DEBUG:
+            logger.critical("🚨 CRITICAL: S3 credentials missing in production. Media uploads will FAIL on Render.")
     else:
         logger.warning("⚠️  USE_S3 is disabled. Using local storage.")
 

@@ -28,8 +28,6 @@ const HomePage = () => {
           aboutApi.get().catch(() => null),
         ]);
         
-        console.log('Videos API response:', videosResponse);
-        
         // Handle paginated or array response for sliders
         const slidersData = Array.isArray(slidersResponse) 
           ? slidersResponse 
@@ -39,8 +37,6 @@ const HomePage = () => {
         const videosData = Array.isArray(videosResponse) 
           ? videosResponse 
           : (videosResponse as any).results || [];
-        
-        console.log('Processed videos:', videosData);
         
         // Handle paginated or array response for products
         const products = Array.isArray(productsData) 
