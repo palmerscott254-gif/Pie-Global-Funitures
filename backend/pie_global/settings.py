@@ -242,13 +242,20 @@ else:
 # Media files (uploads) - defined in S3 or local storage config above
 
 # Base URL for serving media in production/development
-# Priority: 1. RENDER_EXTERNAL_URL (Render auto-set), 2. BACKEND_URL env var, 3. localhost default
-if render_url:
-    # Use Render's external URL if available
-    BACKEND_URL = render_url if '://' in render_url else f'https://{render_url}'
-else:
-    # Use explicit BACKEND_URL if set, otherwise default to localhost for dev
+# Priority: 1. Custom domain (pieglobalfunitures.co.ke), 2. RENDER_EXTERNAL_URL (Render auto-set), 3. BACKEND_URL env var, 4. localhost default
+# For production: use the custom domain or Render URL
+if DEBUG:
+    # Development: allow localhost
     BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
+else:
+    # Production: Use custom domain first, then Render URL, then env variable
+    BACKEND_URL = config('BACKEND_URL', default='https://pieglobalfunitures.co.ke')
+    if render_url:
+        # If running on Render, use Render's URL (Render sets this automatically)
+        render_url_full = render_url if '://' in render_url else f'https://{render_url}'
+        # Only override if it's different from custom domain
+        if 'onrender.com' in render_url_full:
+            BACKEND_URL = render_url_full
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
