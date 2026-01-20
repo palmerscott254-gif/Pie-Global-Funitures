@@ -96,6 +96,7 @@ const Slider = ({ images }: SliderProps) => {
               loading="eager"
               decoding="async"
               sizes="100vw"
+              crossOrigin="anonymous"
               onError={(e) => {
                 console.error('Image failed to load:', currentImage.image, e);
               }}

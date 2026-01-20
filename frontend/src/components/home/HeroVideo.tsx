@@ -72,6 +72,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           muted
           playsInline
           preload="metadata"
+          crossOrigin="anonymous"
           disablePictureInPicture
           disableRemotePlayback
           className="absolute inset-0 w-full h-full object-cover"

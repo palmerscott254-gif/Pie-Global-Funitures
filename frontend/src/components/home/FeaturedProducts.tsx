@@ -98,6 +98,7 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
                     alt={product.name}
                     loading="lazy"
                     decoding="async"
+                    crossOrigin="anonymous"
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder-product.jpg';
                     }}

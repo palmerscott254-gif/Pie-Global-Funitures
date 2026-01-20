@@ -2,6 +2,9 @@ from rest_framework import serializers
 from django.conf import settings
 from apps.core.media_utils import get_absolute_media_url
 from .models import Product
+import logging
+
+logger = logging.getLogger('django')
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -27,24 +30,34 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at', 'in_stock', 'discount_percentage']
     
     def get_main_image(self, obj):
-        """Return absolute URL for main image"""
-        if obj.main_image:
+        """Return absolute URL for main image. Always returns absolute URL for S3 CORS compliance."""
+        if not obj.main_image:
+            return None
+        try:
             return get_absolute_media_url(obj.main_image.url)
-        return None
+        except Exception as e:
+            logger.error(f"[ProductSerializer] Error getting image URL for product {obj.id}: {str(e)}")
+            return None
     
     def get_gallery(self, obj):
         """Return absolute URLs for gallery images"""
-        if obj.gallery and isinstance(obj.gallery, list):
-            gallery_urls = []
-            for image_path in obj.gallery:
-                if image_path:
+        if not obj.gallery or not isinstance(obj.gallery, list):
+            return []
+        
+        gallery_urls = []
+        for image_path in obj.gallery:
+            if image_path:
+                try:
                     # gallery items are paths stored as strings
                     gallery_url = f"{settings.MEDIA_URL.rstrip('/')}/{image_path.lstrip('/')}"
                     absolute_url = get_absolute_media_url(gallery_url)
                     if absolute_url:
                         gallery_urls.append(absolute_url)
-            return gallery_urls
-        return []
+                except Exception as e:
+                    logger.error(f"[ProductSerializer] Error processing gallery image {image_path}: {str(e)}")
+                    continue
+        
+        return gallery_urls
     
     def validate_price(self, value):
         """Ensure price is positive."""
@@ -82,7 +95,11 @@ class ProductListSerializer(serializers.ModelSerializer):
         ]
     
     def get_main_image(self, obj):
-        """Return absolute URL for main image"""
-        if obj.main_image:
+        """Return absolute URL for main image. Always returns absolute URL for S3 CORS compliance."""
+        if not obj.main_image:
+            return None
+        try:
             return get_absolute_media_url(obj.main_image.url)
-        return None
+        except Exception as e:
+            logger.error(f"[ProductListSerializer] Error getting image URL for product {obj.id}: {str(e)}")
+            return None
