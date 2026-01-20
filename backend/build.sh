@@ -12,6 +12,7 @@ python manage.py collectstatic --no-input
 python manage.py migrate
 
 # Import media records from JSON (if present)
+# Always use --skip-duplicates to prevent re-importing on every build
 if [ -f "media_records.json" ]; then
     echo "Importing media records from media_records.json..."
     python manage.py import_media --input media_records.json --skip-duplicates
