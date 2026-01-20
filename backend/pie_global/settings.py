@@ -222,10 +222,16 @@ if USE_S3 and HAS_AWS_CREDS:
     # S3 media settings
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
     
+    # Use custom S3 storage backends for optimal performance
     STORAGES = {
-        "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
-        "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
+        "default": {"BACKEND": "pie_global.storage.S3MediaStorage"},
+        "staticfiles": {"BACKEND": "pie_global.storage.S3StaticStorage"},
     }
+    
+    # Log S3 configuration
+    import logging
+    logger = logging.getLogger('django')
+    logger.info(f"✅ S3 Storage configured: {AWS_S3_CUSTOM_DOMAIN}")
 else:
     # Local file storage (development or when S3 disabled)
     MEDIA_URL = config('MEDIA_URL', default='/media/')
@@ -237,6 +243,13 @@ else:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+    
+    import logging
+    logger = logging.getLogger('django')
+    if not HAS_AWS_CREDS:
+        logger.warning("⚠️  S3 credentials not configured. Using local storage.")
+    else:
+        logger.warning("⚠️  USE_S3 is disabled. Using local storage.")
 
 # Always define MEDIA_ROOT for local file access (uploads script, migrations, etc.)
 MEDIA_ROOT = BASE_DIR / 'media'
