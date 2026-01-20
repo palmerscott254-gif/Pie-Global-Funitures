@@ -49,6 +49,7 @@ const ImageWithFallback = ({
         className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}
         loading={loading}
         decoding="async"
+        crossOrigin="anonymous"
         onError={handleError}
         onLoad={handleLoad}
       />

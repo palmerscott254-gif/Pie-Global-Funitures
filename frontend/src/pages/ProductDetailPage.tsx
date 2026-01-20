@@ -109,8 +109,9 @@ const ProductDetailPage = () => {
                     src={getImageUrl(img)}
                     alt={`${product.name} ${idx + 1}`}
                     className="w-full h-20 object-cover"
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
+                    crossOrigin="anonymous"
                     sizes="(max-width: 768px) 25vw, 10vw"
                   />
                 </button>
