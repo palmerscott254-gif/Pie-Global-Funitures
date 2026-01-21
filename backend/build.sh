@@ -11,6 +11,9 @@ python manage.py collectstatic --no-input
 # Apply database migrations
 python manage.py migrate
 
+# Initialize default about page (safe to run multiple times)
+python manage.py init_about_page
+
 # Import media records from JSON (if present)
 # Always use --skip-duplicates to prevent re-importing on every build
 if [ -f "media_records.json" ]; then
