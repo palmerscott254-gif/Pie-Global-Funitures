@@ -23,11 +23,14 @@ const ProductsPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.debug('[ProductsPage] Fetching products...', { category: selectedCategory });
         const params = selectedCategory ? { category: selectedCategory } : {};
         const data = await productsApi.getAll(params);
-        setProducts(data.results || []);
+        const products = data.results || [];
+        console.debug('[ProductsPage] Products loaded:', products.length);
+        setProducts(products);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('[ProductsPage] Error fetching products:', error);
       } finally {
         setLoading(false);
       }

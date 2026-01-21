@@ -21,6 +21,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.debug('[HomePage] Fetching home page data...');
+        
         const [slidersResponse, videosResponse, productsData, aboutData] = await Promise.all([
           homeApi.getSliders(),
           homeApi.getVideos(),
@@ -43,11 +45,17 @@ const HomePage = () => {
           ? productsData 
           : (productsData as any).results || [];
         
+        console.debug('[HomePage] Sliders loaded:', slidersData.length);
+        console.debug('[HomePage] Videos loaded:', videosData.length);
+        console.debug('[HomePage] Featured products loaded:', products.length);
+        console.debug('[HomePage] About page loaded:', aboutData?.headline);
+        
         setSliders(slidersData);
         setVideos(videosData);
         setFeaturedProducts(products);
         setAbout(aboutData);
       } catch (error) {
+        console.error('[HomePage] Error fetching data:', error);
         console.error('Error fetching homepage data:', error);
         if (error instanceof Error) {
           console.error('Error message:', error.message);

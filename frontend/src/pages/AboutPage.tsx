@@ -5,14 +5,35 @@ import type { AboutPage as AboutPageType } from '@/types';
 const AboutPage = () => {
   const [about, setAbout] = useState<AboutPageType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAbout = async () => {
       try {
+        console.debug('[AboutPage] Fetching about page data...');
         const data = await aboutApi.get();
-        setAbout(data);
+        console.debug('[AboutPage] Data fetched successfully:', data);
+        
+        if (!data) {
+          console.warn('[AboutPage] About API returned no data');
+          setError('About page content not available');
+        } else {
+          setAbout(data);
+          setError(null);
+        }
       } catch (error) {
-        console.error('Error fetching about page:', error);
+        console.error('[AboutPage] Error fetching about page:', error);
+        setError('Unable to load about page. Please try again later.');
+        
+        // Set fallback default about data
+        setAbout({
+          id: 0,
+          headline: 'About Pie Global Furniture',
+          body: 'Welcome to Pie Global Furniture. We provide quality furniture solutions for your home and office.',
+          mission: 'To provide affordable, high-quality furniture that enhances lives.',
+          vision: 'To be the leading furniture provider in East Africa.',
+          updated_at: new Date().toISOString(),
+        });
       } finally {
         setLoading(false);
       }
@@ -25,6 +46,17 @@ const AboutPage = () => {
     return (
       <div className="container-custom py-12 text-center">
         <div className="spinner mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (error && !about) {
+    return (
+      <div className="container-custom py-12">
+        <h1 className="section-title">About Us</h1>
+        <div className="max-w-4xl mx-auto">
+          <p className="text-center text-gray-600">About page content will be available soon.</p>
+        </div>
       </div>
     );
   }
