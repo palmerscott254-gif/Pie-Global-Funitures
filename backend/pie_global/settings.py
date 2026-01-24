@@ -214,6 +214,14 @@ HAS_AWS_CREDS = bool(AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and
 # Determine if S3 should be used for Django file storage
 USE_S3 = config('USE_S3', default=False, cast=bool)
 
+# Log storage decision inputs (without revealing secrets)
+import logging
+_logger = logging.getLogger('django')
+_logger.info(
+    f"Storage config → USE_S3={USE_S3}, HAS_AWS_CREDS={HAS_AWS_CREDS}, "
+    f"BUCKET={AWS_STORAGE_BUCKET_NAME}, KEY_SET={bool(AWS_ACCESS_KEY_ID)}, SECRET_SET={bool(AWS_SECRET_ACCESS_KEY)}"
+)
+
 if USE_S3 and HAS_AWS_CREDS:
     # S3 Storage backend for media and static files
     # S3 static settings
