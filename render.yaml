@@ -25,6 +25,8 @@ services:
         fromDatabase:
           name: pie-global-db
           property: connectionString
+        - key: USE_S3
+          value: True
       - key: AWS_ACCESS_KEY_ID
         sync: false  # Set manually in Render dashboard
       - key: AWS_SECRET_ACCESS_KEY
@@ -86,6 +88,8 @@ databases:
 #         fromDatabase:
 #           name: pie-global-db
 #           property: connectionString
+#       - key: USE_S3
+#         value: True
 #       - key: AWS_ACCESS_KEY_ID
 #         sync: false
 #       - key: AWS_SECRET_ACCESS_KEY
