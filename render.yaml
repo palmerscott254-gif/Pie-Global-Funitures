@@ -1,0 +1,97 @@
+services:
+  # Backend Django API
+  - type: web
+    name: pie-global-backend
+    runtime: python
+    buildCommand: |
+      cd backend &&
+      find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true &&
+      find . -type f -name "*.pyc" -delete 2>/dev/null || true &&
+      pip install --no-cache-dir -r requirements.txt &&
+      python manage.py migrate &&
+      python populate_s3_records.py &&
+      python manage.py collectstatic --no-input --clear
+    startCommand: cd backend && gunicorn pie_global.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: False
+      - key: DJANGO_ALLOWED_HOSTS
+        value: pie-global-funitures.onrender.com,pieglobalfunitures.co.ke,www.pieglobalfunitures.co.ke
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pie-global-db
+          property: connectionString
+      - key: AWS_ACCESS_KEY_ID
+        sync: false  # Set manually in Render dashboard
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: AWS_STORAGE_BUCKET_NAME
+        value: pieglobal
+    healthCheckPath: /api/products/
+    autoDeploy: true
+
+  # Frontend React App
+  - type: web
+    name: pie-global-frontend
+    runtime: node
+    buildCommand: cd frontend && rm -rf node_modules/.cache && npm install && npm run build
+    startCommand: cd frontend && npm run preview -- --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: VITE_API_URL
+        value: https://pie-global-funitures.onrender.com
+    healthCheckPath: /
+    autoDeploy: true
+
+# Database
+databases:
+  - name: pie-global-db
+    databaseName: pieglobal
+    user: pieglobal_user
+    plan: free  # Change to 'starter' or higher for production
+
+# Alternative: Single Service Configuration
+# If you prefer to serve the React app as static files from Django:
+# 
+# services:
+#   - type: web
+#     name: pie-global-fullstack
+#     runtime: python
+#     buildCommand: |
+#       cd backend &&
+#       find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true &&
+#       find . -type f -name "*.pyc" -delete 2>/dev/null || true &&
+#       pip install --no-cache-dir -r requirements.txt &&
+#       cd ../frontend && rm -rf node_modules/.cache && npm install && npm run build &&
+#       cd ../backend &&
+#       python manage.py migrate &&
+#       python populate_s3_records.py &&
+#       python manage.py collectstatic --no-input --clear
+#     startCommand: cd backend && gunicorn pie_global.wsgi:application
+#     envVars:
+#       - key: PYTHON_VERSION
+#         value: 3.12.3
+#       - key: DJANGO_SECRET_KEY
+#         generateValue: true
+#       - key: DJANGO_DEBUG
+#         value: False
+#       - key: DJANGO_ALLOWED_HOSTS
+#         value: pie-global-funitures.onrender.com,pieglobalfunitures.co.ke
+#       - key: DATABASE_URL
+#         fromDatabase:
+#           name: pie-global-db
+#           property: connectionString
+#       - key: AWS_ACCESS_KEY_ID
+#         sync: false
+#       - key: AWS_SECRET_ACCESS_KEY
+#         sync: false
+#       - key: AWS_STORAGE_BUCKET_NAME
+#         value: pieglobal
+#     staticPublishPath: ./frontend/dist
+#     healthCheckPath: /api/products/
+#     autoDeploy: true
