@@ -9,12 +9,8 @@ services:
       find . -type f -name "*.pyc" -delete 2>/dev/null || true &&
       pip install --no-cache-dir -r requirements.txt &&
       python manage.py migrate &&
-      if [ "$USE_S3" = "True" ]; then 
-        echo "🔄 Syncing S3 media into DB...";
-        python manage.py sync_s3_to_db;
-      else 
-        echo "⏭️  Skipping S3 sync (USE_S3 disabled)"; 
-      fi &&
+      echo "🔄 Syncing S3 media into DB..." &&
+      python manage.py sync_s3_to_db &&
       python populate_s3_records.py &&
       python manage.py collectstatic --no-input --clear
     startCommand: cd backend && gunicorn pie_global.wsgi:application
@@ -78,12 +74,8 @@ databases:
 #       cd ../frontend && rm -rf node_modules/.cache && npm install && npm run build &&
 #       cd ../backend &&
 #       python manage.py migrate &&
-#       if [ "$USE_S3" = "True" ]; then 
-#         echo "🔄 Syncing S3 media into DB...";
-#         python manage.py sync_s3_to_db;
-#       else 
-#         echo "⏭️  Skipping S3 sync (USE_S3 disabled)"; 
-#       fi &&
+#       echo "🔄 Syncing S3 media into DB..." &&
+#       python manage.py sync_s3_to_db &&
 #       python populate_s3_records.py &&
 #       python manage.py collectstatic --no-input --clear
 #     startCommand: cd backend && gunicorn pie_global.wsgi:application
