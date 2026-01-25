@@ -106,11 +106,7 @@ const Slider = ({ images }: SliderProps) => {
             <img
               src={getImageUrl(currentImage.image)}
               alt="Gallery"
-<<<<<<< HEAD
-              className="max-w-full max-h-full w-auto h-auto object-contain"
-=======
-              className="w-full h-full object-contain bg-gray-50"
->>>>>>> 56fbfbe1a35581e021756017b9f40598892c840f
+              className="w-full h-full object-cover"
               loading="eager"
               decoding="async"
               sizes="100vw"
