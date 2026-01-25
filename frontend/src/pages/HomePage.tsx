@@ -79,10 +79,13 @@ const HomePage = () => {
       {/* Always render hero with video + first slider as fallback */}
       <HeroVideo video={videos[0]} slider={sliders[0]} />
 
-      {/* Subtle divider between hero and strip slider */}
+      {/* Premium glassy transition between hero and slider */}
       {sliders.length > 1 && (
-        <div className="flex justify-center px-6 sm:px-10">
-          <div className="w-full max-w-6xl h-px sm:h-[1.5px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-8 sm:my-10" />
+        <div className="relative flex justify-center px-6 sm:px-10 my-10 sm:my-12">
+          <div className="w-full max-w-6xl h-[8px] sm:h-[10px] rounded-full bg-gradient-to-r from-transparent via-primary-200/50 to-transparent backdrop-blur-md shadow-[0_0_40px_rgba(0,0,0,0.08)]" />
+          <div className="pointer-events-none absolute inset-0 flex justify-center">
+            <div className="w-2/3 max-w-3xl h-full blur-[20px] bg-gradient-to-r from-primary-300/30 via-secondary-300/25 to-primary-300/30 rounded-full" />
+          </div>
         </div>
       )}
 
