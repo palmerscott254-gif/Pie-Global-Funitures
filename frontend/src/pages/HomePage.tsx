@@ -79,6 +79,13 @@ const HomePage = () => {
       {/* Always render hero with video + first slider as fallback */}
       <HeroVideo video={videos[0]} slider={sliders[0]} />
 
+      {/* Subtle divider between hero and strip slider */}
+      {sliders.length > 1 && (
+        <div className="flex justify-center px-6 sm:px-10">
+          <div className="w-full max-w-6xl h-px sm:h-[1.5px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-8 sm:my-10" />
+        </div>
+      )}
+
       {/* Render full slider carousel when we have multiple slides */}
       {sliders.length > 1 && <Slider images={sliders} />}
 
