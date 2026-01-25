@@ -34,7 +34,9 @@ class ProductSerializer(serializers.ModelSerializer):
         if not obj.main_image:
             return None
         try:
-            return get_absolute_media_url(obj.main_image.url)
+            raw_url = str(obj.main_image.url)
+            sanitized = self._sanitize_media_url(raw_url)
+            return get_absolute_media_url(sanitized)
         except Exception as e:
             logger.error(f"[ProductSerializer] Error getting image URL for product {obj.id}: {str(e)}")
             return None
@@ -48,9 +50,17 @@ class ProductSerializer(serializers.ModelSerializer):
         for image_path in obj.gallery:
             if image_path:
                 try:
-                    # gallery items are paths stored as strings
-                    gallery_url = f"{settings.MEDIA_URL.rstrip('/')}/{image_path.lstrip('/')}"
-                    absolute_url = get_absolute_media_url(gallery_url)
+                    sanitized = self._sanitize_media_url(image_path)
+                    if not sanitized:
+                        continue
+
+                    if sanitized.startswith('http://') or sanitized.startswith('https://'):
+                        absolute_url = sanitized
+                    else:
+                        # gallery items are stored as relative paths
+                        gallery_url = f"{settings.MEDIA_URL.rstrip('/')}/{sanitized.lstrip('/')}"
+                        absolute_url = get_absolute_media_url(gallery_url)
+
                     if absolute_url:
                         gallery_urls.append(absolute_url)
                 except Exception as e:
@@ -58,6 +68,17 @@ class ProductSerializer(serializers.ModelSerializer):
                     continue
         
         return gallery_urls
+
+    @staticmethod
+    def _sanitize_media_url(url_value: str):
+        """Normalize stored media paths to avoid double /media/ prefixes."""
+        if not url_value:
+            return None
+        url_str = str(url_value)
+        # Deduplicate a single extra media/ prefix
+        url_str = url_str.replace('/media/media/', '/media/', 1)
+        url_str = url_str.replace('media/media/', 'media/', 1)
+        return url_str
     
     def validate_price(self, value):
         """Ensure price is positive."""

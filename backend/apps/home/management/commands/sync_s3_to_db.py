@@ -247,15 +247,21 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'Error listing S3 product files: {e}'))
             return
 
-        # Get existing database records
-        existing_products = {prod.main_image.name: prod for prod in Product.objects.all() if prod.main_image}
+        # Normalize S3 keys so we avoid double "media/" prefixes when saving to storage
+        normalized_s3_files = {self._normalize_s3_key(key) for key in s3_files}
+
+        # Get existing database records, keyed by normalized path
+        existing_products = {
+            self._normalize_s3_key(prod.main_image.name): prod
+            for prod in Product.objects.all() if prod.main_image
+        }
         empty_products = list(Product.objects.filter(main_image='') | Product.objects.filter(main_image__isnull=True))
         self.stdout.write(f'Found {len(existing_products)} products in database with images')
         self.stdout.write(f'Found {len(empty_products)} products in database WITHOUT images')
 
-        # Update empty products with S3 files
+        # Update empty products with S3 files, using normalized paths
         updated_count = 0
-        for s3_key in list(s3_files):
+        for s3_key in list(normalized_s3_files):
             if empty_products:
                 prod = empty_products.pop(0)
                 if dry_run:
@@ -265,11 +271,21 @@ class Command(BaseCommand):
                     prod.save()
                     self.stdout.write(self.style.SUCCESS(f'Updated Product ID {prod.id}: {s3_key}'))
                 updated_count += 1
-                s3_files.remove(s3_key)
+                normalized_s3_files.remove(s3_key)
+
+        # Normalize existing products that already have images but with double prefixes
+        for norm_key, prod in existing_products.items():
+            if prod.main_image and prod.main_image.name != norm_key:
+                if dry_run:
+                    self.stdout.write(self.style.WARNING(f'Would normalize Product ID {prod.id}: {prod.main_image.name} -> {norm_key}'))
+                else:
+                    prod.main_image.name = norm_key
+                    prod.save(update_fields=['main_image'])
+                    self.stdout.write(self.style.SUCCESS(f'Normalized Product ID {prod.id}: {norm_key}'))
 
         # Create missing database records for remaining S3 files
         created_count = 0
-        for s3_key in s3_files:
+        for s3_key in normalized_s3_files:
             if s3_key not in existing_products:
                 filename = s3_key.split('/')[-1]
                 base_name = filename.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ')
@@ -307,7 +323,7 @@ class Command(BaseCommand):
         removed_count = 0
         if clean:
             for db_key, prod_obj in existing_products.items():
-                if db_key not in s3_files:
+                if db_key not in normalized_s3_files:
                     if dry_run:
                         self.stdout.write(self.style.WARNING(f'Would remove product image: {db_key} (ID: {prod_obj.id})'))
                     else:
@@ -316,3 +332,13 @@ class Command(BaseCommand):
                     removed_count += 1
 
         self.stdout.write(f'\nProduct Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
+
+    @staticmethod
+    def _normalize_s3_key(key: str) -> str:
+        """Remove leading 'media/' to avoid double prefix when storage adds location."""
+        if not key:
+            return key
+        key = str(key)
+        if key.startswith('media/'):
+            return key[len('media/'):]
+        return key
