@@ -1,0 +1,40 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadMediaFiles",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::pieglobal/media/*"
+        },
+        {
+            "Sid": "PublicReadStaticFiles",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::pieglobal/static/*"
+        },
+        {
+            "Sid": "ListBucket",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::pieglobal",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": [
+                        "media/*",
+                        "static/*"
+                    ]
+                }
+            }
+        }
+    ]
+}
