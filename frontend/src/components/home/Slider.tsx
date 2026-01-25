@@ -61,7 +61,7 @@ const Slider = ({ images }: SliderProps) => {
   if (!currentImage) return null;
 
   return (
-    <section className="relative h-[600px] bg-gray-900 overflow-hidden">
+    <section className="relative h-[380px] md:h-[480px] lg:h-[520px] bg-gray-900/80 overflow-hidden">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentIndex}
@@ -92,7 +92,7 @@ const Slider = ({ images }: SliderProps) => {
             <img
               src={getImageUrl(currentImage.image)}
               alt={currentImage.title || 'Slide image'}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain md:object-cover"
               loading="eager"
               decoding="async"
               sizes="100vw"
