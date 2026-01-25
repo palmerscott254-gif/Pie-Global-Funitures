@@ -4,9 +4,11 @@ This creates database entries for files that exist in S3 but not in the database
 """
 import boto3
 from botocore.config import Config
+from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.home.models import SliderImage, HomeVideo
+from apps.products.models import Product
 
 
 class Command(BaseCommand):
@@ -72,11 +74,17 @@ class Command(BaseCommand):
         self.stdout.write('='*50)
         self._sync_videos(s3_client, bucket_name, dry_run, clean)
 
+        # Sync products
+        self.stdout.write('\n' + '='*50)
+        self.stdout.write('Syncing Products...')
+        self.stdout.write('='*50)
+        self._sync_products(s3_client, bucket_name, dry_run, clean)
+
         self.stdout.write(self.style.SUCCESS('\n✓ Sync completed!'))
 
     def _sync_sliders(self, s3_client, bucket_name, dry_run, clean):
         """Sync slider images from S3 to database"""
-        prefix = 'home/sliders/'
+        prefix = 'media/home/sliders/'
         
         # Get all files in S3
         try:
@@ -149,7 +157,7 @@ class Command(BaseCommand):
 
     def _sync_videos(self, s3_client, bucket_name, dry_run, clean):
         """Sync home videos from S3 to database"""
-        prefix = 'home/videos/'
+        prefix = 'media/home/videos/'
         
         # Get all files in S3
         try:
@@ -218,3 +226,93 @@ class Command(BaseCommand):
                     removed_count += 1
 
         self.stdout.write(f'\nVideo Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
+
+    def _sync_products(self, s3_client, bucket_name, dry_run, clean):
+        """Sync product main images from S3 to database"""
+        prefix = 'media/products/main/'
+
+        # Get all files in S3
+        try:
+            response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+            s3_files = set()
+
+            if 'Contents' in response:
+                for obj in response['Contents']:
+                    key = obj['Key']
+                    if not key.endswith('/'):
+                        s3_files.add(key)
+
+            self.stdout.write(f'Found {len(s3_files)} product images in S3')
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f'Error listing S3 product files: {e}'))
+            return
+
+        # Get existing database records
+        existing_products = {prod.main_image.name: prod for prod in Product.objects.all() if prod.main_image}
+        empty_products = list(Product.objects.filter(main_image='') | Product.objects.filter(main_image__isnull=True))
+        self.stdout.write(f'Found {len(existing_products)} products in database with images')
+        self.stdout.write(f'Found {len(empty_products)} products in database WITHOUT images')
+
+        # Update empty products with S3 files
+        updated_count = 0
+        for s3_key in list(s3_files):
+            if empty_products:
+                prod = empty_products.pop(0)
+                if dry_run:
+                    self.stdout.write(self.style.WARNING(f'Would update Product ID {prod.id}: {s3_key}'))
+                else:
+                    prod.main_image = s3_key
+                    prod.save()
+                    self.stdout.write(self.style.SUCCESS(f'Updated Product ID {prod.id}: {s3_key}'))
+                updated_count += 1
+                s3_files.remove(s3_key)
+
+        # Create missing database records for remaining S3 files
+        created_count = 0
+        for s3_key in s3_files:
+            if s3_key not in existing_products:
+                filename = s3_key.split('/')[-1]
+                base_name = filename.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ')
+                product_name = f'Product {base_name}'.strip().title() or 'Product'
+
+                if dry_run:
+                    self.stdout.write(self.style.WARNING(f'Would create product for: {s3_key}'))
+                else:
+                    Product.objects.create(
+                        name=product_name,
+                        description='',
+                        short_description='',
+                        price=Decimal('0.01'),
+                        compare_at_price=None,
+                        category='other',
+                        tags=[],
+                        main_image=s3_key,
+                        gallery=[],
+                        stock=0,
+                        sku=None,
+                        dimensions='',
+                        material='',
+                        color='',
+                        weight='',
+                        featured=False,
+                        is_active=True,
+                        on_sale=False,
+                        meta_title='',
+                        meta_description='',
+                    )
+                    self.stdout.write(self.style.SUCCESS(f'Created product for: {s3_key}'))
+                created_count += 1
+
+        # Clean up database records for missing S3 files
+        removed_count = 0
+        if clean:
+            for db_key, prod_obj in existing_products.items():
+                if db_key not in s3_files:
+                    if dry_run:
+                        self.stdout.write(self.style.WARNING(f'Would remove product image: {db_key} (ID: {prod_obj.id})'))
+                    else:
+                        prod_obj.delete()
+                        self.stdout.write(self.style.ERROR(f'Removed product: {db_key} (ID: {prod_obj.id})'))
+                    removed_count += 1
+
+        self.stdout.write(f'\nProduct Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
