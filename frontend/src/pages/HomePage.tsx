@@ -76,15 +76,11 @@ const HomePage = () => {
   return (
     <div className="overflow-hidden">
       {/* Hero Video or Slider with Premium Component */}
-      {videos.length > 0 ? (
-        <HeroVideo video={videos[0]} />
-      ) : sliders.length > 1 ? (
-        <Slider images={sliders} />
-      ) : sliders.length === 1 ? (
-        <HeroVideo slider={sliders[0]} />
-      ) : (
-        <HeroVideo />
-      )}
+      {/* Always render hero with video + first slider as fallback */}
+      <HeroVideo video={videos[0]} slider={sliders[0]} />
+
+      {/* Render full slider carousel when we have multiple slides */}
+      {sliders.length > 1 && <Slider images={sliders} />}
 
       {/* Featured Products Section */}
       <FeaturedProducts products={featuredProducts} />

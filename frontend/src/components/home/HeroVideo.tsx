@@ -12,10 +12,11 @@ interface HeroVideoProps {
 const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(true); // Default to true to avoid desktop not loading
+  const [videoFailed, setVideoFailed] = useState(false);
 
   useEffect(() => {
-    // Defer video loading until hero is in viewport
+    // Defer video loading until hero is in viewport while keeping eager default
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
@@ -28,9 +29,6 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
 
     if (sectionRef.current) {
       observer.observe(sectionRef.current);
-    } else {
-      // Fallback: load immediately
-      setShouldLoadVideo(true);
     }
 
     return () => observer.disconnect();
@@ -63,7 +61,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   return (
     <section ref={sectionRef} className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
-      {video && video.video ? (
+      {video && video.video && !videoFailed ? (
         <video
           ref={videoRef}
           src={shouldLoadVideo ? getVideoUrl(video.video) || undefined : undefined}
@@ -85,6 +83,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
             console.error('Video error:', e);
             console.error('Video src:', video.video);
             console.error('Attempted URL:', getVideoUrl(video.video));
+            setVideoFailed(true);
           }}
         />
       ) : slider && slider.image ? (
