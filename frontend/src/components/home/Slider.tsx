@@ -8,20 +8,29 @@ interface SliderProps {
   images: SliderImage[];
 }
 
+/**
+ * Premium horizontal strip-style image slider
+ * - Compact height (25-30% viewport)
+ * - Full width, edge-to-edge images
+ * - Clean, minimal design with no text overlays
+ * - Smooth horizontal scrolling with subtle controls
+ * - Mobile-first optimized
+ */
 const Slider = ({ images }: SliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
 
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (images.length <= 1 || !autoplay) return;
 
     const interval = setInterval(() => {
       setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 5000);
+    }, 6000);
 
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, [images.length, autoplay]);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -53,6 +62,7 @@ const Slider = ({ images }: SliderProps) => {
       if (next >= images.length) return 0;
       return next;
     });
+    setAutoplay(true);
   };
 
   if (images.length === 0) return null;
@@ -61,7 +71,12 @@ const Slider = ({ images }: SliderProps) => {
   if (!currentImage) return null;
 
   return (
-    <section className="relative h-[380px] md:h-[480px] lg:h-[520px] bg-gray-900/80 overflow-hidden">
+    <section 
+      className="relative w-full h-[22vh] sm:h-[25vh] md:h-[28vh] lg:h-[30vh] bg-white overflow-hidden"
+      onMouseEnter={() => setAutoplay(false)}
+      onMouseLeave={() => setAutoplay(true)}
+    >
+      {/* Image Container */}
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentIndex}
@@ -72,98 +87,91 @@ const Slider = ({ images }: SliderProps) => {
           exit="exit"
           transition={{
             x: { type: 'spring', stiffness: 300, damping: 30 },
-            opacity: { duration: 0.2 },
+            opacity: { duration: 0.3 },
           }}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={1}
+          dragElastic={0.2}
           onDragEnd={(_, { offset, velocity }) => {
             const swipe = swipePower(offset.x, velocity.x);
-
             if (swipe < -swipeConfidenceThreshold) {
               paginate(1);
             } else if (swipe > swipeConfidenceThreshold) {
               paginate(-1);
             }
           }}
-          className="absolute inset-0"
+          className="absolute inset-0 cursor-grab active:cursor-grabbing"
         >
           {currentImage.image ? (
             <img
               src={getImageUrl(currentImage.image)}
-              alt={currentImage.title || 'Slide image'}
-              className="w-full h-full object-contain md:object-cover"
+              alt="Gallery"
+              className="w-full h-full object-cover"
               loading="eager"
               decoding="async"
               sizes="100vw"
               crossOrigin="anonymous"
-              onError={(e) => {
-                console.error('Image failed to load:', currentImage.image, e);
+              onError={() => {
+                console.error('Image failed to load:', currentImage.image);
               }}
             />
           ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <p className="text-gray-400">Image not available</p>
-            </div>
-          )}
-          
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-          {/* Slide Content */}
-          {currentImage.title && (
-            <div className="absolute bottom-20 left-0 right-0 text-center">
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-4xl md:text-6xl font-bold text-white mb-4"
-              >
-                {currentImage.title}
-              </motion.h2>
-            </div>
+            <div className="w-full h-full bg-gray-200" />
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows */}
+      {/* Subtle Navigation Arrows */}
       {images.length > 1 && (
         <>
-          <button
+          {/* Left Arrow */}
+          <motion.button
             onClick={() => paginate(-1)}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110 group"
-            aria-label="Previous slide"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-20 px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 group"
+            aria-label="Previous"
+            whileHover={{ x: -2 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <FaChevronLeft className="text-white text-2xl group-hover:text-primary-400 transition-colors" />
-          </button>
+            <FaChevronLeft className="text-xl sm:text-2xl opacity-60 group-hover:opacity-100 transition-opacity" />
+          </motion.button>
 
-          <button
+          {/* Right Arrow */}
+          <motion.button
             onClick={() => paginate(1)}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110 group"
-            aria-label="Next slide"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-20 px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 group"
+            aria-label="Next"
+            whileHover={{ x: 2 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <FaChevronRight className="text-white text-2xl group-hover:text-primary-400 transition-colors" />
-          </button>
+            <FaChevronRight className="text-xl sm:text-2xl opacity-60 group-hover:opacity-100 transition-opacity" />
+          </motion.button>
         </>
       )}
 
-      {/* Dots Indicator */}
+      {/* Minimal Progress Dots */}
       {images.length > 1 && (
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-3 z-10">
+        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-10 flex gap-1.5 sm:gap-2">
           {images.map((_, index) => (
-            <button
+            <motion.button
               key={index}
               onClick={() => {
                 setDirection(index > currentIndex ? 1 : -1);
                 setCurrentIndex(index);
+                setAutoplay(true);
               }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex
-                  ? 'w-12 bg-white'
-                  : 'w-2 bg-white/50 hover:bg-white/70'
-              }`}
+              className="transition-all duration-300"
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
               aria-label={`Go to slide ${index + 1}`}
-            />
+            >
+              <div
+                className={`rounded-full transition-all duration-300 ${
+                  index === currentIndex
+                    ? 'h-1.5 w-4 sm:h-2 sm:w-5 bg-gray-800'
+                    : 'h-1.5 w-1.5 sm:h-2 sm:w-2 bg-gray-400 hover:bg-gray-600'
+                }`}
+              />
+            </motion.button>
           ))}
         </div>
       )}
