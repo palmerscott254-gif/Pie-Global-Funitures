@@ -72,7 +72,7 @@ const Slider = ({ images }: SliderProps) => {
 
   return (
     <section 
-      className="relative w-full h-[22vh] sm:h-[25vh] md:h-[28vh] lg:h-[30vh] bg-white overflow-hidden"
+      className="relative w-full h-[22vh] sm:h-[25vh] md:h-[28vh] lg:h-[30vh] bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden flex items-center justify-center"
       onMouseEnter={() => setAutoplay(false)}
       onMouseLeave={() => setAutoplay(true)}
     >
@@ -100,13 +100,13 @@ const Slider = ({ images }: SliderProps) => {
               paginate(-1);
             }
           }}
-          className="absolute inset-0 cursor-grab active:cursor-grabbing"
+          className="absolute inset-0 cursor-grab active:cursor-grabbing flex items-center justify-center"
         >
           {currentImage.image ? (
             <img
               src={getImageUrl(currentImage.image)}
               alt="Gallery"
-              className="w-full h-full object-cover"
+              className="max-w-full max-h-full w-auto h-auto object-contain"
               loading="eager"
               decoding="async"
               sizes="100vw"
