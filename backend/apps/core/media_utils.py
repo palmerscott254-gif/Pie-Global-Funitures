@@ -23,6 +23,7 @@ def get_absolute_media_url(media_url):
     - Local storage URLs are prefixed with BACKEND_URL
     - Null/empty URLs return None safely
     - Already-absolute URLs are returned unchanged
+    - Deduplicates any extra /media/ prefixes
     - Errors are logged for debugging
     
     Args:
@@ -33,10 +34,10 @@ def get_absolute_media_url(media_url):
         
     Example:
         >>> get_absolute_media_url(obj.image.url)
-        'https://pieclobal.s3.amazonaws.com/media/products/image.jpg'
+        'https://pieclobal.s3.amazonaws.com/media/home/sliders/image.jpg'
         
         or (local storage):
-        'https://pie-global-funitures.onrender.com/media/products/image.jpg'
+        'https://pie-global-funitures.onrender.com/media/home/sliders/image.jpg'
     
     IMPORTANT for production:
     - S3 must have CORS configured for frontend domain
@@ -49,12 +50,17 @@ def get_absolute_media_url(media_url):
     try:
         media_str = str(media_url)
         
-        # If already absolute, return as-is (S3 URLs or previously constructed)
+        # If already absolute, deduplicate /media/ and return
         if media_str.startswith('http://') or media_str.startswith('https://'):
+            # Fix double /media/ in absolute URLs
+            media_str = media_str.replace('/media/media/', '/media/', 1)
             return media_str
         
         # If using S3 storage backend, URLs from storage are already absolute
+        # but may have double /media/ so deduplicate
         if settings.USE_S3:
+            media_str = media_str.replace('/media/media/', '/media/', 1)
+            media_str = media_str.replace('media/media/', 'media/', 1)
             return media_str
         
         # For local storage, prepend BACKEND_URL (used in development or Render with local media)
@@ -62,6 +68,8 @@ def get_absolute_media_url(media_url):
         backend_url = settings.BACKEND_URL.rstrip('/')
         media_path = media_str.lstrip('/')
         absolute_url = f"{backend_url}/{media_path}"
+        # Deduplicate any double /media/
+        absolute_url = absolute_url.replace('/media/media/', '/media/', 1)
         
         return absolute_url
         
