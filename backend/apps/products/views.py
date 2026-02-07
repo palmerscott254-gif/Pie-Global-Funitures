@@ -35,7 +35,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         """Allow admins to see inactive products."""
         queryset = Product.objects.all()
         if not self.request.user.is_staff:
-            queryset = queryset.filter(is_active=True)
+            queryset = queryset.filter(is_active=True, price__gte=1)
         return queryset
     
     @action(detail=False, methods=['get'])
