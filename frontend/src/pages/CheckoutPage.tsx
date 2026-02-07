@@ -94,7 +94,7 @@ const CheckoutPage = () => {
           price: parseFloat(item.price.toFixed(2)),
           qty: Math.max(1, Math.min(1000, item.quantity)), // Limit quantity range
         })),
-        total_amount: parseFloat(totalPrice.toFixed(2)),
+        total_amount: totalPrice.toFixed(2),
       };
 
       await ordersApi.create(orderData);

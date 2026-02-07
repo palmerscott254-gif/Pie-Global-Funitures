@@ -78,7 +78,7 @@ const Header = () => {
               className="h-10 md:h-12 w-auto object-contain"
               loading="eager"
               decoding="async"
-              fetchpriority="high"
+              fetchPriority="high"
             />
             <div className="text-2xl font-bold text-primary-600">
               Pie<span className="text-secondary-600">Global</span>

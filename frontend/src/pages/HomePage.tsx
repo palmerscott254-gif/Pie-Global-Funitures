@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { homeApi, productsApi, aboutApi } from '@/services/api';
-import { getImageUrl } from '@/utils/imageUrl';
 import type { SliderImage, Product, HomeVideo, AboutPage } from '@/types';
 import HeroVideo from '@/components/home/HeroVideo';
 import Slider from '@/components/home/Slider';

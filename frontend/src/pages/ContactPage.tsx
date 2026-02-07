@@ -37,7 +37,7 @@ const ContactPage = () => {
     setSubmitting(true);
 
     try {
-      const response = await messagesApi.create(sanitizedData);
+      await messagesApi.create(sanitizedData);
       toast.success('Thank you! We will get back to you soon.');
       setFormData({ name: '', email: '', phone: '', message: '' });
     } catch (error: any) {
