@@ -2,6 +2,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Product
 from .serializers import ProductSerializer, ProductListSerializer
@@ -35,7 +36,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         """Allow admins to see inactive products."""
         queryset = Product.objects.all()
         if not self.request.user.is_staff:
-            queryset = queryset.filter(is_active=True, price__gte=1)
+            queryset = (
+                queryset
+                .filter(price__gte=1)
+                .filter(Q(is_active=True) | Q(is_active=False, stock__gt=0))
+                .exclude(name__startswith='Product ')
+            )
         return queryset
     
     @action(detail=False, methods=['get'])
