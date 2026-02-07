@@ -23,6 +23,10 @@ else
     echo "No media_records.json found (skipping import)"
 fi
 
+# Populate real products (must run before S3 sync to ensure real products exist)
+echo "Populating real products..."
+python manage.py fix_production_products || echo "Product population skipped or failed"
+
 # Sync S3 files to database (only if enabled AND creds exist)
 if [ "$USE_S3" = "True" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "Syncing S3 files to database..."
