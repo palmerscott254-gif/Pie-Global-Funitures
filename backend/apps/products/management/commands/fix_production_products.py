@@ -10,7 +10,16 @@ from decimal import Decimal
 class Command(BaseCommand):
     help = 'Fix production products by deleting bad ones and adding real ones'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--safe-mode',
+            action='store_true',
+            help='Use get_or_create instead of update_or_create to preserve existing products',
+        )
+
     def handle(self, *args, **options):
+        safe_mode = options.get('safe_mode', False)
+        
         # Delete bad products
         bad_products = Product.objects.filter(price__lt=1)
         bad_count = bad_products.count()
@@ -130,22 +139,38 @@ class Command(BaseCommand):
         
         created = 0
         updated = 0
+        skipped = 0
         
         for product_data in products:
-            product, created_new = Product.objects.update_or_create(
-                slug=product_data['slug'],
-                defaults=product_data
-            )
-            
-            if created_new:
+            if safe_mode:
+                # Safe mode: only create if doesn't exist, never update
+                if Product.objects.filter(slug=product_data['slug']).exists():
+                    skipped += 1
+                    existing = Product.objects.get(slug=product_data['slug'])
+                    self.stdout.write(self.style.WARNING(f"⏭️  Skipped (exists): {existing.name}"))
+                    continue
+                product = Product.objects.create(**product_data)
                 created += 1
                 self.stdout.write(self.style.SUCCESS(f"✅ Created: {product.name}"))
             else:
-                updated += 1
-                self.stdout.write(self.style.WARNING(f"♻️  Updated: {product.name}"))
+                # Normal mode: create or update
+                product, created_new = Product.objects.update_or_create(
+                    slug=product_data['slug'],
+                    defaults=product_data
+                )
+                
+                if created_new:
+                    created += 1
+                    self.stdout.write(self.style.SUCCESS(f"✅ Created: {product.name}"))
+                else:
+                    updated += 1
+                    self.stdout.write(self.style.WARNING(f"♻️  Updated: {product.name}"))
         
         self.stdout.write("\n" + "="*60)
         self.stdout.write(self.style.SUCCESS(f"✅ Import complete!"))
         self.stdout.write(f"   Created: {created} products")
-        self.stdout.write(f"   Updated: {updated} products")
+        if safe_mode:
+            self.stdout.write(f"   Skipped: {skipped} products (already exist)")
+        else:
+            self.stdout.write(f"   Updated: {updated} products")
         self.stdout.write("="*60)

@@ -23,12 +23,12 @@ else
     echo "No media_records.json found (skipping import)"
 fi
 
-# NOTE: Commented out fix_production_products to preserve manually added products
-# Only run this manually when you need to reset products to baseline
-# echo "Populating real products..."
-# python manage.py fix_production_products || echo "Product population skipped or failed"
+# Populate real products (safe - uses get_or_create, won't overwrite existing)
+echo "Ensuring real products exist..."
+python manage.py ensure_products || echo "Product creation skipped or failed"
 
 # Sync S3 files to database (only if enabled AND creds exist)
+# Note: This only updates empty product records, doesn't create new ones
 if [ "$USE_S3" = "True" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "Syncing S3 files to database..."
     python manage.py sync_s3_to_db || echo "Sync skipped or failed"
