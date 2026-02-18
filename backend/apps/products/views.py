@@ -46,7 +46,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Get featured products only."""
-        products = self.get_queryset().filter(featured=True, is_active=True)[:8]
+        products = self.get_queryset().filter(featured=True, is_active=True)[:20]
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
