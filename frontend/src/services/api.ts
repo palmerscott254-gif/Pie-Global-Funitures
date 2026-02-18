@@ -141,7 +141,7 @@ api.interceptors.response.use(
 // Products API
 export const productsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await api.get<PaginatedResponse<Product>>('/products/', { params });
+    const response = await api.get<PaginatedResponse<Product> | Product[]>('/products/', { params });
     return response.data;
   },
 
@@ -198,8 +198,14 @@ export const messagesApi = {
 // About API
 export const aboutApi = {
   get: async () => {
-    const response = await api.get<AboutPage[]>('/about/');
-    return response.data[0]; // Assuming single about page
+    try {
+      const response = await api.get<AboutPage>('/about/current/');
+      return response.data;
+    } catch (error) {
+      // Fallback to list endpoint (sorted by backend ordering)
+      const response = await api.get<AboutPage[]>('/about/');
+      return response.data[0];
+    }
   },
 };
 

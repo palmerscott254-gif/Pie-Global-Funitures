@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { productsApi } from '@/services/api';
@@ -10,9 +10,13 @@ import ImageWithFallback from '@/components/common/ImageWithFallback';
 const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('q') || '');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
 
   useSEO({
     title: 'Shop Furniture - Pie Global Furniture',
@@ -20,24 +24,44 @@ const ProductsPage = () => {
     keywords: 'furniture shop, buy furniture Nairobi, sofas, beds, office furniture, dining tables',
   });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        console.debug('[ProductsPage] Fetching products...', { category: selectedCategory });
-        const params = selectedCategory ? { category: selectedCategory } : {};
-        const data = await productsApi.getAll(params);
-        const products = data.results || [];
-        console.debug('[ProductsPage] Products loaded:', products.length);
-        setProducts(products);
-      } catch (error) {
-        console.error('[ProductsPage] Error fetching products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const buildParams = (pageToLoad: number) => {
+    const params: Record<string, any> = { page: pageToLoad };
+    if (selectedCategory) params.category = selectedCategory;
+    if (searchTerm.trim()) params.search = searchTerm.trim();
+    return params;
+  };
 
-    fetchProducts();
-  }, [selectedCategory]);
+  const fetchProducts = async (pageToLoad: number, append = false) => {
+    try {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+      console.debug('[ProductsPage] Fetching products...', {
+        category: selectedCategory,
+        search: searchTerm,
+        page: pageToLoad,
+      });
+      const data = await productsApi.getAll(buildParams(pageToLoad));
+      const pageResults = Array.isArray(data) ? data : data.results || [];
+      setProducts((prev) => (append ? [...prev, ...pageResults] : pageResults));
+      const nextPageExists = !Array.isArray(data) && Boolean(data.next);
+      setHasMore(nextPageExists);
+      setTotalCount(!Array.isArray(data) && typeof data.count === 'number' ? data.count : pageResults.length);
+      setPage(pageToLoad);
+      console.debug('[ProductsPage] Products loaded:', pageResults.length);
+    } catch (error) {
+      console.error('[ProductsPage] Error fetching products:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(1, false);
+  }, [selectedCategory, searchTerm]);
 
   useEffect(() => {
     setSearchTerm(searchParams.get('q') || '');
@@ -53,15 +77,6 @@ const ProductsPage = () => {
     }
     setSearchParams(params, { replace: true });
   };
-
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) return products;
-    const term = searchTerm.toLowerCase();
-    return products.filter((product) =>
-      product.name.toLowerCase().includes(term) ||
-      (product.short_description || '').toLowerCase().includes(term)
-    );
-  }, [products, searchTerm]);
 
   const categories = [
     { value: '', label: 'All Products' },
@@ -110,14 +125,14 @@ const ProductsPage = () => {
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
+      {products.length > 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {filteredProducts.map((product, index) => (
+          {products.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
@@ -186,6 +201,24 @@ const ProductsPage = () => {
             View All Products
           </button>
         </motion.div>
+      )}
+
+      {/* Pagination */}
+      {hasMore && (
+        <div className="flex justify-center mt-10">
+          <button
+            onClick={() => fetchProducts(page + 1, true)}
+            className="btn-primary"
+            disabled={loadingMore}
+          >
+            {loadingMore ? 'Loading...' : 'Load More'}
+          </button>
+        </div>
+      )}
+      {totalCount !== null && (
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Showing {products.length} of {totalCount} products
+        </p>
       )}
     </div>
   );

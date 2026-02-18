@@ -11,19 +11,19 @@ logger = logging.getLogger('django')
 
 class AboutPageViewSet(viewsets.ModelViewSet):
     """ViewSet for About Page with error handling and logging."""
-    queryset = AboutPage.objects.all()
+    queryset = AboutPage.objects.all().order_by('-updated_at')
     serializer_class = AboutPageSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = None  # Disable pagination
     
     def get_queryset(self):
-        """Return all about pages for staff, only first for public."""
-        return AboutPage.objects.all()
+        """Return about pages ordered by most recently updated first."""
+        return AboutPage.objects.all().order_by('-updated_at')
     
     @action(detail=False, methods=['get'])
     def current(self, request):
-        """Get current/primary about page."""
-        about = AboutPage.objects.first()
+        """Get current/primary about page (most recently updated)."""
+        about = AboutPage.objects.order_by('-updated_at').first()
         if not about:
             logger.warning('[AboutAPI] No about page found')
             return Response(
