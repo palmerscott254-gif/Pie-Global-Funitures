@@ -22,10 +22,10 @@ class OrderAdmin(admin.ModelAdmin):
             "fields": ("name", "email", "phone")
         }),
         ("Shipping Address", {
-            "fields": ("address", "city", "postal_code", "country")
+            "fields": ("address", "city", "postal_code")
         }),
         ("Order Details", {
-            "fields": ("items", "total_amount", "status", "paid")
+            "fields": ("items", "total_amount", "status", "paid", "payment_method")
         }),
         ("Additional Information", {
             "fields": ("notes",)
