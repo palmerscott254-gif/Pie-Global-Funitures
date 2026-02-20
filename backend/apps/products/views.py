@@ -46,14 +46,14 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Get featured products only."""
-        products = self.get_queryset().filter(featured=True, is_active=True)[:20]
+        products = self.get_queryset().filter(featured=True, is_active=True)
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def on_sale(self, request):
         """Get products on sale."""
-        products = self.get_queryset().filter(on_sale=True, is_active=True)[:12]
+        products = self.get_queryset().filter(on_sale=True, is_active=True)
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
@@ -66,7 +66,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             products = self.get_queryset().filter(
                 category=cat_key, 
                 is_active=True
-            )[:4]
+            )
             result[cat_key] = ProductListSerializer(
                 products, 
                 many=True, 
