@@ -14,7 +14,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     List/Retrieve: Public access
     Create/Update/Delete: Admin only
     """
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.all()  # Start with all products, filtering happens in get_queryset()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = 'slug'
@@ -32,28 +32,22 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
     
     def get_queryset(self):
-        """Allow admins to see inactive products."""
-        queryset = Product.objects.all()
-        if not self.request.user.is_staff:
-            # Public: Hide only placeholder products (auto-generated with low prices and generic names)
-            queryset = queryset.exclude(
-                name__startswith='Product '
-            ).filter(
-                price__gte=1  # Hide placeholder products with 0.01 price
-            )
+        """Show all products regardless of is_active status. Only hide placeholder products (price < 1)."""
+        queryset = Product.objects.all().filter(price__gte=1)  # Only hide true placeholder products with price < 1
+        # Do NOT filter by is_active or name prefix - show all real products
         return queryset
     
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Get featured products only."""
-        products = self.get_queryset().filter(featured=True, is_active=True)
+        products = self.get_queryset().filter(featured=True)
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def on_sale(self, request):
         """Get products on sale."""
-        products = self.get_queryset().filter(on_sale=True, is_active=True)
+        products = self.get_queryset().filter(on_sale=True)
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
@@ -63,10 +57,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         categories = Product.CATEGORY_CHOICES
         result = {}
         for cat_key, cat_name in categories:
-            products = self.get_queryset().filter(
-                category=cat_key, 
-                is_active=True
-            )
+            products = self.get_queryset().filter(category=cat_key)
             result[cat_key] = ProductListSerializer(
                 products, 
                 many=True, 
