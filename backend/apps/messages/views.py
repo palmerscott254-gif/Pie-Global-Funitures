@@ -104,10 +104,6 @@ class UserMessageViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
     
-    def perform_create(self, serializer):
-        """Save the message and return instance."""
-        return serializer.save()
-    
     def _send_admin_notification_safe(self, message):
         try:
             # Skip sending if SMTP is not properly configured to avoid long hangs

@@ -12,22 +12,6 @@ export const formatPrice = (price: string | number): string => {
 };
 
 /**
- * Get full media URL
- * Handles both absolute URLs from API and relative paths
- */
-export const getMediaUrl = (path: string | undefined | null): string => {
-  if (!path) return '/placeholder-product.jpg';
-  // Already an absolute URL (from updated serializers)
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  // Relative path - prepend backend URL (not API URL)
-  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-  const baseUrl = apiBaseUrl.replace('/api', ''); // Remove /api suffix
-  // Ensure path starts with /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${baseUrl}${normalizedPath}`;
-};
-
-/**
  * Truncate text to specified length
  */
 export const truncateText = (text: string, maxLength: number): string => {

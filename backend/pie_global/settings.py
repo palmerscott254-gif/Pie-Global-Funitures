@@ -216,8 +216,8 @@ USE_S3 = config('USE_S3', default=False, cast=bool)
 
 # Log storage decision inputs (without revealing secrets)
 import logging
-_logger = logging.getLogger('django')
-_logger.info(
+logger = logging.getLogger('django')
+logger.info(
     f"Storage config → USE_S3={USE_S3}, HAS_AWS_CREDS={HAS_AWS_CREDS}, "
     f"BUCKET={AWS_STORAGE_BUCKET_NAME}, KEY_SET={bool(AWS_ACCESS_KEY_ID)}, SECRET_SET={bool(AWS_SECRET_ACCESS_KEY)}"
 )
@@ -237,8 +237,6 @@ if USE_S3 and HAS_AWS_CREDS:
     }
     
     # Log S3 configuration
-    import logging
-    logger = logging.getLogger('django')
     logger.info(f"✅ S3 Storage configured: {AWS_S3_CUSTOM_DOMAIN}")
 else:
     # Local file storage (development or when S3 disabled)
@@ -254,8 +252,6 @@ else:
         },
     }
     
-    import logging
-    logger = logging.getLogger('django')
     if not HAS_AWS_CREDS:
         logger.warning("⚠️  S3 credentials not configured. Using local storage.")
         if not DEBUG:
