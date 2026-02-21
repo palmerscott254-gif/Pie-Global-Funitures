@@ -32,6 +32,29 @@ python manage.py ensure_products || echo "Product creation skipped or failed"
 if [ "$USE_S3" = "True" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "Syncing S3 files to database..."
     python manage.py sync_s3_to_db || echo "Sync skipped or failed"
+    
+    # GENIUS LOGIC: Ensure ALL products are visible after sync
+    # This automatically makes all products active and featured during deployment
+    echo "Ensuring all products are visible..."
+    python -c "
+import django
+django.setup()
+from apps.products.models import Product
+products = Product.objects.all()
+updated = 0
+for p in products:
+    changed = False
+    if not p.is_active:
+        p.is_active = True
+        changed = True
+    if not p.featured:
+        p.featured = True
+        changed = True
+    if changed:
+        p.save(update_fields=['is_active', 'featured'])
+        updated += 1
+print(f'✅ Made {products.count()} products visible ({updated} updated)')
+" || echo "Visibility update skipped or failed"
 else
     echo "Skipping S3 sync (USE_S3 disabled or AWS creds missing)"
 fi
