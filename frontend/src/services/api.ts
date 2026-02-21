@@ -141,7 +141,9 @@ api.interceptors.response.use(
 // Products API
 export const productsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await api.get<PaginatedResponse<Product> | Product[]>('/products/', { params });
+    // Add cache-busting timestamp to force fresh data
+    const allParams = { ...params, _t: Date.now() };
+    const response = await api.get<PaginatedResponse<Product> | Product[]>('/products/', { params: allParams });
     return response.data;
   },
 
