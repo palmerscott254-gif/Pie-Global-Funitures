@@ -141,9 +141,12 @@ api.interceptors.response.use(
 // Products API
 export const productsApi = {
   getAll: async (params?: Record<string, any>) => {
-    // Add cache-busting timestamp to force fresh data
-    const allParams = { ...params, _t: Date.now() };
+    // AGGRESSIVE cache-busting: Add timestamp + random value to force fresh data
+    const cacheBuster = `${Date.now()}-${Math.random()}`;
+    const allParams = { ...params, _cache: cacheBuster };
+    console.debug('[ProductsAPI] Fetching with cache buster:', cacheBuster);
     const response = await api.get<PaginatedResponse<Product> | Product[]>('/products/', { params: allParams });
+    console.debug('[ProductsAPI] Received products:', Array.isArray(response.data) ? response.data.length : response.data.results?.length);
     return response.data;
   },
 

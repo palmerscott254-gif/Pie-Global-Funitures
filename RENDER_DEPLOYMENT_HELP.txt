@@ -1,0 +1,18 @@
+#!/bin/bash
+# Deploy and force sync on Render
+# This script will trigger a fresh build with full product sync
+
+echo "🚀 FORCE REDEPLOYING RENDER WITH FULL PRODUCT SYNC"
+echo ""
+echo "INSTRUCTIONS:"
+echo "1. Go to Render Dashboard: https://dashboard.render.com"
+echo "2. Find 'pie-global-funitures' service"
+echo "3. Click 'Manual Deploy' or 'Deploy latest commit'"
+echo "4. Wait for deployment to complete (logs show 'Build successful')"
+echo "5. Check that products 9-30 are created in the sync step"
+echo ""
+echo "IF PRODUCTS STILL DON'T SYNC:"
+echo "- This likely means Render's database isn't persisting data between deployments"
+echo "- Contact Render support to ensure PostgreSQL database is properly attached"
+echo "- Or switch to a persistent Postgres database service"
+echo ""
