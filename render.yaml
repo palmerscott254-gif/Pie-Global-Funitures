@@ -62,7 +62,7 @@ services:
 # Database
 databases:
   - name: pie-global-db
-    databaseName: pieglobal
+    databaseName: pie_global_db
     user: pieglobal_user
     plan: free  # Change to 'starter' or higher for production
 
