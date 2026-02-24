@@ -197,3 +197,95 @@ video {
   perspective: 1000px;
   -webkit-perspective: 1000px;
 }
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS FOR E-COMMERCE
+   ============================================ */
+
+/* Image Optimization - Prevent stretching */
+img {
+  object-fit: cover;
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Aspect Ratio Container - Prevents layout shift */
+[style*="aspect-"] {
+  contain: layout style paint;
+}
+
+/* Touch Target Optimization (min 44-48px for mobile) */
+@media (max-width: 640px) {
+  button,
+  [role="button"],
+  a[href] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Product Card Containment */
+.group {
+  contain: layout style;
+}
+
+/* Product Grid Performance */
+.grid {
+  contain: layout;
+}
+
+/* Improved scroll performance */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  scrollbar-gutter: stable;
+}
+
+/* Accessibility: Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Link and input optimizations */
+a {
+  text-decoration-skip-ink: auto;
+  touch-action: manipulation;
+}
+
+input,
+textarea,
+select {
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Mobile performance tweaks */
+@media (max-width: 768px) {
+  * {
+    transition-duration: 150ms !important;
+  }
+
+  .shadow-md {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .shadow-lg {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .badge,
+  [role="status"] {
+    contain: size layout style paint;
+  }
+}

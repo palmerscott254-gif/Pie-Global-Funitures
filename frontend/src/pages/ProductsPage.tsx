@@ -94,29 +94,31 @@ const ProductsPage = () => {
   }
 
   return (
-    <div className="container-custom py-12">
-      <h1 className="section-title">Our Products</h1>
+    <div className="container-custom py-8 sm:py-12">
+      <h1 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-900">
+        Our Products
+      </h1>
 
       {/* Search bar */}
-      <div className="max-w-2xl mx-auto mb-8">
+      <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
         <input
           value={searchTerm}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search products by name or description"
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+          placeholder="Search products..."
+          className="w-full px-4 py-3 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
         />
       </div>
 
       {/* Category Filter */}
-      <div className="flex flex-wrap gap-2 justify-center mb-8">
+      <div className="flex flex-wrap gap-2 sm:gap-3 justify-center mb-8 sm:mb-10">
         {categories.map((cat) => (
           <button
             key={cat.value}
             onClick={() => setSelectedCategory(cat.value)}
-            className={`px-4 py-2 rounded-full transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
               selectedCategory === cat.value
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-primary-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {cat.label}
@@ -129,58 +131,76 @@ const ProductsPage = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-10 sm:mb-12"
         >
           {products.map((product, index) => (
             <motion.div
               key={product.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
+              transition={{ duration: 0.3, delay: Math.min(index * 0.02, 0.2) }}
             >
               <Link
                 to={`/products/${product.slug}`}
-                className="block bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+                className="group flex flex-col h-full bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
               >
-                <div className="relative h-56 overflow-hidden bg-gray-100">
+                {/* Image Container - Fixed Aspect Ratio */}
+                <div className="relative w-full overflow-hidden bg-gray-100 aspect-square flex-shrink-0">
                   <ImageWithFallback
                     src={product.main_image}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 will-change-transform"
                   />
+                  
+                  {/* Sale Badge */}
                   {product.on_sale && (
-                    <span className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
+                    <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">
                       SALE
                     </span>
                   )}
+                  
+                  {/* Featured Badge */}
                   {product.featured && (
-                    <span className="absolute top-3 left-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
-                      ⭐ Featured
+                    <span className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 text-xs font-bold rounded">
+                      Featured
                     </span>
                   )}
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-lg mb-2 text-gray-800 group-hover:text-primary-600 transition-colors">
+
+                {/* Product Info */}
+                <div className="flex flex-col flex-grow p-3 sm:p-4">
+                  {/* Title */}
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 line-clamp-2 mb-1.5 sm:mb-2 group-hover:text-primary-600 transition-colors">
                     {product.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {product.short_description}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-primary-600 font-bold text-xl">KSh {product.price}</span>
+
+                  {/* Short Description - Hidden on very small screens for performance */}
+                  {product.short_description && (
+                    <p className="hidden sm:block text-gray-600 text-xs mb-2 line-clamp-2 flex-grow">
+                      {product.short_description}
+                    </p>
+                  )}
+
+                  {/* Price Section */}
+                  <div className="flex items-baseline gap-2 mt-auto">
+                    <span className="text-primary-600 font-bold text-sm sm:text-base">
+                      KSh {product.price}
+                    </span>
                     {product.compare_at_price && (
-                      <span className="text-gray-400 line-through text-sm">
-                        KSh {product.compare_at_price}
+                      <span className="text-gray-400 line-through text-xs">
+                        {product.compare_at_price}
                       </span>
                     )}
                   </div>
+
+                  {/* Discount Badge */}
                   {product.discount_percentage && (
-                    <div className="mt-2">
-                      <span className="text-green-600 text-sm font-semibold">
-                        Save {product.discount_percentage}%
-                      </span>
-                    </div>
+                    <span className="text-green-600 text-xs font-semibold mt-1">
+                      Save {product.discount_percentage}%
+                    </span>
                   )}
                 </div>
               </Link>
@@ -191,21 +211,23 @@ const ProductsPage = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-20"
+          className="text-center py-16 sm:py-20"
         >
-          <p className="text-gray-600 text-lg">No products found{searchTerm ? ` for "${searchTerm}"` : ''} in this category.</p>
+          <p className="text-gray-600 text-base sm:text-lg mb-4">
+            No products found{searchTerm ? ` for "${searchTerm}"` : ''} in this category.
+          </p>
           <button
             onClick={() => setSelectedCategory('')}
-            className="mt-4 btn-primary"
+            className="btn-primary"
           >
             View All Products
           </button>
         </motion.div>
       )}
 
-      {/* Pagination */}
+      {/* Load More Button */}
       {hasMore && (
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mb-6">
           <button
             onClick={() => fetchProducts(page + 1, true)}
             className="btn-primary"
@@ -215,8 +237,10 @@ const ProductsPage = () => {
           </button>
         </div>
       )}
+
+      {/* Product Count */}
       {totalCount !== null && (
-        <p className="text-center text-sm text-gray-500 mt-4">
+        <p className="text-center text-xs sm:text-sm text-gray-500">
           Showing {products.length} of {totalCount} products
         </p>
       )}

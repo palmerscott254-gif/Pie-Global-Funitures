@@ -61,38 +61,40 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="container-custom">
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10 sm:mb-12 md:mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900">
             Featured Collection
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Handpicked pieces that define modern elegance
           </p>
         </motion.div>
 
+        {/* Products Grid */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-10 sm:mb-12 md:mb-16"
         >
-          {products.map((product) => (
+          {products.map((product, index) => (
             <motion.div key={product.id} variants={itemVariants}>
               <Link
                 to={`/products/${product.slug}`}
-                className="group block bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+                className="group flex flex-col h-full bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
               >
-                {/* Image Container */}
-                <div className="relative h-64 overflow-hidden bg-gray-100">
+                {/* Image Container - Fixed Aspect Ratio */}
+                <div className="relative w-full overflow-hidden bg-gray-100 aspect-square flex-shrink-0">
                   <img
                     src={getImageUrl(product.main_image)}
                     alt={product.name}
@@ -102,60 +104,67 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder-product.jpg';
                     }}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 will-change-transform"
                   />
                   
-                  {/* Overlay on Hover */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                  {/* Quick Action Overlay - Only show on hover for desktop */}
+                  <div className="hidden sm:flex absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center gap-3">
                     <button
                       onClick={(e) => handleAddToCart(product, e)}
-                      className="p-3 bg-white rounded-full text-primary-600 hover:bg-primary-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                      className="p-2.5 sm:p-3 bg-white rounded-full text-primary-600 hover:bg-primary-600 hover:text-white transition-all duration-300 transform hover:scale-110"
                       title="Add to Cart"
                     >
-                      <FaShoppingCart size={20} />
+                      <FaShoppingCart size={18} />
                     </button>
-                    <div className="p-3 bg-white rounded-full text-primary-600 hover:bg-primary-600 hover:text-white transition-all duration-300 transform hover:scale-110">
-                      <FaEye size={20} />
-                    </div>
+                    <a
+                      href={`/products/${product.slug}`}
+                      className="p-2.5 sm:p-3 bg-white rounded-full text-primary-600 hover:bg-primary-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                      title="View Details"
+                    >
+                      <FaEye size={18} />
+                    </a>
                   </div>
 
                   {/* Badges */}
                   {product.on_sale && (
-                    <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">
                       Sale
-                    </div>
+                    </span>
                   )}
                   {product.featured && (
-                    <div className="absolute top-4 right-4 bg-primary-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    <span className="absolute top-2 left-2 bg-primary-600 text-white px-2 py-1 text-xs font-bold rounded">
                       Featured
-                    </div>
+                    </span>
                   )}
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-800 group-hover:text-primary-600 transition-colors">
+                {/* Product Info */}
+                <div className="flex flex-col flex-grow p-3 sm:p-4">
+                  {/* Title */}
+                  <h3 className="text-sm sm:text-base font-semibold mb-1.5 text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors">
                     {product.name}
                   </h3>
-                  
+
+                  {/* Description - Responsive */}
                   {product.short_description && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    <p className="hidden sm:block text-xs text-gray-600 line-clamp-2 mb-2 flex-grow">
                       {product.short_description}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-primary-600">
+                  {/* Price and Stock */}
+                  <div className="mt-auto">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="font-bold text-primary-600 text-sm sm:text-base">
                         KSh {product.price}
                       </span>
                       {product.compare_at_price && (
-                        <span className="text-sm text-gray-400 line-through">
+                        <span className="text-xs text-gray-400 line-through">
                           KSh {product.compare_at_price}
                         </span>
                       )}
                     </div>
-                    
+
                     {!product.in_stock && (
                       <span className="text-xs text-red-500 font-semibold">
                         Out of Stock
@@ -173,12 +182,12 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-12"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center"
         >
           <Link
             to="/products"
-            className="inline-block px-10 py-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-full font-semibold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+            className="inline-block px-8 sm:px-10 py-3 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg sm:rounded-full font-semibold text-base sm:text-lg transition-all duration-300 hover:shadow-lg active:scale-95"
           >
             Explore All Products
           </Link>
