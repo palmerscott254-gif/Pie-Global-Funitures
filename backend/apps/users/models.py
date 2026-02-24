@@ -28,6 +28,16 @@ class User(models.Model):
         """Check if the provided password matches the stored hash."""
         return check_password(raw_password, self.password)
 
+    @property
+    def is_authenticated(self):
+        """Compatibility with Django auth checks used by DRF throttling."""
+        return True
+
+    @property
+    def is_anonymous(self):
+        """Compatibility with Django auth checks for anonymous users."""
+        return False
+
     def save(self, *args, **kwargs):
         """Override save to ensure password is hashed."""
         # Only hash if password looks like plain text (doesn't start with algorithm prefix)
