@@ -84,6 +84,7 @@ class Command(BaseCommand):
 
     def _sync_sliders(self, s3_client, bucket_name, dry_run, clean):
         """Sync slider images from S3 to database"""
+        from django.db import IntegrityError
         prefix = 'media/home/sliders/'
         
         # Get all files in S3
@@ -123,6 +124,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f'Updated ID {slider.id}: {s3_key}'))
                 updated_count += 1
                 s3_files.remove(s3_key)  # Remove from set to avoid re-processing
+                existing_sliders[s3_key] = slider  # Update the dict to avoid re-creating
 
         # Create missing database records for remaining S3 files
         created_count = 0
@@ -132,20 +134,29 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
                 else:
-                    # Use get_or_create to avoid duplicate key errors on re-runs
-                    slider, created = SliderImage.objects.get_or_create(
-                        image=s3_key,
-                        defaults={
-                            'title': f'Slider {filename}',
-                            'active': True,
-                            'order': 0
-                        }
-                    )
-                    if created:
-                        self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
-                        created_count += 1
-                    else:
-                        self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+                    try:
+                        # Use get_or_create to avoid duplicate key errors on re-runs
+                        slider, created = SliderImage.objects.get_or_create(
+                            image=s3_key,
+                            defaults={
+                                'title': f'Slider {filename}',
+                                'active': True,
+                                'order': 0
+                            }
+                        )
+                        if created:
+                            self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
+                            created_count += 1
+                        else:
+                            self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+                    except IntegrityError as e:
+                        # Handle race condition where record exists but query didn't find it
+                        self.stdout.write(self.style.WARNING(f'IntegrityError for {s3_key}: {e}. Checking if exists...'))
+                        try:
+                            slider = SliderImage.objects.get(image=s3_key)
+                            self.stdout.write(self.style.WARNING(f'Record already exists for {s3_key}, skipping'))
+                        except SliderImage.DoesNotExist:
+                            self.stdout.write(self.style.ERROR(f'Failed to create slider for {s3_key}: {e}'))
             else:
                 created_count += 0
 
@@ -165,6 +176,7 @@ class Command(BaseCommand):
 
     def _sync_videos(self, s3_client, bucket_name, dry_run, clean):
         """Sync home videos from S3 to database"""
+        from django.db import IntegrityError
         prefix = 'media/home/videos/'
         
         # Get all files in S3
@@ -204,6 +216,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f'Updated ID {video.id}: {s3_key}'))
                 updated_count += 1
                 s3_files.remove(s3_key)  # Remove from set to avoid re-processing
+                existing_videos[s3_key] = video  # Update the dict to avoid re-creating
 
         # Create missing database records for remaining S3 files
         created_count = 0
@@ -213,19 +226,28 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
                 else:
-                    # Use get_or_create to avoid duplicate key errors on re-runs
-                    video, created = HomeVideo.objects.get_or_create(
-                        video=s3_key,
-                        defaults={
-                            'title': f'Video {filename}',
-                            'active': True
-                        }
-                    )
-                    if created:
-                        self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
-                        created_count += 1
-                    else:
-                        self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+                    try:
+                        # Use get_or_create to avoid duplicate key errors on re-runs
+                        video, created = HomeVideo.objects.get_or_create(
+                            video=s3_key,
+                            defaults={
+                                'title': f'Video {filename}',
+                                'active': True
+                            }
+                        )
+                        if created:
+                            self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
+                            created_count += 1
+                        else:
+                            self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+                    except IntegrityError as e:
+                        # Handle race condition where record exists but query didn't find it
+                        self.stdout.write(self.style.WARNING(f'IntegrityError for {s3_key}: {e}. Checking if exists...'))
+                        try:
+                            video = HomeVideo.objects.get(video=s3_key)
+                            self.stdout.write(self.style.WARNING(f'Record already exists for {s3_key}, skipping'))
+                        except HomeVideo.DoesNotExist:
+                            self.stdout.write(self.style.ERROR(f'Failed to create video for {s3_key}: {e}'))
             else:
                 created_count += 0
 
@@ -245,6 +267,7 @@ class Command(BaseCommand):
 
     def _sync_products(self, s3_client, bucket_name, dry_run, clean):
         """Sync product main images from S3 to database"""
+        from django.db import IntegrityError
         prefix = 'media/products/main/'
 
         # Get all files in S3
@@ -288,6 +311,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f'Updated Product ID {prod.id}: {s3_key}'))
                 updated_count += 1
                 normalized_s3_files.remove(s3_key)
+                existing_products[s3_key] = prod  # Update the dict to avoid re-creating
 
         # Normalize existing products that already have images but with double prefixes
         for norm_key, prod in existing_products.items():
@@ -310,36 +334,45 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would create product for: {s3_key}'))
                 else:
-                    # Use get_or_create to avoid duplicate key errors on re-runs
-                    product, created = Product.objects.get_or_create(
-                        main_image=s3_key,
-                        defaults={
-                            'name': product_name,
-                            'description': '',
-                            'short_description': '',
-                            'price': Decimal('1.00'),
-                            'compare_at_price': None,
-                            'category': 'other',
-                            'tags': [],
-                            'gallery': [],
-                            'stock': 0,
-                            'sku': None,
-                            'dimensions': '',
-                            'material': '',
-                            'color': '',
-                            'weight': '',
-                            'featured': False,
-                            'is_active': False,
-                            'on_sale': False,
-                            'meta_title': '',
-                            'meta_description': '',
-                        }
-                    )
-                    if created:
-                        self.stdout.write(self.style.SUCCESS(f'Created product for: {s3_key}'))
-                        created_count += 1
-                    else:
-                        self.stdout.write(self.style.WARNING(f'Product already exists for: {s3_key}'))
+                    try:
+                        # Use get_or_create to avoid duplicate key errors on re-runs
+                        product, created = Product.objects.get_or_create(
+                            main_image=s3_key,
+                            defaults={
+                                'name': product_name,
+                                'description': '',
+                                'short_description': '',
+                                'price': Decimal('1.00'),
+                                'compare_at_price': None,
+                                'category': 'other',
+                                'tags': [],
+                                'gallery': [],
+                                'stock': 0,
+                                'sku': None,
+                                'dimensions': '',
+                                'material': '',
+                                'color': '',
+                                'weight': '',
+                                'featured': False,
+                                'is_active': False,
+                                'on_sale': False,
+                                'meta_title': '',
+                                'meta_description': '',
+                            }
+                        )
+                        if created:
+                            self.stdout.write(self.style.SUCCESS(f'Created product for: {s3_key}'))
+                            created_count += 1
+                        else:
+                            self.stdout.write(self.style.WARNING(f'Product already exists for: {s3_key}'))
+                    except IntegrityError as e:
+                        # Handle race condition where record exists but query didn't find it
+                        self.stdout.write(self.style.WARNING(f'IntegrityError for {s3_key}: {e}. Checking if exists...'))
+                        try:
+                            product = Product.objects.get(main_image=s3_key)
+                            self.stdout.write(self.style.WARNING(f'Product already exists for {s3_key}, skipping'))
+                        except Product.DoesNotExist:
+                            self.stdout.write(self.style.ERROR(f'Failed to create product for {s3_key}: {e}'))
 
         # Clean up database records for missing S3 files
         removed_count = 0
