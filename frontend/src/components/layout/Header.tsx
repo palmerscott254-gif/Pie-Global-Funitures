@@ -176,6 +176,8 @@ const Header = () => {
                       <button
                         onClick={() => {
                           localStorage.removeItem('pgf-auth-current');
+                          localStorage.removeItem('pgf-auth-access');
+                          localStorage.removeItem('pgf-auth-refresh');
                           window.dispatchEvent(new Event('pgf-auth-changed'));
                           closeUserMenu();
                         }}
@@ -243,6 +245,8 @@ const Header = () => {
                 <button
                   onClick={() => {
                     localStorage.removeItem('pgf-auth-current');
+                    localStorage.removeItem('pgf-auth-access');
+                    localStorage.removeItem('pgf-auth-refresh');
                     window.dispatchEvent(new Event('pgf-auth-changed'));
                     closeMobileMenu();
                   }}

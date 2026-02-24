@@ -95,6 +95,24 @@ export interface AboutPage {
   updated_at: string;
 }
 
+// User/auth types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  errors?: Record<string, string[]> | Record<string, any>;
+  user?: User;
+  access?: string;
+  refresh?: string;
+}
+
 // Cart item (frontend only)
 export interface CartItem {
   id: number;

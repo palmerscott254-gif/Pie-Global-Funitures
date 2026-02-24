@@ -293,6 +293,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'apps.users.authentication.PgfAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': None,  # Disable pagination - allow all products
@@ -314,6 +315,10 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
     },
 }
+
+# JWT configuration for custom auth tokens
+JWT_ACCESS_TTL_MINUTES = config('JWT_ACCESS_TTL_MINUTES', default=30, cast=int)
+JWT_REFRESH_TTL_DAYS = config('JWT_REFRESH_TTL_DAYS', default=7, cast=int)
 
 # CORS Settings - CRITICAL: Explicitly list all allowed origins (don't rely on DEBUG)
 # Development: localhost on multiple ports

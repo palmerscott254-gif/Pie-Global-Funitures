@@ -25,6 +25,7 @@ python-decouple==3.8
 
 # Security - Updated rate limiting
 django-ratelimit==4.1.0
+PyJWT==2.9.0
 
 # Production server - Updated for performance and security
 gunicorn==23.0.0

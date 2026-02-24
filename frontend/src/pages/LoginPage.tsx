@@ -23,11 +23,20 @@ const LoginPage = () => {
 
       toast.success('Signed in — welcome back!');
       // Store user info in localStorage for frontend use
+      if (!data.user) {
+        throw new Error('Missing user data in login response.');
+      }
       localStorage.setItem('pgf-auth-current', JSON.stringify({ 
         email: data.user.email,
         name: data.user.name,
         id: data.user.id,
       }));
+      if (data.access) {
+        localStorage.setItem('pgf-auth-access', data.access);
+      }
+      if (data.refresh) {
+        localStorage.setItem('pgf-auth-refresh', data.refresh);
+      }
       window.dispatchEvent(new Event('pgf-auth-changed'));
       const redirectTo = (location.state as { from?: string } | null)?.from || '/';
       navigate(redirectTo, { replace: true });

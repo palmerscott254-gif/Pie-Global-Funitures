@@ -7,6 +7,7 @@ import type {
   ContactMessage,
   AboutPage,
   PaginatedResponse,
+  AuthResponse,
 } from '@/types';
 
 // CRITICAL: API URL configuration with explicit fallback hierarchy
@@ -108,6 +109,13 @@ api.interceptors.request.use(
     const csrfToken = csrfCookie || csrfMeta;
     if (csrfToken) {
       (config.headers as any)['X-CSRFToken'] = csrfToken;
+    }
+
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('pgf-auth-access');
+      if (accessToken) {
+        (config.headers as any).Authorization = `Bearer ${accessToken}`;
+      }
     }
     return config;
   },
@@ -217,19 +225,23 @@ export const aboutApi = {
 // Auth API (session-based)
 export const authApi = {
   register: async (payload: { name: string; email: string; password: string; password_confirm: string }) => {
-    const response = await api.post('/auth/users/register/', payload);
+    const response = await api.post<AuthResponse>('/users/register/', payload);
     return response.data;
   },
   login: async (payload: { email: string; password: string }) => {
-    const response = await api.post('/auth/users/login/', payload);
+    const response = await api.post<AuthResponse>('/users/login/', payload);
     return response.data;
   },
   logout: async () => {
-    const response = await api.post('/auth/users/logout/');
+    const response = await api.post<AuthResponse>('/users/logout/');
     return response.data;
   },
   me: async () => {
-    const response = await api.get('/auth/users/me/');
+    const response = await api.get<AuthResponse>('/users/me/');
+    return response.data;
+  },
+  refresh: async (payload: { refresh: string }) => {
+    const response = await api.post<AuthResponse>('/users/refresh/', payload);
     return response.data;
   },
 };

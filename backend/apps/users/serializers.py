@@ -40,6 +40,11 @@ class UserLoginSerializer(serializers.Serializer):
         return value.lower()
 
 
+class RefreshTokenSerializer(serializers.Serializer):
+    """Serializer for refreshing access tokens."""
+    refresh = serializers.CharField()
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user details."""
     class Meta:

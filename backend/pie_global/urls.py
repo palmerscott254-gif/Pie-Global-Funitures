@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/', include('apps.messages.urls')),
     path('api/', include('apps.orders.urls')),
     path('api/', include('apps.about.urls')),
+    path('api/', include('apps.users.urls')),
     path('api/auth/', include('apps.users.urls')),
     
     # Redirect root to admin or API docs

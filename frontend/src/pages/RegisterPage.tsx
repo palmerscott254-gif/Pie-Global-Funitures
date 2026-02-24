@@ -34,11 +34,20 @@ const RegisterPage = () => {
       });
 
       // Store user info in localStorage for frontend use
+      if (!data.user) {
+        throw new Error('Missing user data in registration response.');
+      }
       localStorage.setItem('pgf-auth-current', JSON.stringify({ 
         email: data.user.email,
         name: data.user.name,
         id: data.user.id,
       }));
+      if (data.access) {
+        localStorage.setItem('pgf-auth-access', data.access);
+      }
+      if (data.refresh) {
+        localStorage.setItem('pgf-auth-refresh', data.refresh);
+      }
       window.dispatchEvent(new Event('pgf-auth-changed'));
 
       toast.success('Account created — welcome!');

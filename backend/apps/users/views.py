@@ -2,10 +2,15 @@ import logging
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.sessions.models import Session
+from rest_framework.permissions import AllowAny
 from .models import User
-from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer
+from .serializers import (
+    UserRegisterSerializer,
+    UserLoginSerializer,
+    UserSerializer,
+    RefreshTokenSerializer,
+)
+from .jwt_utils import create_access_token, create_refresh_token, decode_token
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +26,8 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserRegisterSerializer
         elif self.action == 'login':
             return UserLoginSerializer
+        elif self.action == 'refresh':
+            return RefreshTokenSerializer
         return UserSerializer
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
@@ -41,12 +48,17 @@ class UserViewSet(viewsets.ModelViewSet):
             # Create session
             request.session['user_id'] = str(user.id)
             request.session['user_email'] = user.email
-            
+
+            access_token = create_access_token(user)
+            refresh_token = create_refresh_token(user)
+
             return Response(
                 {
                     'success': True,
                     'message': 'Account created successfully.',
                     'user': UserSerializer(user).data,
+                    'access': access_token,
+                    'refresh': refresh_token,
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -99,11 +111,16 @@ class UserViewSet(viewsets.ModelViewSet):
         request.session['user_email'] = user.email
         request.session.modified = True
 
+        access_token = create_access_token(user)
+        refresh_token = create_refresh_token(user)
+
         return Response(
             {
                 'success': True,
                 'message': 'Signed in successfully.',
                 'user': UserSerializer(user).data,
+                'access': access_token,
+                'refresh': refresh_token,
             },
             status=status.HTTP_200_OK,
         )
@@ -125,8 +142,13 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def me(self, request):
         """Get current authenticated user."""
+        if isinstance(request.user, User):
+            return Response(
+                {'success': True, 'user': UserSerializer(request.user).data},
+                status=status.HTTP_200_OK,
+            )
+
         user_id = request.session.get('user_id')
-        
         if not user_id:
             return Response(
                 {'success': False, 'error': 'Not authenticated.'},
@@ -146,3 +168,49 @@ class UserViewSet(viewsets.ModelViewSet):
                 {'success': False, 'error': 'User not found.'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def refresh(self, request):
+        """Refresh access token using a refresh token."""
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as exc:
+            logger.warning(f"Refresh validation failed: {exc}")
+            return Response(
+                {'success': False, 'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        refresh_token = serializer.validated_data['refresh']
+        try:
+            payload = decode_token(refresh_token, expected_type='refresh')
+        except Exception:
+            return Response(
+                {'success': False, 'error': 'Invalid or expired refresh token.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user_id = payload.get('sub')
+        if not user_id:
+            return Response(
+                {'success': False, 'error': 'Invalid token payload.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'success': False, 'error': 'User not found.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        access_token = create_access_token(user)
+        return Response(
+            {
+                'success': True,
+                'access': access_token,
+            },
+            status=status.HTTP_200_OK,
+        )
