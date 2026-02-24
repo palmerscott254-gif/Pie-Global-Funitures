@@ -38,6 +38,16 @@ class User(models.Model):
         """Compatibility with Django auth checks for anonymous users."""
         return False
 
+    @property
+    def is_staff(self):
+        """Compatibility with admin/staff checks in views."""
+        return False
+
+    @property
+    def is_superuser(self):
+        """Compatibility with superuser checks in views."""
+        return False
+
     def save(self, *args, **kwargs):
         """Override save to ensure password is hashed."""
         # Only hash if password looks like plain text (doesn't start with algorithm prefix)
