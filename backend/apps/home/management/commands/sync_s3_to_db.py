@@ -84,7 +84,6 @@ class Command(BaseCommand):
 
     def _sync_sliders(self, s3_client, bucket_name, dry_run, clean):
         """Sync slider images from S3 to database"""
-        from django.db import IntegrityError
         prefix = 'media/home/sliders/'
         
         # Get all files in S3
@@ -104,17 +103,27 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'Error listing S3 files: {e}'))
             return
 
-        # Get existing database records
-        existing_sliders = {img.image.name: img for img in SliderImage.objects.all() if img.image}
+        # Get existing database records - normalize paths for comparison
+        existing_sliders = {}
+        for img in SliderImage.objects.all():
+            if img.image:
+                # Store by both raw and normalized paths to handle format variations
+                existing_sliders[str(img.image.name)] = img
+                # Also normalize the path
+                normalized = self._normalize_s3_key(str(img.image.name))
+                existing_sliders[normalized] = img
+                existing_sliders[f'media/{normalized}'] = img  # Also store with media/ prefix
+        
         empty_sliders = list(SliderImage.objects.filter(image='') | SliderImage.objects.filter(image__isnull=True))
-        self.stdout.write(f'Found {len(existing_sliders)} slider images in database with files')
+        self.stdout.write(f'Found {len(set(existing_sliders.values()))} slider images in database with files')
         self.stdout.write(f'Found {len(empty_sliders)} slider images in database WITHOUT files')
 
         # Update empty database records with S3 files
         updated_count = 0
+        processed = set()
         for s3_key in list(s3_files):
             # Try to match with empty sliders first (by order)
-            if empty_sliders:
+            if empty_sliders and s3_key not in processed:
                 slider = empty_sliders.pop(0)
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would update ID {slider.id}: {s3_key}'))
@@ -123,60 +132,72 @@ class Command(BaseCommand):
                     slider.save()
                     self.stdout.write(self.style.SUCCESS(f'Updated ID {slider.id}: {s3_key}'))
                 updated_count += 1
-                s3_files.remove(s3_key)  # Remove from set to avoid re-processing
-                existing_sliders[s3_key] = slider  # Update the dict to avoid re-creating
+                processed.add(s3_key)
+                # Update the existence dict
+                existing_sliders[s3_key] = slider
+                existing_sliders[self._normalize_s3_key(s3_key)] = slider
 
         # Create missing database records for remaining S3 files
         created_count = 0
         for s3_key in s3_files:
-            if s3_key not in existing_sliders:
-                filename = s3_key.split('/')[-1]
-                if dry_run:
-                    self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
-                else:
+            if s3_key not in processed:
+                # Check multiple formats to see if it exists
+                normalized = self._normalize_s3_key(s3_key)
+                exists = (s3_key in existing_sliders or 
+                         normalized in existing_sliders or 
+                         f'media/{normalized}' in existing_sliders)
+                
+                if not exists:
+                    # Final check: query database directly with both formats
                     try:
-                        # Use get_or_create to avoid duplicate key errors on re-runs
-                        slider, created = SliderImage.objects.get_or_create(
-                            image=s3_key,
-                            defaults={
-                                'title': f'Slider {filename}',
-                                'active': True,
-                                'order': 0
-                            }
-                        )
-                        if created:
+                        SliderImage.objects.get(image=s3_key)
+                        self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+                        created_count += 0
+                        continue
+                    except SliderImage.DoesNotExist:
+                        pass
+                    
+                    filename = s3_key.split('/')[-1]
+                    if dry_run:
+                        self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
+                    else:
+                        try:
+                            slider = SliderImage.objects.create(
+                                image=s3_key,
+                                title=f'Slider {filename}',
+                                active=True,
+                                order=0
+                            )
                             self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
                             created_count += 1
-                        else:
-                            self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
-                    except IntegrityError as e:
-                        # Handle race condition where record exists but query didn't find it
-                        self.stdout.write(self.style.WARNING(f'IntegrityError for {s3_key}: {e}. Checking if exists...'))
-                        try:
-                            slider = SliderImage.objects.get(image=s3_key)
-                            self.stdout.write(self.style.WARNING(f'Record already exists for {s3_key}, skipping'))
-                        except SliderImage.DoesNotExist:
+                        except Exception as e:
                             self.stdout.write(self.style.ERROR(f'Failed to create slider for {s3_key}: {e}'))
-            else:
-                created_count += 0
+                else:
+                    self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
 
         # Clean up database records for missing S3 files
         removed_count = 0
         if clean:
-            for db_key, slider_obj in existing_sliders.items():
-                if db_key not in s3_files:
-                    if dry_run:
-                        self.stdout.write(self.style.WARNING(f'Would remove: {db_key} (ID: {slider_obj.id})'))
-                    else:
-                        slider_obj.delete()
-                        self.stdout.write(self.style.ERROR(f'Removed: {db_key} (ID: {slider_obj.id})'))
-                    removed_count += 1
+            for db_record in SliderImage.objects.all():
+                if db_record.image:
+                    found = False
+                    db_path = str(db_record.image.name)
+                    for s3_key in s3_files:
+                        if db_path == s3_key or self._normalize_s3_key(db_path) == self._normalize_s3_key(s3_key):
+                            found = True
+                            break
+                    if not found:
+                        if dry_run:
+                            self.stdout.write(self.style.WARNING(f'Would remove: {db_path} (ID: {db_record.id})'))
+                        else:
+                            db_record.delete()
+                            self.stdout.write(self.style.ERROR(f'Removed: {db_path} (ID: {db_record.id})'))
+                        removed_count += 1
 
         self.stdout.write(f'\nSlider Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
 
     def _sync_videos(self, s3_client, bucket_name, dry_run, clean):
         """Sync home videos from S3 to database"""
-        from django.db import IntegrityError
         prefix = 'media/home/videos/'
         
         # Get all files in S3
@@ -196,17 +217,26 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'Error listing S3 files: {e}'))
             return
 
-        # Get existing database records
-        existing_videos = {vid.video.name: vid for vid in HomeVideo.objects.all() if vid.video}
+        # Get existing database records - normalize paths for comparison
+        existing_videos = {}
+        for vid in HomeVideo.objects.all():
+            if vid.video:
+                # Store by both raw and normalized paths to handle format variations
+                existing_videos[str(vid.video.name)] = vid
+                normalized = self._normalize_s3_key(str(vid.video.name))
+                existing_videos[normalized] = vid
+                existing_videos[f'media/{normalized}'] = vid  # Also store with media/ prefix
+        
         empty_videos = list(HomeVideo.objects.filter(video='') | HomeVideo.objects.filter(video__isnull=True))
-        self.stdout.write(f'Found {len(existing_videos)} videos in database with files')
+        self.stdout.write(f'Found {len(set(existing_videos.values()))} videos in database with files')
         self.stdout.write(f'Found {len(empty_videos)} videos in database WITHOUT files')
 
         # Update empty database records with S3 files
         updated_count = 0
+        processed = set()
         for s3_key in list(s3_files):
             # Try to match with empty videos first
-            if empty_videos:
+            if empty_videos and s3_key not in processed:
                 video = empty_videos.pop(0)
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would update ID {video.id}: {s3_key}'))
@@ -215,59 +245,71 @@ class Command(BaseCommand):
                     video.save()
                     self.stdout.write(self.style.SUCCESS(f'Updated ID {video.id}: {s3_key}'))
                 updated_count += 1
-                s3_files.remove(s3_key)  # Remove from set to avoid re-processing
-                existing_videos[s3_key] = video  # Update the dict to avoid re-creating
+                processed.add(s3_key)
+                # Update the existence dict
+                existing_videos[s3_key] = video
+                existing_videos[self._normalize_s3_key(s3_key)] = video
 
         # Create missing database records for remaining S3 files
         created_count = 0
         for s3_key in s3_files:
-            if s3_key not in existing_videos:
-                filename = s3_key.split('/')[-1]
-                if dry_run:
-                    self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
-                else:
+            if s3_key not in processed:
+                # Check multiple formats to see if it exists
+                normalized = self._normalize_s3_key(s3_key)
+                exists = (s3_key in existing_videos or 
+                         normalized in existing_videos or 
+                         f'media/{normalized}' in existing_videos)
+                
+                if not exists:
+                    # Final check: query database directly with both formats
                     try:
-                        # Use get_or_create to avoid duplicate key errors on re-runs
-                        video, created = HomeVideo.objects.get_or_create(
-                            video=s3_key,
-                            defaults={
-                                'title': f'Video {filename}',
-                                'active': True
-                            }
-                        )
-                        if created:
+                        HomeVideo.objects.get(video=s3_key)
+                        self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+                        created_count += 0
+                        continue
+                    except HomeVideo.DoesNotExist:
+                        pass
+                    
+                    filename = s3_key.split('/')[-1]
+                    if dry_run:
+                        self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
+                    else:
+                        try:
+                            video = HomeVideo.objects.create(
+                                video=s3_key,
+                                title=f'Video {filename}',
+                                active=True
+                            )
                             self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
                             created_count += 1
-                        else:
-                            self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
-                    except IntegrityError as e:
-                        # Handle race condition where record exists but query didn't find it
-                        self.stdout.write(self.style.WARNING(f'IntegrityError for {s3_key}: {e}. Checking if exists...'))
-                        try:
-                            video = HomeVideo.objects.get(video=s3_key)
-                            self.stdout.write(self.style.WARNING(f'Record already exists for {s3_key}, skipping'))
-                        except HomeVideo.DoesNotExist:
+                        except Exception as e:
                             self.stdout.write(self.style.ERROR(f'Failed to create video for {s3_key}: {e}'))
-            else:
-                created_count += 0
+                else:
+                    self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
 
         # Clean up database records for missing S3 files
         removed_count = 0
         if clean:
-            for db_key, video_obj in existing_videos.items():
-                if db_key not in s3_files:
-                    if dry_run:
-                        self.stdout.write(self.style.WARNING(f'Would remove: {db_key} (ID: {video_obj.id})'))
-                    else:
-                        video_obj.delete()
-                        self.stdout.write(self.style.ERROR(f'Removed: {db_key} (ID: {video_obj.id})'))
-                    removed_count += 1
+            for db_record in HomeVideo.objects.all():
+                if db_record.video:
+                    found = False
+                    db_path = str(db_record.video.name)
+                    for s3_key in s3_files:
+                        if db_path == s3_key or self._normalize_s3_key(db_path) == self._normalize_s3_key(s3_key):
+                            found = True
+                            break
+                    if not found:
+                        if dry_run:
+                            self.stdout.write(self.style.WARNING(f'Would remove: {db_path} (ID: {db_record.id})'))
+                        else:
+                            db_record.delete()
+                            self.stdout.write(self.style.ERROR(f'Removed: {db_path} (ID: {db_record.id})'))
+                        removed_count += 1
 
         self.stdout.write(f'\nVideo Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
 
     def _sync_products(self, s3_client, bucket_name, dry_run, clean):
         """Sync product main images from S3 to database"""
-        from django.db import IntegrityError
         prefix = 'media/products/main/'
 
         # Get all files in S3
@@ -289,19 +331,25 @@ class Command(BaseCommand):
         # Normalize S3 keys so we avoid double "media/" prefixes when saving to storage
         normalized_s3_files = {self._normalize_s3_key(key) for key in s3_files}
 
-        # Get existing database records, keyed by normalized path
-        existing_products = {
-            self._normalize_s3_key(prod.main_image.name): prod
-            for prod in Product.objects.all() if prod.main_image
-        }
+        # Get existing database records - normalize paths for comparison
+        existing_products = {}
+        for prod in Product.objects.all():
+            if prod.main_image:
+                # Store by both raw and normalized paths to handle format variations
+                existing_products[str(prod.main_image.name)] = prod
+                normalized = self._normalize_s3_key(str(prod.main_image.name))
+                existing_products[normalized] = prod
+                existing_products[f'media/{normalized}'] = prod  # Also store with media/ prefix
+        
         empty_products = list(Product.objects.filter(main_image='') | Product.objects.filter(main_image__isnull=True))
-        self.stdout.write(f'Found {len(existing_products)} products in database with images')
+        self.stdout.write(f'Found {len(set(existing_products.values()))} products in database with images')
         self.stdout.write(f'Found {len(empty_products)} products in database WITHOUT images')
 
         # Update empty products with S3 files, using normalized paths
         updated_count = 0
+        processed = set()
         for s3_key in list(normalized_s3_files):
-            if empty_products:
+            if empty_products and s3_key not in processed:
                 prod = empty_products.pop(0)
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would update Product ID {prod.id}: {s3_key}'))
@@ -310,81 +358,98 @@ class Command(BaseCommand):
                     prod.save()
                     self.stdout.write(self.style.SUCCESS(f'Updated Product ID {prod.id}: {s3_key}'))
                 updated_count += 1
-                normalized_s3_files.remove(s3_key)
-                existing_products[s3_key] = prod  # Update the dict to avoid re-creating
+                processed.add(s3_key)
+                # Update the existence dict
+                existing_products[s3_key] = prod
+                existing_products[f'media/{s3_key}'] = prod
 
         # Normalize existing products that already have images but with double prefixes
-        for norm_key, prod in existing_products.items():
-            if prod.main_image and prod.main_image.name != norm_key:
-                if dry_run:
-                    self.stdout.write(self.style.WARNING(f'Would normalize Product ID {prod.id}: {prod.main_image.name} -> {norm_key}'))
-                else:
-                    prod.main_image.name = norm_key
-                    prod.save(update_fields=['main_image'])
-                    self.stdout.write(self.style.SUCCESS(f'Normalized Product ID {prod.id}: {norm_key}'))
+        for prod in Product.objects.filter(main_image__isnull=False).exclude(main_image=''):
+            if prod.main_image:
+                old_path = str(prod.main_image.name)
+                normalized = self._normalize_s3_key(old_path)
+                if old_path != normalized and normalized in normalized_s3_files:
+                    if dry_run:
+                        self.stdout.write(self.style.WARNING(f'Would normalize Product ID {prod.id}: {old_path} -> {normalized}'))
+                    else:
+                        prod.main_image.name = normalized
+                        prod.save(update_fields=['main_image'])
+                        self.stdout.write(self.style.SUCCESS(f'Normalized Product ID {prod.id}: {normalized}'))
 
         # Create missing database records for remaining S3 files
         created_count = 0
         for s3_key in normalized_s3_files:
-            if s3_key not in existing_products:
-                filename = s3_key.split('/')[-1]
-                base_name = filename.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ')
-                product_name = f'Product {base_name}'.strip().title() or 'Product'
-
-                if dry_run:
-                    self.stdout.write(self.style.WARNING(f'Would create product for: {s3_key}'))
-                else:
+            if s3_key not in processed:
+                # Check multiple formats to see if it exists
+                exists = (s3_key in existing_products or 
+                         f'media/{s3_key}' in existing_products)
+                
+                if not exists:
+                    # Final check: query database directly
                     try:
-                        # Use get_or_create to avoid duplicate key errors on re-runs
-                        product, created = Product.objects.get_or_create(
-                            main_image=s3_key,
-                            defaults={
-                                'name': product_name,
-                                'description': '',
-                                'short_description': '',
-                                'price': Decimal('1.00'),
-                                'compare_at_price': None,
-                                'category': 'other',
-                                'tags': [],
-                                'gallery': [],
-                                'stock': 0,
-                                'sku': None,
-                                'dimensions': '',
-                                'material': '',
-                                'color': '',
-                                'weight': '',
-                                'featured': False,
-                                'is_active': False,
-                                'on_sale': False,
-                                'meta_title': '',
-                                'meta_description': '',
-                            }
-                        )
-                        if created:
+                        Product.objects.get(main_image=s3_key)
+                        self.stdout.write(self.style.WARNING(f'Product already exists for: {s3_key}'))
+                        created_count += 0
+                        continue
+                    except Product.DoesNotExist:
+                        pass
+                    
+                    filename = s3_key.split('/')[-1]
+                    base_name = filename.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ')
+                    product_name = f'Product {base_name}'.strip().title() or 'Product'
+
+                    if dry_run:
+                        self.stdout.write(self.style.WARNING(f'Would create product for: {s3_key}'))
+                    else:
+                        try:
+                            product = Product.objects.create(
+                                main_image=s3_key,
+                                name=product_name,
+                                description='',
+                                short_description='',
+                                price=Decimal('1.00'),
+                                compare_at_price=None,
+                                category='other',
+                                tags=[],
+                                gallery=[],
+                                stock=0,
+                                sku=None,
+                                dimensions='',
+                                material='',
+                                color='',
+                                weight='',
+                                featured=False,
+                                is_active=False,
+                                on_sale=False,
+                                meta_title='',
+                                meta_description='',
+                            )
                             self.stdout.write(self.style.SUCCESS(f'Created product for: {s3_key}'))
                             created_count += 1
-                        else:
-                            self.stdout.write(self.style.WARNING(f'Product already exists for: {s3_key}'))
-                    except IntegrityError as e:
-                        # Handle race condition where record exists but query didn't find it
-                        self.stdout.write(self.style.WARNING(f'IntegrityError for {s3_key}: {e}. Checking if exists...'))
-                        try:
-                            product = Product.objects.get(main_image=s3_key)
-                            self.stdout.write(self.style.WARNING(f'Product already exists for {s3_key}, skipping'))
-                        except Product.DoesNotExist:
+                        except Exception as e:
                             self.stdout.write(self.style.ERROR(f'Failed to create product for {s3_key}: {e}'))
+                else:
+                    self.stdout.write(self.style.WARNING(f'Product already exists for: {s3_key}'))
 
         # Clean up database records for missing S3 files
         removed_count = 0
         if clean:
-            for db_key, prod_obj in existing_products.items():
-                if db_key not in normalized_s3_files:
-                    if dry_run:
-                        self.stdout.write(self.style.WARNING(f'Would remove product image: {db_key} (ID: {prod_obj.id})'))
-                    else:
-                        prod_obj.delete()
-                        self.stdout.write(self.style.ERROR(f'Removed product: {db_key} (ID: {prod_obj.id})'))
-                    removed_count += 1
+            for db_record in Product.objects.all():
+                if db_record.main_image:
+                    found = False
+                    db_path = str(db_record.main_image.name)
+                    db_normalized = self._normalize_s3_key(db_path)
+                    for s3_key in normalized_s3_files:
+                        if db_path == s3_key or db_normalized == s3_key:
+                            found = True
+                            break
+                    if not found:
+                        if dry_run:
+                            self.stdout.write(self.style.WARNING(f'Would remove product image: {db_path} (ID: {db_record.id})'))
+                        else:
+                            db_record.delete()
+                            self.stdout.write(self.style.ERROR(f'Removed product: {db_path} (ID: {db_record.id})'))
+                        removed_count += 1
 
         self.stdout.write(f'\nProduct Summary: Updated {updated_count}, Created {created_count}, Removed {removed_count}')
 
