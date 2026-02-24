@@ -1,4 +1,5 @@
 {
+  "buildCommand": "rm -rf .next .vercel/output node_modules/.cache 2>/dev/null; npm run build",
   "headers": [
     {
       "source": "/(.*)",

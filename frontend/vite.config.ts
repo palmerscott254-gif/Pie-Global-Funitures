@@ -12,13 +12,8 @@ export default defineConfig({
     viteCompression({ algorithm: 'gzip' }),
   ],
   
-  // Explicitly define environment variables for client-side access
-  // This ensures VITE_API_URL is available in import.meta.env even during build
-  define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(
-      process.env.VITE_API_URL || 'http://localhost:8000/api/'
-    ),
-  },
+  // Environment variables are available at runtime via import.meta.env
+  // VITE_API_URL will be picked up from .env file or Vercel environment variables
   
   resolve: {
     alias: {
