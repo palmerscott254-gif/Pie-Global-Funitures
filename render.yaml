@@ -31,9 +31,7 @@ services:
       - key: DJANGO_ALLOWED_HOSTS
         value: pie-global-funitures.onrender.com,pieglobalfunitures.co.ke,www.pieglobalfunitures.co.ke
       - key: DATABASE_URL
-        fromDatabase:
-          name: pie-global-db
-          property: connectionString
+        value: postgresql://postgres:254admin020@localhost:5432/pie_global_db
       - key: USE_S3
         value: True
       - key: AWS_ACCESS_KEY_ID
@@ -96,9 +94,7 @@ databases:
 #       - key: DJANGO_ALLOWED_HOSTS
 #         value: pie-global-funitures.onrender.com,pieglobalfunitures.co.ke
 #       - key: DATABASE_URL
-#         fromDatabase:
-#           name: pie-global-db
-#           property: connectionString
+#         value: postgresql://postgres:254admin020@localhost:5432/pie_global_db
 #       - key: USE_S3
 #         value: True
 #       - key: AWS_ACCESS_KEY_ID

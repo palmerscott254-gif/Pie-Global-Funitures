@@ -79,11 +79,11 @@ A full-stack e-commerce platform for Pie Global Furniture built with Django REST
    DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
    
    # Database (for production)
-   DATABASE_URL=postgresql://user:password@host:port/dbname
+   DATABASE_URL=postgresql://postgres:254admin020@localhost:5432/pie_global_db
    # OR individual PostgreSQL settings
-   POSTGRES_DB=pieglobal
+   POSTGRES_DB=pie_global_db
    POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=yourpassword
+   POSTGRES_PASSWORD=254admin020
    POSTGRES_HOST=localhost
    POSTGRES_PORT=5432
    
