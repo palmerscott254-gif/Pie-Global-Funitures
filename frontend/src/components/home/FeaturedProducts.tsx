@@ -87,7 +87,7 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
           viewport={{ once: true }}
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-10 sm:mb-12 md:mb-16"
         >
-          {products.map((product, index) => (
+          {products.map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
               <Link
                 to={`/products/${product.slug}`}
