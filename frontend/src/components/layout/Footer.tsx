@@ -16,7 +16,7 @@ const Footer = () => {
               Premium furniture for your home and office. Quality craftsmanship, modern designs, and exceptional service.
             </p>
             <div className="flex space-x-3">
-              <a href="#" className="hover:text-primary-500 transition-colors">
+              <a href="https://www.facebook.com/p/Pie-Global-Furniture-61572628584637/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-500 transition-colors">
                 <FaFacebookF size={18} />
               </a>
               <a href="#" className="hover:text-primary-500 transition-colors">
