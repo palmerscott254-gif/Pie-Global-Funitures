@@ -116,22 +116,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pie_global.wsgi.application'
 
 # Database Configuration
-# Use DATABASE_URL if available (Railway, Render, Heroku, etc.), otherwise fall back to individual config
+# Priority:
+# 1. DATABASE_URL (Render, Railway, Heroku) - MUST be used on production
+# 2. POSTGRES_* env vars (local development only)
+# 3. SQLite fallback (when no database configured)
+
 database_url = config('DATABASE_URL', default='')
 
-# Sanitize: convert any empty/whitespace-only string to empty string for consistency
-if database_url:
-    database_url = str(database_url).strip()
-
-# Only use DATABASE_URL if it's a non-empty string with actual content
-if database_url and len(database_url) > 0:
-    # Production: Use DATABASE_URL (e.g., from Railway, Render, Heroku)
+if database_url and str(database_url).strip():
+    # Production: Use DATABASE_URL (Render auto-injects this from attached database)
     try:
         DATABASES = {
-            'default': dj_database_url.parse(database_url, conn_max_age=600)
+            'default': dj_database_url.parse(
+                str(database_url).strip(),
+                conn_max_age=600,
+                ssl_require=not DEBUG  # Require SSL on production
+            )
         }
-    except ValueError:
-        # If parsing fails, fall back to SQLite
+    except Exception as e:
+        # Log parsing error and fall back to SQLite
+        import logging
+        logging.error(f"Failed to parse DATABASE_URL: {e}")
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
@@ -139,26 +144,25 @@ if database_url and len(database_url) > 0:
             }
         }
 else:
-    # Development/Build: Use individual PostgreSQL settings or SQLite fallback
+    # Local development: Check for individual PostgreSQL settings
     postgres_db = config('POSTGRES_DB', default='')
-    if postgres_db:
-        postgres_db = postgres_db.strip()
+    postgres_user = config('POSTGRES_USER', default='')
     
-    if postgres_db:
-        # Use PostgreSQL with individual settings
+    if postgres_db and postgres_user:
+        # Use PostgreSQL with individual settings (local dev only)
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',
-                'NAME': postgres_db,
-                'USER': config('POSTGRES_USER', default='postgres'),
-                'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
+                'NAME': postgres_db.strip(),
+                'USER': postgres_user.strip(),
+                'PASSWORD': config('POSTGRES_PASSWORD', default='postgres').strip(),
                 'HOST': config('POSTGRES_HOST', default='localhost'),
                 'PORT': config('POSTGRES_PORT', default='5432'),
                 'CONN_MAX_AGE': 600,
             }
         }
     else:
-        # Fallback to SQLite for builds/collectstatic when no database configured
+        # Fallback to SQLite when no database configured
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',

@@ -132,14 +132,22 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
                 else:
-                    SliderImage.objects.create(
-                        title=f'Slider {filename}',
+                    # Use get_or_create to avoid duplicate key errors on re-runs
+                    slider, created = SliderImage.objects.get_or_create(
                         image=s3_key,
-                        active=True,
-                        order=0
+                        defaults={
+                            'title': f'Slider {filename}',
+                            'active': True,
+                            'order': 0
+                        }
                     )
-                    self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
-                created_count += 1
+                    if created:
+                        self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
+                        created_count += 1
+                    else:
+                        self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+            else:
+                created_count += 0
 
         # Clean up database records for missing S3 files
         removed_count = 0
@@ -205,13 +213,21 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would create: {s3_key}'))
                 else:
-                    HomeVideo.objects.create(
-                        title=f'Video {filename}',
+                    # Use get_or_create to avoid duplicate key errors on re-runs
+                    video, created = HomeVideo.objects.get_or_create(
                         video=s3_key,
-                        active=True
+                        defaults={
+                            'title': f'Video {filename}',
+                            'active': True
+                        }
                     )
-                    self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
-                created_count += 1
+                    if created:
+                        self.stdout.write(self.style.SUCCESS(f'Created: {s3_key}'))
+                        created_count += 1
+                    else:
+                        self.stdout.write(self.style.WARNING(f'Already exists: {s3_key}'))
+            else:
+                created_count += 0
 
         # Clean up database records for missing S3 files
         removed_count = 0
@@ -294,30 +310,36 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(self.style.WARNING(f'Would create product for: {s3_key}'))
                 else:
-                    Product.objects.create(
-                        name=product_name,
-                        description='',
-                        short_description='',
-                        price=Decimal('1.00'),
-                        compare_at_price=None,
-                        category='other',
-                        tags=[],
+                    # Use get_or_create to avoid duplicate key errors on re-runs
+                    product, created = Product.objects.get_or_create(
                         main_image=s3_key,
-                        gallery=[],
-                        stock=0,
-                        sku=None,
-                        dimensions='',
-                        material='',
-                        color='',
-                        weight='',
-                        featured=False,
-                        is_active=False,
-                        on_sale=False,
-                        meta_title='',
-                        meta_description='',
+                        defaults={
+                            'name': product_name,
+                            'description': '',
+                            'short_description': '',
+                            'price': Decimal('1.00'),
+                            'compare_at_price': None,
+                            'category': 'other',
+                            'tags': [],
+                            'gallery': [],
+                            'stock': 0,
+                            'sku': None,
+                            'dimensions': '',
+                            'material': '',
+                            'color': '',
+                            'weight': '',
+                            'featured': False,
+                            'is_active': False,
+                            'on_sale': False,
+                            'meta_title': '',
+                            'meta_description': '',
+                        }
                     )
-                    self.stdout.write(self.style.SUCCESS(f'Created product for: {s3_key}'))
-                created_count += 1
+                    if created:
+                        self.stdout.write(self.style.SUCCESS(f'Created product for: {s3_key}'))
+                        created_count += 1
+                    else:
+                        self.stdout.write(self.style.WARNING(f'Product already exists for: {s3_key}'))
 
         # Clean up database records for missing S3 files
         removed_count = 0
