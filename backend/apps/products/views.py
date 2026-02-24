@@ -32,10 +32,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
     
     def get_queryset(self):
-        """Show all products regardless of is_active status. Only hide placeholder products (price <= 1)."""
-        queryset = Product.objects.all().filter(price__gt=1)  # Hide placeholder products with price = 1.00
-        # Do NOT filter by is_active or name prefix - show all real products
-        return queryset
+        """Show all products without placeholder filtering."""
+        return Product.objects.all()
     
     @action(detail=False, methods=['get'])
     def featured(self, request):
