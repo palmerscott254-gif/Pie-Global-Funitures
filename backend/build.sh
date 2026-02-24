@@ -39,9 +39,48 @@ if [ "$USE_S3" = "True" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_AC
     
     echo ""
     echo "=========================================="
+    echo "IMPORTING REAL PRODUCT DATA..."
+    echo "=========================================="
+    python << 'EOF'
+import os
+import json
+from decimal import Decimal
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pie_global.settings')
+import django
+django.setup()
+
+from apps.products.models import Product
+
+imported = 0
+try:
+    if os.path.exists('products_full_export.json'):
+        with open('products_full_export.json', 'r') as f:
+            products_data = json.load(f)
+        
+        for data in products_data:
+            data['price'] = Decimal(str(data['price']))
+            if data.get('compare_at_price'):
+                data['compare_at_price'] = Decimal(str(data['compare_at_price']))
+            slug = data.pop('slug', None)
+            product_id = data.pop('id', None)
+            if slug:
+                product, created = Product.objects.update_or_create(slug=slug, defaults=data)
+                imported += 1
+        
+        print(f'✅ Imported real product data for {imported} products')
+    else:
+        print('⚠️  products_full_export.json not found')
+except Exception as e:
+    print(f'⚠️  Import error: {e}')
+    import traceback
+    traceback.print_exc()
+EOF
+
+    echo "=========================================="
     echo "MAKING ALL PRODUCTS VISIBLE..."
     echo "=========================================="
-    python -c "
+    python << 'EOF'
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pie_global.settings')
 import django
@@ -50,36 +89,26 @@ django.setup()
 from apps.products.models import Product
 
 total = Product.objects.count()
-print(f'📊 Total products in database: {total}')
+updated = 0
+for p in Product.objects.all():
+    changed = False
+    if not p.is_active:
+        p.is_active = True
+        changed = True
+    if not p.featured:
+        p.featured = True
+        changed = True
+    if changed:
+        p.save(update_fields=['is_active', 'featured'])
+        updated += 1
 
-if total == 0:
-    print('⚠️  WARNING: No products found in database!')
-    print('   The sync_s3_to_db command may have failed.')
-else:
-    updated = 0
-    for p in Product.objects.all():
-        changed = False
-        if not p.is_active:
-            p.is_active = True
-            changed = True
-        if not p.featured:
-            p.featured = True
-            changed = True
-        if changed:
-            p.save(update_fields=['is_active', 'featured'])
-            updated += 1
-    
-    featured = Product.objects.filter(featured=True).count()
-    active = Product.objects.filter(is_active=True).count()
-    
-    print(f'✅ SUCCESS: All {total} products are now visible!')
-    print(f'   - Featured: {featured}/{total}')
-    print(f'   - Active: {active}/{total}')
-    print(f'   - Updated: {updated} products')
-    print(f'')
-    print(f'🌐 Website will show {total} products at:')
-    print(f'   https://www.pieglobalfunitures.co.ke/products')
-" || echo "⚠️  Visibility update failed"
+featured = Product.objects.filter(featured=True).count()
+active = Product.objects.filter(is_active=True).count()
+print(f'✅ SUCCESS: All {total} products visible!')
+print(f'   - Featured: {featured}/{total}')
+print(f'   - Active: {active}/{total}')
+print(f'🌐 Website: https://www.pieglobalfunitures.co.ke/products')
+EOF
     
     echo "=========================================="
 else
