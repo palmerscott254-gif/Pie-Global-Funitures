@@ -6,14 +6,13 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 import dj_database_url
-from decouple import config, Csv
+from decouple import AutoConfig, Csv
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load .env file explicitly for local development
 # python-decouple searches for .env automatically, but we ensure it's in BASE_DIR
-from decouple import AutoConfig
 config = AutoConfig(search_path=BASE_DIR)
 
 # Security Settings
