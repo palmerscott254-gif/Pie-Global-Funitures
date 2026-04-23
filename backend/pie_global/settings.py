@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 import dj_database_url
 from decouple import AutoConfig, Csv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -123,6 +124,14 @@ WSGI_APPLICATION = 'pie_global.wsgi.application'
 database_url = config('DATABASE_URL', default='')
 
 if database_url and str(database_url).strip():
+    parsed_db_url = urlparse(str(database_url).strip())
+    db_host = (parsed_db_url.hostname or '').strip().lower()
+    if not DEBUG and db_host in {'localhost', '127.0.0.1'}:
+        raise ImproperlyConfigured(
+            'Invalid DATABASE_URL for production: host is localhost. '
+            'On Render, attach a Postgres database or set an external reachable PostgreSQL host.'
+        )
+
     # Production: Use DATABASE_URL (Render auto-injects this from attached database)
     try:
         DATABASES = {
