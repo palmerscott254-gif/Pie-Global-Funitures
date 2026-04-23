@@ -8,6 +8,9 @@ services:
       echo "🔍 PRE-BUILD ENV CHECK:" &&
       echo "  USE_S3=$USE_S3" &&
       echo "  DJANGO_DEBUG=$DJANGO_DEBUG" &&
+        test -n "$DATABASE_URL" || (echo "  ✗ DATABASE_URL is MISSING" && exit 1) &&
+        DB_HOST=$(python -c "import os; from urllib.parse import urlparse; print((urlparse((os.getenv('DATABASE_URL') or '').strip()).hostname or '').strip().lower())") &&
+        case "$DB_HOST" in localhost|127.0.0.1) echo "  ✗ DATABASE_URL points to localhost (invalid on Render)" && exit 1;; *) echo "  ✓ DATABASE_URL host detected: $DB_HOST";; esac &&
       test -n "$AWS_ACCESS_KEY_ID" && echo "  ✓ AWS_ACCESS_KEY_ID is set" || echo "  ✗ AWS_ACCESS_KEY_ID is MISSING" &&
       test -n "$AWS_SECRET_ACCESS_KEY" && echo "  ✓ AWS_SECRET_ACCESS_KEY is set" || echo "  ✗ AWS_SECRET_ACCESS_KEY is MISSING" &&
       echo "" &&
