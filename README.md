@@ -196,11 +196,7 @@ cd frontend && npm install && npm run build
 ## Project Management Scripts
 
 ### Backend Scripts
-- `backend/install.sh` - Setup script for Unix/Linux
-- `backend/install.bat` - Setup script for Windows
 - `backend/build.sh` - Production build script
-- `backend/check_env.py` - Environment variable checker
-- `backend/upload_media_to_s3.py` - Upload local media to S3
 - `backend/populate_s3_records.py` - Create S3 media records
 
 ## Contributing
