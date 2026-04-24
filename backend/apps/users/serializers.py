@@ -37,7 +37,7 @@ class UserLoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate_email(self, value):
-        return value.lower()
+        return value.strip().lower()
 
 
 class RefreshTokenSerializer(serializers.Serializer):
