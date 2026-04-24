@@ -77,15 +77,9 @@ A full-stack e-commerce platform for Pie Global Furniture built with Django REST
    DJANGO_SECRET_KEY=your-secret-key-here
    DJANGO_DEBUG=True
    DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-   
-   # Database (for production)
-   DATABASE_URL=postgresql://postgres:254admin020@localhost:5432/pie_global_db
-   # OR individual PostgreSQL settings
-   POSTGRES_DB=pie_global_db
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=254admin020
-   POSTGRES_HOST=localhost
-   POSTGRES_PORT=5432
+
+   # Database
+   # SQLite is used automatically (backend/db.sqlite3)
    
    # AWS S3 Storage
    AWS_ACCESS_KEY_ID=your-access-key
@@ -181,10 +175,11 @@ The project is configured for deployment on Render.com. See `render.yaml` for se
 - `DJANGO_SECRET_KEY`
 - `DJANGO_DEBUG=False`
 - `DJANGO_ALLOWED_HOSTS=your-domain.onrender.com,pieglobalfunitures.co.ke`
-- `DATABASE_URL` (auto-provided by Render PostgreSQL)
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_STORAGE_BUCKET_NAME`
+
+Note: this project now uses SQLite only for the database, so no PostgreSQL env vars are needed.
 
 ### Build Commands
 
