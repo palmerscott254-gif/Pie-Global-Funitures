@@ -119,14 +119,15 @@ if database_url:
         )
     }
 else:
+    # Local development: use environment variables or defaults
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql' if not DEBUG else 'django.db.backends.sqlite3',
-            'NAME': 'pie_global_db' if not DEBUG else BASE_DIR / 'db.sqlite3',
-            'USER': 'scholsey',
-            'PASSWORD': '254admin020',
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'NAME': config('DB_NAME', default='pie_global_db' if not DEBUG else str(BASE_DIR / 'db.sqlite3')),
+            'USER': config('DB_USER', default='scholsey'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
         }
     }
 
