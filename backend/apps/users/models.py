@@ -16,6 +16,8 @@ class User(models.Model):
     class Meta:
         db_table = 'users'
         ordering = ['-created_at']
+        verbose_name = 'Frontend User Account'
+        verbose_name_plural = 'Frontend User Accounts'
 
     def __str__(self):
         return self.email
