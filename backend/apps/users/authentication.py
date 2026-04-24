@@ -1,5 +1,4 @@
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import AuthenticationFailed
 
 from .models import User
 from .jwt_utils import decode_token
@@ -13,20 +12,20 @@ class PgfAuthentication(BaseAuthentication):
         if auth_header.startswith('Bearer '):
             token = auth_header.split(' ', 1)[1].strip()
             if not token:
-                raise AuthenticationFailed('Missing token.')
+                return None
             try:
                 payload = decode_token(token, expected_type='access')
             except Exception:
-                raise AuthenticationFailed('Invalid or expired token.')
+                return None
 
             user_id = payload.get('sub')
             if not user_id:
-                raise AuthenticationFailed('Invalid token payload.')
+                return None
 
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
-                raise AuthenticationFailed('User not found.')
+                return None
 
             return (user, None)
 
