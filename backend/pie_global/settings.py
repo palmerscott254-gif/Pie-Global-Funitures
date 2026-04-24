@@ -122,36 +122,10 @@ if database_url:
 else:
     # Fallback to explicit PostgreSQL variables (Render compatible):
     # Prefer PG* variables, then DB_* for local development.
-    db_name = config('PGDATABASE', default=config('DB_NAME', default='')).strip()
-    db_user = config('PGUSER', default=config('DB_USER', default='')).strip()
-    db_password = config('PGPASSWORD', default=config('DB_PASSWORD', default='')).strip()
-    db_host = config('PGHOST', default=config('DB_HOST', default='')).strip()
-    db_port = config('PGPORT', default=config('DB_PORT', default='5432')).strip()
+    # Local development defaults to SQLite unless LOCAL_DB_ENGINE=postgres.
+    local_db_engine = config('LOCAL_DB_ENGINE', default='sqlite' if DEBUG else 'postgres').strip().lower()
 
-    has_explicit_postgres_config = bool(db_name and db_user and db_host)
-
-    if has_explicit_postgres_config:
-        if not DEBUG and db_host.lower() in {'localhost', '127.0.0.1'}:
-            raise ValueError(
-                'Invalid PostgreSQL host for production: localhost. '
-                'Set DATABASE_URL (recommended) or PGHOST/DB_HOST to your Render database host.'
-            )
-
-        db_options = {'sslmode': 'require'} if not DEBUG else {}
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': db_name,
-                'USER': db_user,
-                'PASSWORD': db_password,
-                'HOST': db_host,
-                'PORT': db_port,
-                'CONN_MAX_AGE': 600,
-                'OPTIONS': db_options,
-            }
-        }
-    elif DEBUG:
-        # Development default: SQLite when no PostgreSQL env vars are provided
+    if DEBUG and local_db_engine != 'postgres':
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
@@ -159,10 +133,46 @@ else:
             }
         }
     else:
-        raise ValueError(
-            'Database configuration missing in production. '
-            'Set DATABASE_URL (preferred) or PGHOST/PGDATABASE/PGUSER/PGPASSWORD.'
-        )
+        db_name = config('PGDATABASE', default=config('DB_NAME', default='')).strip()
+        db_user = config('PGUSER', default=config('DB_USER', default='')).strip()
+        db_password = config('PGPASSWORD', default=config('DB_PASSWORD', default='')).strip()
+        db_host = config('PGHOST', default=config('DB_HOST', default='')).strip()
+        db_port = config('PGPORT', default=config('DB_PORT', default='5432')).strip()
+
+        has_explicit_postgres_config = bool(db_name and db_user and db_host)
+
+        if has_explicit_postgres_config:
+            if not DEBUG and db_host.lower() in {'localhost', '127.0.0.1'}:
+                raise ValueError(
+                    'Invalid PostgreSQL host for production: localhost. '
+                    'Set DATABASE_URL (recommended) or PGHOST/DB_HOST to your Render database host.'
+                )
+
+            db_options = {'sslmode': 'require'} if not DEBUG else {}
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': db_name,
+                    'USER': db_user,
+                    'PASSWORD': db_password,
+                    'HOST': db_host,
+                    'PORT': db_port,
+                    'CONN_MAX_AGE': 600,
+                    'OPTIONS': db_options,
+                }
+            }
+        elif DEBUG:
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': str(BASE_DIR / 'db.sqlite3'),
+                }
+            }
+        else:
+            raise ValueError(
+                'Database configuration missing in production. '
+                'Set DATABASE_URL (preferred) or PGHOST/PGDATABASE/PGUSER/PGPASSWORD.'
+            )
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
