@@ -44,7 +44,9 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         await videoRef.current.play();
       } catch {
         setTimeout(() => {
-          videoRef.current?.play().catch(() => {});
+          videoRef.current?.play().catch(() => {
+            setVideoFailed(true);
+          });
         }, 300);
       }
     };
@@ -88,7 +90,9 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
             WebkitBackfaceVisibility: 'hidden',
           }}
           onCanPlay={() => {
-            videoRef.current?.play().catch(() => {});
+            videoRef.current?.play().catch(() => {
+              setVideoFailed(true);
+            });
           }}
           onError={(e) => {
             console.error('Video error:', e);
