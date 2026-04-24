@@ -86,7 +86,7 @@ class UserViewSet(viewsets.ModelViewSet):
         password = serializer.validated_data['password']
 
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             return Response(
                 {'success': False, 'error': 'No account found for this email.'},
