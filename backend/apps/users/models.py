@@ -7,7 +7,7 @@ class User(models.Model):
     """Custom User model for authentication."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, blank=False)
-    email = models.EmailField(unique=True, db_index=True)
+    email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)  # Hashed password
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

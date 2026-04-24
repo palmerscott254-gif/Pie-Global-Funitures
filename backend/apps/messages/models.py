@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.validators import EmailValidator
 
 class UserMessage(models.Model):
     """Customer contact form messages."""
