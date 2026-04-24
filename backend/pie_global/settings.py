@@ -232,6 +232,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Base URL for serving media in production/development
 # Priority: 1. Custom domain (pieglobalfunitures.co.ke), 2. RENDER_EXTERNAL_URL (Render auto-set), 3. BACKEND_URL env var, 4. localhost default
 # For production: use the custom domain or Render URL
+render_url = config('RENDER_EXTERNAL_URL', default='').strip()
+
 if DEBUG:
     # Development: allow localhost
     BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
