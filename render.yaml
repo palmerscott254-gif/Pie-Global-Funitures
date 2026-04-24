@@ -41,7 +41,7 @@ services:
         sync: false  # Set manually in Render dashboard
       - key: AWS_STORAGE_BUCKET_NAME
         value: pieglobal
-    healthCheckPath: /api/products/
+    healthCheckPath: /warmup/
     autoDeploy: true
 
   # Frontend React App
