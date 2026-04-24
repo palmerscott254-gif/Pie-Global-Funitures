@@ -40,7 +40,7 @@ class Product(models.Model):
     )
     
     # Categorization
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default="other", db_index=True)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default="other")
     tags = models.JSONField(
         blank=True, 
         null=True, 
@@ -66,8 +66,8 @@ class Product(models.Model):
     weight = models.CharField(max_length=50, blank=True)
     
     # Flags
-    featured = models.BooleanField(default=False, db_index=True)
-    is_active = models.BooleanField(default=True, db_index=True)
+    featured = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     on_sale = models.BooleanField(default=False)
     
     # SEO
