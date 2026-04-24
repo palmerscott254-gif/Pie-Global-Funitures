@@ -8,6 +8,7 @@ services:
       echo "🔍 PRE-BUILD ENV CHECK:" &&
       echo "  USE_S3=$USE_S3" &&
       echo "  DJANGO_DEBUG=$DJANGO_DEBUG" &&
+      test -n "$DATABASE_URL" && echo "  ✓ DATABASE_URL is set" || echo "  ✗ DATABASE_URL is MISSING" &&
       test -n "$AWS_ACCESS_KEY_ID" && echo "  ✓ AWS_ACCESS_KEY_ID is set" || echo "  ✗ AWS_ACCESS_KEY_ID is MISSING" &&
       test -n "$AWS_SECRET_ACCESS_KEY" && echo "  ✓ AWS_SECRET_ACCESS_KEY is set" || echo "  ✗ AWS_SECRET_ACCESS_KEY is MISSING" &&
       echo "" &&
@@ -31,9 +32,7 @@ services:
       - key: DJANGO_ALLOWED_HOSTS
         value: pie-global-funitures.onrender.com,pieglobalfunitures.co.ke,www.pieglobalfunitures.co.ke
       - key: DATABASE_URL
-        fromDatabase:
-          name: pie-global-db
-          property: connectionString
+        sync: false  # Set manually in Render dashboard (external PostgreSQL URL)
       - key: USE_S3
         value: True
       - key: AWS_ACCESS_KEY_ID
@@ -58,10 +57,3 @@ services:
         value: https://pie-global-funitures.onrender.com
     healthCheckPath: /
     autoDeploy: true
-
-# Internal Render PostgreSQL database
-databases:
-  - name: pie-global-db
-    databaseName: pie_global_db
-    user: pieglobal_user
-    plan: free
