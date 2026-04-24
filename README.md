@@ -175,11 +175,12 @@ The project is configured for deployment on Render.com. See `render.yaml` for se
 - `DJANGO_SECRET_KEY`
 - `DJANGO_DEBUG=False`
 - `DJANGO_ALLOWED_HOSTS=your-domain.onrender.com,pieglobalfunitures.co.ke`
+- `DATABASE_URL` (external persistent PostgreSQL)
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_STORAGE_BUCKET_NAME`
 
-Note: this project now uses SQLite only for the database, so no PostgreSQL env vars are needed.
+Note: SQLite is for local development only. Production should use a persistent PostgreSQL database via `DATABASE_URL`.
 
 ### Build Commands
 
@@ -226,6 +227,10 @@ See LICENSE file for details.
 - Development uses SQLite by default
 - Production uses PostgreSQL
 - Media files stored in AWS S3
+
+### User Accounts in Admin
+- Frontend-created accounts are stored in the custom users model at `/admin/users/user/`
+- `/admin/auth/user/` is Django's built-in auth table and is not used for frontend registration/login in this project
 
 ### Static Files
 - Served by Whitenoise in production

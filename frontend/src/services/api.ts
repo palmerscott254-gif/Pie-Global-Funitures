@@ -10,38 +10,29 @@ import type {
   AuthResponse,
 } from '@/types';
 
-// CRITICAL: API URL configuration with explicit fallback hierarchy
-// Priority: 1. import.meta.env.VITE_API_URL (set at build time by Vite/Vercel)
-//           2. Browser localhost detection (for local development)
-//           3. Hardcoded production URL (final fallback)
+// Stable API URL rules:
+// - Local development always uses local backend by default.
+// - Production always uses one backend URL (env override allowed).
+
+const LOCAL_API_URL = 'http://localhost:8000/api/';
+const PRODUCTION_API_URL = 'https://pie-global-funitures.onrender.com/api/';
 
 const getApiUrl = (): string => {
-  // Priority 1: Use build-time environment variable (VITE_API_URL)
-  // This is set from:
-  // - .env file (local dev)
-  // - Vercel Environment Variables (production)
-  // - vite.config.ts define option (as fallback)
   const envUrl = import.meta.env.VITE_API_URL;
+
+  if (import.meta.env.DEV) {
+    // In local dev, avoid accidentally sending account actions to production.
+    const forceRemoteApi = String(import.meta.env.VITE_FORCE_REMOTE_API || '').toLowerCase() === 'true';
+    if (!forceRemoteApi) {
+      return LOCAL_API_URL;
+    }
+  }
+
   if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
     return envUrl;
   }
 
-  // Priority 2: Check if we're in browser and detect local environment
-  if (typeof window !== 'undefined') {
-    const isLocal =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.startsWith('192.168.') ||
-      window.location.hostname.startsWith('10.');
-
-    if (isLocal) {
-      return 'http://localhost:8000/api/';
-    }
-  }
-
-  // Priority 3: Production fallback (only if env var not set and not localhost)
-  // This assumes Render backend is always available in production
-  return 'https://pie-global-funitures.onrender.com/api/';
+  return import.meta.env.PROD ? PRODUCTION_API_URL : LOCAL_API_URL;
 };
 
 const API_BASE_URL = getApiUrl();
