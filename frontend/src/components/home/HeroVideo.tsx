@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { memo, useRef, useEffect, useState } from 'react';
+import { memo, useRef, useEffect, useMemo, useState } from 'react';
 import { getImageUrl, getVideoUrl } from '@/utils/imageUrl';
 import type { HomeVideo, SliderImage } from '@/types';
 
@@ -11,112 +11,119 @@ interface HeroVideoProps {
 
 const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const sectionRef = useRef<HTMLElement>(null);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(true); // Default to true to avoid desktop not loading
   const [videoFailed, setVideoFailed] = useState(false);
+  const videoUrl = video?.video ? getVideoUrl(video.video) : '';
+  const fallbackImageUrl = slider?.image ? getImageUrl(slider.image) : '';
 
-  useEffect(() => {
-    // Defer video loading until hero is in viewport while keeping eager default
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          setShouldLoadVideo(true);
-        }
-      },
-      { rootMargin: '0px', threshold: 0.1 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
+  const particles = useMemo(() => {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 1440;
+    const height = typeof window !== 'undefined' ? window.innerHeight : 900;
+    return [...Array(8)].map((_, i) => ({
+      id: i,
+      initialX: Math.random() * width,
+      initialY: Math.random() * height,
+      animateX: Math.random() * width,
+      animateY: Math.random() * height,
+      duration: 15 + Math.random() * 20,
+    }));
   }, []);
 
+  const getVideoMimeType = (url: string) => {
+    const cleanUrl = url.toLowerCase().split('?')[0];
+    if (cleanUrl.endsWith('.webm')) return 'video/webm';
+    if (cleanUrl.endsWith('.mov')) return 'video/quicktime';
+    return 'video/mp4';
+  };
+
   useEffect(() => {
-    // Ensure video plays smoothly once loaded and visible
     const playVideo = async () => {
-      if (!shouldLoadVideo || !videoRef.current) return;
+      if (!videoRef.current || !videoUrl || videoFailed) return;
       try {
-        videoRef.current.playbackRate = 1.0;
-
-        if ('connection' in navigator) {
-          const conn = (navigator as any).connection;
-          if (conn && conn.effectiveType !== '4g') {
-            videoRef.current.playbackRate = 1.0;
-          }
-        }
-
+        videoRef.current.muted = true;
+        videoRef.current.defaultMuted = true;
         await videoRef.current.play();
-      } catch (err) {
+      } catch {
         setTimeout(() => {
-          videoRef.current?.play().catch(() => {});
-        }, 800);
+          videoRef.current?.play().catch(() => {
+            setVideoFailed(true);
+          });
+        }, 300);
       }
     };
+
     playVideo();
-  }, [shouldLoadVideo]);
+    document.addEventListener('visibilitychange', playVideo);
+    return () => document.removeEventListener('visibilitychange', playVideo);
+  }, [videoUrl, videoFailed]);
 
   return (
-    <section ref={sectionRef} className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
+    <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
-      {video && video.video && !videoFailed ? (
+      {fallbackImageUrl ? (
+        <img
+          src={fallbackImageUrl}
+          alt={slider?.title || 'Hero background'}
+          className="absolute inset-0 z-0 w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+          onError={(e) => console.error('Slider fallback image failed to load:', slider?.image, e)}
+        />
+      ) : (
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
+      )}
+
+      {videoUrl && !videoFailed && (
         <video
           ref={videoRef}
-          src={shouldLoadVideo ? getVideoUrl(video.video) || undefined : undefined}
           autoPlay
           loop
           muted
           playsInline
-          preload="metadata"
-          crossOrigin="anonymous"
+          preload="auto"
+          poster={fallbackImageUrl || undefined}
           disablePictureInPicture
           disableRemotePlayback
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 z-[1] w-full h-full object-cover pointer-events-none"
           style={{
-            willChange: 'auto',
+            willChange: 'transform',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
           }}
+          onCanPlay={() => {
+            videoRef.current?.play().catch(() => {
+              setVideoFailed(true);
+            });
+          }}
           onError={(e) => {
             console.error('Video error:', e);
-            console.error('Video src:', video.video);
-            console.error('Attempted URL:', getVideoUrl(video.video));
+            console.error('Video src:', video?.video);
+            console.error('Attempted URL:', videoUrl);
             setVideoFailed(true);
           }}
-        />
-      ) : slider && slider.image ? (
-        <img
-          src={getImageUrl(slider.image)}
-          alt={slider.title}
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-          onError={(e) => console.error('Slider image failed to load:', slider.image, e)}
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
+        >
+          <source src={videoUrl} type={getVideoMimeType(videoUrl)} />
+        </video>
       )}
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+      <div className="absolute inset-0 z-[2] bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
 
       {/* Animated Particles Background - Reduced for performance */}
-      <div className="absolute inset-0 opacity-10">
-        {[...Array(8)].map((_, i) => (
+      <div className="absolute inset-0 z-[3] opacity-10">
+        {particles.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             className="absolute w-1.5 h-1.5 bg-white rounded-full"
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: particle.initialX,
+              y: particle.initialY,
             }}
             animate={{
-              y: [null, Math.random() * window.innerHeight],
-              x: [null, Math.random() * window.innerWidth],
+              y: [null, particle.animateY],
+              x: [null, particle.animateX],
             }}
             transition={{
-              duration: 15 + Math.random() * 20,
+              duration: particle.duration,
               repeat: Infinity,
               ease: 'linear',
             }}
