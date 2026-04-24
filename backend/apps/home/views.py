@@ -13,7 +13,6 @@ class SliderImageViewSet(viewsets.ModelViewSet):
     queryset = SliderImage.objects.filter(active=True)
     serializer_class = SliderImageSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    ordering = ['order', '-uploaded_at']
     pagination_class = None  # Disable pagination for sliders
 
     def _cache_timeout(self):

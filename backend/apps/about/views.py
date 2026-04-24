@@ -16,10 +16,6 @@ class AboutPageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = None  # Disable pagination
     
-    def get_queryset(self):
-        """Return about pages ordered by most recently updated first."""
-        return AboutPage.objects.all().order_by('-updated_at')
-    
     @action(detail=False, methods=['get'])
     def current(self, request):
         """Get current/primary about page (most recently updated)."""
