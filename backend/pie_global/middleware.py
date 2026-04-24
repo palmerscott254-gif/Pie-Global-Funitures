@@ -1,7 +1,35 @@
 """
 Custom middleware for Pie Global Furniture project.
 """
+import logging
 import mimetypes
+
+from .performance import mark_request_and_get_state
+
+
+logger = logging.getLogger('django')
+
+
+class StartupPerformanceMiddleware:
+    """
+    Lightweight middleware to log cold-start versus warm requests.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        is_cold_request, uptime_ms = mark_request_and_get_state()
+        if is_cold_request:
+            logger.info(
+                'COLD_START first_request path=%s startup_ms=%.2f',
+                request.path,
+                uptime_ms,
+            )
+        else:
+            logger.debug('WARM_REQUEST path=%s uptime_ms=%.2f', request.path, uptime_ms)
+
+        return self.get_response(request)
 
 
 class VideoMimeTypeMiddleware:

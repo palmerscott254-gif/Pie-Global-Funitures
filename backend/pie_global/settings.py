@@ -69,6 +69,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'pie_global.middleware.StartupPerformanceMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -309,6 +310,17 @@ REST_FRAMEWORK = {
         'anon': '100/hour',
         'user': '1000/hour',
     },
+}
+
+# Lightweight in-memory response caching for high-traffic read endpoints
+API_RESPONSE_CACHE_TTL = config('API_RESPONSE_CACHE_TTL', default=120, cast=int)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'pie-global-cache',
+        'TIMEOUT': API_RESPONSE_CACHE_TTL,
+    }
 }
 
 # JWT configuration for custom auth tokens

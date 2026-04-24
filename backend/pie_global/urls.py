@@ -7,8 +7,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from apps.core.warmup import warmup_view
 
 urlpatterns = [
+    path('warmup/', warmup_view),
     # Admin
     path('admin/', admin.site.urls),
     

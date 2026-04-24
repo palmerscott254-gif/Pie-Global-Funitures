@@ -2,17 +2,44 @@
 Core views for file uploads and utilities.
 """
 import logging
-import boto3
-from botocore.config import Config
-from datetime import datetime, timedelta
+import threading
+from datetime import datetime
 from django.conf import settings
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
+
+_s3_client = None
+_s3_client_lock = threading.Lock()
+
+
+def _get_s3_client():
+    """Lazily initialize and cache a single S3 client per process."""
+    global _s3_client
+
+    if _s3_client is not None:
+        return _s3_client
+
+    with _s3_client_lock:
+        if _s3_client is not None:
+            return _s3_client
+
+        import boto3
+        from botocore.config import Config
+
+        s3_config = Config(signature_version='s3v4', s3={'addressing_style': 'virtual'})
+        _s3_client = boto3.client(
+            's3',
+            region_name=settings.AWS_S3_REGION_NAME,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            config=s3_config,
+        )
+        return _s3_client
 
 
 class S3PresignedURLViewSet(viewsets.ViewSet):
@@ -107,15 +134,7 @@ class S3PresignedURLViewSet(viewsets.ViewSet):
         Returns:
             Presigned URL string
         """
-        # Force s3v4 signing with virtual addressing for us-east-1
-        s3_config = Config(signature_version='s3v4', s3={'addressing_style': 'virtual'})
-        s3_client = boto3.client(
-            's3',
-            region_name=settings.AWS_S3_REGION_NAME,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            config=s3_config,
-        )
+        s3_client = _get_s3_client()
         
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
