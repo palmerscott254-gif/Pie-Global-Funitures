@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.cache import cache
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -95,7 +95,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         def fetch_payload():
             categories = Product.CATEGORY_CHOICES
             result = {}
-            for cat_key, cat_name in categories:
+            for cat_key, _cat_name in categories:
                 products = self.get_queryset().filter(category=cat_key)
                 result[cat_key] = ProductListSerializer(
                     products,
