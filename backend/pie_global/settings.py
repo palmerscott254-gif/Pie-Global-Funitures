@@ -67,7 +67,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'pie_global.cors_middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'pie_global.middleware.StartupPerformanceMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files
