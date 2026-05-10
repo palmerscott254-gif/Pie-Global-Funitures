@@ -5,7 +5,6 @@ Django settings for Pie Global Furniture project.
 import os
 from pathlib import Path
 from urllib.parse import urlparse
-import dj_database_url
 from decouple import AutoConfig, Csv
 
 # Build paths
@@ -113,12 +112,26 @@ if database_url:
             'Use Render\'s internal database connection string.'
         )
 
-    DATABASES = {
-        'default': dj_database_url.parse(
-            database_url,
-            conn_max_age=600,
-            ssl_require=not DEBUG,
+    db_scheme = (parsed_db_url.scheme or '').strip().lower()
+    if db_scheme not in {'postgres', 'postgresql'}:
+        raise ValueError(
+            f'Unsupported DATABASE_URL scheme: {parsed_db_url.scheme!r}. '
+            'Use postgres:// or postgresql://.'
         )
+
+    db_name = (parsed_db_url.path or '').lstrip('/')
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db_name,
+            'USER': parsed_db_url.username or '',
+            'PASSWORD': parsed_db_url.password or '',
+            'HOST': parsed_db_url.hostname or '',
+            'PORT': str(parsed_db_url.port or 5432),
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': {},
+        }
     }
 else:
     # Fallback to explicit PostgreSQL variables (Render compatible):
