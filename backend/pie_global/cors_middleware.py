@@ -1,5 +1,6 @@
 import re
 from django.conf import settings
+from django.http import HttpResponse
 
 
 class CorsMiddleware:
@@ -32,9 +33,25 @@ class CorsMiddleware:
         return False
 
     def __call__(self, request):
+        origin = request.headers.get('Origin') or request.META.get('HTTP_ORIGIN')
+        is_preflight = (
+            request.method == 'OPTIONS'
+            and bool(request.headers.get('Access-Control-Request-Method') or request.META.get('HTTP_ACCESS_CONTROL_REQUEST_METHOD'))
+        )
+
+        if origin and is_preflight and self._origin_allowed(origin):
+            response = HttpResponse(status=200)
+            response['Access-Control-Allow-Origin'] = '*' if self.allow_all else origin
+            response['Access-Control-Allow-Methods'] = self.allow_methods
+            if self.allow_credentials:
+                response['Access-Control-Allow-Credentials'] = 'true'
+            if self.allow_headers:
+                response['Access-Control-Allow-Headers'] = self.allow_headers
+            response['Vary'] = 'Origin'
+            return response
+
         response = self.get_response(request)
 
-        origin = request.headers.get('Origin') or request.META.get('HTTP_ORIGIN')
         if not origin:
             return response
 
@@ -46,5 +63,6 @@ class CorsMiddleware:
                 response['Access-Control-Allow-Credentials'] = 'true'
             if self.allow_headers:
                 response['Access-Control-Allow-Headers'] = self.allow_headers
+            response['Vary'] = 'Origin'
 
         return response

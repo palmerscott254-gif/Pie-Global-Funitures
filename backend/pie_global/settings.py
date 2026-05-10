@@ -360,10 +360,23 @@ JWT_REFRESH_TTL_DAYS = config('JWT_REFRESH_TTL_DAYS', default=7, cast=int)
 # Production: Vercel frontend domain (including all preview/staging deployments)
 _default_cors_origins = 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://pie-global-funitures.vercel.app,https://pieglobalfunitures.co.ke,https://www.pieglobalfunitures.co.ke'
 
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS', 
-    default=_default_cors_origins, 
-    cast=Csv()
+_configured_cors_origins = list(config('CORS_ALLOWED_ORIGINS', default='', cast=Csv()))
+_required_cors_origins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    'https://pie-global-funitures.vercel.app',
+    'https://pieglobalfunitures.co.ke',
+    'https://www.pieglobalfunitures.co.ke',
+]
+
+CORS_ALLOWED_ORIGINS = sorted(
+    {
+        origin.strip()
+        for origin in (_configured_cors_origins or list(Csv()(_default_cors_origins))) + _required_cors_origins
+        if origin and origin.strip()
+    }
 )
 
 # Also allow all Vercel preview domains (*.vercel.app)
