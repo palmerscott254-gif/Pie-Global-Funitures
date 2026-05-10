@@ -72,35 +72,42 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def login(self, request):
         """Login a user."""
+        logger.info(f"Login request received with data: {request.data}")
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as exc:
-            logger.warning(f"Login validation failed: {exc}")
+            logger.error(f"Login validation failed: {exc}, errors: {serializer.errors}")
             return Response(
                 {'success': False, 'errors': serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
+        email = serializer.validated_data.get('email', '').strip().lower()
+        password = serializer.validated_data.get('password', '')
+        logger.info(f"Login attempt for email: {email}")
 
         try:
             user = User.objects.get(email__iexact=email)
+            logger.info(f"User found: {user.email} (ID: {user.id})")
         except User.DoesNotExist:
+            logger.warning(f"Login failed: No account found for email: {email}")
             return Response(
                 {'success': False, 'error': 'No account found for this email.'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
         if not user.is_active:
+            logger.warning(f"Login failed: User {user.id} is inactive")
             return Response(
                 {'success': False, 'error': 'Account is inactive. Please contact support.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if not user.check_password(password):
-            logger.warning(f"Failed login attempt for {email}")
+        # Check password
+        password_valid = user.check_password(password)
+        if not password_valid:
+            logger.warning(f"Login failed: Invalid password for {email}")
             return Response(
                 {'success': False, 'error': 'Incorrect password.'},
                 status=status.HTTP_401_UNAUTHORIZED,

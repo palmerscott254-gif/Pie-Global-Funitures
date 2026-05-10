@@ -195,6 +195,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+# Custom user model
+AUTH_USER_MODEL = 'users.User'
+
 # Internationalization
 # No trailing whitespace in this docstring or in this file
 LANGUAGE_CODE = 'en-us'
