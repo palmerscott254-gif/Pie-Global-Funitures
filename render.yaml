@@ -16,14 +16,6 @@ services:
       find . -type f -name "*.pyc" -delete 2>/dev/null || true &&
       pip install --no-cache-dir -r requirements.txt &&
       python manage.py migrate &&
-      if [ -n "$DEFAULT_ADMIN_EMAIL" ] && [ -n "$DEFAULT_ADMIN_PASSWORD" ]; then
-        python manage.py create_dashboard_admin \
-          --email "$DEFAULT_ADMIN_EMAIL" \
-          --name "${DEFAULT_ADMIN_NAME:-Dashboard Admin}" \
-          --password "$DEFAULT_ADMIN_PASSWORD"
-      else
-        echo "Skipping dashboard admin bootstrap (DEFAULT_ADMIN_EMAIL/PASSWORD not set)"
-      fi &&
       python manage.py sync_s3_to_db &&
       python populate_s3_records.py &&
       python manage.py fix_production_products &&
