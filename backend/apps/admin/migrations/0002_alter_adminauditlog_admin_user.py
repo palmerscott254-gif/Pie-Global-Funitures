@@ -4,6 +4,11 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def clear_admin_user_values(apps, schema_editor):
+    AdminAuditLog = apps.get_model('pgf_admin', 'AdminAuditLog')
+    AdminAuditLog.objects.all().update(admin_user=None)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,30 +17,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.SeparateDatabaseAndState(
-            database_operations=[
-                migrations.RunSQL(
-                    sql="""
-                        ALTER TABLE pgf_admin_adminauditlog
-                        DROP CONSTRAINT IF EXISTS pgf_admin_adminauditlog_admin_user_id_6496a7e0_fk_auth_user_id;
-
-                        ALTER TABLE pgf_admin_adminauditlog
-                        ALTER COLUMN admin_user_id TYPE uuid USING NULL::uuid;
-
-                        ALTER TABLE pgf_admin_adminauditlog
-                        ADD CONSTRAINT pgf_admin_adminauditlog_admin_user_id_fk_users
-                        FOREIGN KEY (admin_user_id) REFERENCES users(id)
-                        DEFERRABLE INITIALLY DEFERRED;
-                    """,
-                    reverse_sql=migrations.RunSQL.noop,
-                ),
-            ],
-            state_operations=[
-                migrations.AlterField(
-                    model_name='adminauditlog',
-                    name='admin_user',
-                    field=models.ForeignKey(blank=True, help_text='Admin user who performed the action', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='admin_audit_logs', to='users.user'),
-                ),
-            ],
+        migrations.RunPython(clear_admin_user_values, migrations.RunPython.noop),
+        migrations.AlterField(
+            model_name='adminauditlog',
+            name='admin_user',
+            field=models.ForeignKey(
+                blank=True,
+                help_text='Admin user who performed the action',
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='admin_audit_logs',
+                to='users.user',
+            ),
         ),
     ]

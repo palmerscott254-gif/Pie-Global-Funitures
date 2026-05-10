@@ -16,7 +16,7 @@ config = AutoConfig(search_path=BASE_DIR)
 
 # Security Settings
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='INSECURE-change-me-in-production-use-strong-random-key')
-DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
+DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
 
 # Allowed hosts: MUST include full domains (not wildcards) for production security
 # Development defaults
