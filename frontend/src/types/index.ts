@@ -150,3 +150,60 @@ export const CATEGORIES = [
 ] as const;
 
 export type CategoryValue = typeof CATEGORIES[number]['value'];
+
+// Admin Dashboard types
+export interface AdminOrder extends Order {
+  id: number;
+  email: string;
+  item_count: number;
+}
+
+export interface AdminMessage {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  status: 'new' | 'read' | 'replied' | 'resolved';
+  reply_text?: string;
+  replied_at?: string;
+  created_at: string;
+  updated_at: string;
+  days_since_created: number;
+}
+
+export interface DashboardAlert {
+  type: string;
+  severity: 'info' | 'warning' | 'danger';
+  message: string;
+  count: number;
+  action_url?: string;
+}
+
+export interface DashboardSummary {
+  total_orders: number;
+  pending_orders: number;
+  processing_orders: number;
+  delivered_orders: number;
+  cancelled_orders: number;
+  unread_messages: number;
+  total_messages: number;
+  revenue_today: number | string;
+  revenue_this_month: number | string;
+  revenue_all_time: number | string;
+  average_order_value: number | string;
+  recent_orders: AdminOrder[];
+  recent_messages: AdminMessage[];
+}
+
+export interface AdminAuditLog {
+  id: number;
+  admin_user_name: string;
+  content_type_name: string;
+  object_id: number;
+  action: string;
+  changes: Record<string, any>;
+  timestamp: string;
+  ip_address?: string;
+}
+

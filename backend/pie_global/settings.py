@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.about',
     'apps.users.apps.UsersConfig',
+    'apps.admin.apps.AdminConfig',  # Admin dashboard
 ]
 
 MIDDLEWARE = [

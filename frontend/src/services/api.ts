@@ -8,6 +8,10 @@ import type {
   AboutPage,
   PaginatedResponse,
   AuthResponse,
+  DashboardSummary,
+  DashboardAlert,
+  AdminOrder,
+  AdminMessage,
 } from '@/types';
 
 // Stable API URL rules:
@@ -233,6 +237,74 @@ export const authApi = {
   },
   refresh: async (payload: { refresh: string }) => {
     const response = await api.post<AuthResponse>('/users/refresh/', payload);
+    return response.data;
+  },
+};
+
+// Admin Dashboard API
+export const adminApi = {
+  getDashboardSummary: async () => {
+    const response = await api.get<DashboardSummary>('/admin/dashboard/summary/');
+    return response.data;
+  },
+
+  getAlerts: async () => {
+    const response = await api.get<DashboardAlert[]>('/admin/dashboard/alerts/');
+    return response.data;
+  },
+
+  getRecentOrders: async (limit: number = 10, status?: string) => {
+    const params: Record<string, any> = { limit };
+    if (status) params.status = status;
+    const response = await api.get<AdminOrder[]>('/admin/dashboard/recent_orders/', { params });
+    return response.data;
+  },
+
+  getRecentMessages: async (limit: number = 10, status?: string) => {
+    const params: Record<string, any> = { limit };
+    if (status) params.status = status;
+    const response = await api.get<AdminMessage[]>('/admin/dashboard/recent_messages/', { params });
+    return response.data;
+  },
+
+  updateOrderStatus: async (orderId: number, status: string, notes?: string) => {
+    const payload: any = { status };
+    if (notes) payload.notes = notes;
+    const response = await api.post<{ message: string; order: AdminOrder }>(
+      `/admin/dashboard/orders/${orderId}/status/`,
+      payload
+    );
+    return response.data;
+  },
+
+  markOrderPaid: async (orderId: number) => {
+    const response = await api.post<{ message: string; order: AdminOrder }>(
+      `/admin/dashboard/orders/${orderId}/mark-paid/`
+    );
+    return response.data;
+  },
+
+  replyToMessage: async (messageId: number, replyText: string, status?: string) => {
+    const payload: any = { reply_text: replyText };
+    if (status) payload.status = status;
+    const response = await api.post<{ message: string; data: AdminMessage }>(
+      `/admin/dashboard/messages/${messageId}/reply/`,
+      payload
+    );
+    return response.data;
+  },
+
+  resolveMessage: async (messageId: number) => {
+    const response = await api.post<{ message: string; data: AdminMessage }>(
+      `/admin/dashboard/messages/${messageId}/resolve/`
+    );
+    return response.data;
+  },
+
+  getAuditLogs: async (limit: number = 50) => {
+    const response = await api.get<any[]>('/admin/dashboard/audit_logs/', {
+      params: { limit }
+    });
     return response.data;
   },
 };

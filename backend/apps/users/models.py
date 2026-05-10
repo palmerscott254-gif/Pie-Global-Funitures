@@ -15,6 +15,8 @@ class User(models.Model):
     email = models.EmailField(unique=True, db_index=True)
     password = models.CharField(max_length=255)  # Hashed password (PBKDF2)
     is_active = models.BooleanField(default=True, db_index=True)
+    is_staff = models.BooleanField(default=False, db_index=True, help_text="Designates whether user is staff (can access admin)")
+    is_superuser = models.BooleanField(default=False, db_index=True, help_text="Designates whether user is superuser (full admin)")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -60,16 +62,6 @@ class User(models.Model):
     @property
     def is_anonymous(self):
         """Compatibility with Django auth checks for anonymous users."""
-        return False
-
-    @property
-    def is_staff(self):
-        """Compatibility with admin/staff checks in views."""
-        return False
-
-    @property
-    def is_superuser(self):
-        """Compatibility with superuser checks in views."""
         return False
 
     def save(self, *args, **kwargs):

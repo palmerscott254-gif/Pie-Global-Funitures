@@ -12,9 +12,11 @@ class Order(models.Model):
     
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('received', 'Received'),
         ('confirmed', 'Confirmed'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
+        ('out_for_delivery', 'Out for Delivery'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ]
@@ -86,4 +88,9 @@ class Order(models.Model):
     @property
     def is_shipped(self) -> bool:
         """Check if order is shipped."""
-        return self.status == 'shipped'
+        return self.status in {'shipped', 'out_for_delivery'}
+
+    @property
+    def is_in_transit(self) -> bool:
+        """Check if order is out for delivery."""
+        return self.status in {'shipped', 'out_for_delivery'}
