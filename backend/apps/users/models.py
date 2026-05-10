@@ -1,6 +1,40 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.base_user import BaseUserManager
 import uuid
+
+
+class UserManager(BaseUserManager):
+    """Custom manager for email-based user lookup/authentication."""
+
+    use_in_migrations = True
+
+    def get_by_natural_key(self, username):
+        return self.get(**{self.model.USERNAME_FIELD: username})
+
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.password = make_password(None)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(models.Model):
@@ -24,6 +58,8 @@ class User(models.Model):
     is_superuser = models.BooleanField(default=False, db_index=True, help_text="Designates whether user is superuser (full admin)")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = UserManager()
 
     class Meta:
         db_table = 'users'
@@ -77,3 +113,24 @@ class User(models.Model):
         if self.password and not self.password.startswith('pbkdf2_sha256$'):
             self.set_password(self.password)
         super().save(*args, **kwargs)
+
+    # Django admin/auth compatibility helpers
+    def has_perm(self, perm, obj=None):
+        """Return True if the user has a specific permission.
+
+        Simplified: treat staff and superusers as having all perms in admin.
+        """
+        return bool(self.is_active and (self.is_superuser or self.is_staff))
+
+    def has_module_perms(self, app_label):
+        """Return True if the user has permissions to view the app `app_label`.
+
+        Simplified: staff and superusers may view admin app modules.
+        """
+        return bool(self.is_active and (self.is_superuser or self.is_staff))
+
+    def get_full_name(self):
+        return self.name or self.email
+
+    def get_short_name(self):
+        return (self.name.split()[0] if self.name and self.name.strip() else self.email)
