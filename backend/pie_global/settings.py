@@ -411,10 +411,10 @@ if not DEBUG:
     # Cookie security
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
-    SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+    SESSION_COOKIE_SAMESITE = 'None'  # Needed for cross-site frontend requests
     CSRF_COOKIE_SECURE = True
-    CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
-    CSRF_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_HTTPONLY = False  # Frontend must read the token for X-CSRFToken
+    CSRF_COOKIE_SAMESITE = 'None'
     
     # Browser security headers
     SECURE_BROWSER_XSS_FILTER = True
@@ -432,6 +432,8 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in data
 SESSION_COOKIE_AGE = 86400  # 1 day in seconds
 SESSION_SAVE_EVERY_REQUEST = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default='Lax' if DEBUG else 'None')
+CSRF_COOKIE_SAMESITE = config('CSRF_COOKIE_SAMESITE', default='Lax' if DEBUG else 'None')
 
 # File Upload Settings - Enhanced security
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB

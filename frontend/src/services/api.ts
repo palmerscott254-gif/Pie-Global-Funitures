@@ -217,6 +217,12 @@ export const aboutApi = {
   },
 };
 
+export const csrfApi = {
+  bootstrap: async () => {
+    await api.get('/csrf/');
+  },
+};
+
 // Auth API (session-based)
 export const authApi = {
   register: async (payload: { name: string; email: string; password: string; password_confirm: string }) => {

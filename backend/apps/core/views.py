@@ -4,17 +4,25 @@ Core views for file uploads and utilities.
 import logging
 import threading
 from datetime import datetime
+from django.http import JsonResponse
 from django.conf import settings
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 logger = logging.getLogger(__name__)
 
 _s3_client = None
 _s3_client_lock = threading.Lock()
+
+
+@ensure_csrf_cookie
+def csrf_bootstrap_view(request):
+    """Set the CSRF cookie for browser clients using cross-origin requests."""
+    return JsonResponse({'detail': 'CSRF cookie set.'})
 
 
 def _get_s3_client():

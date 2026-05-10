@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useEffect, lazy, Suspense } from 'react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import CartDrawer from './components/cart/CartDrawer';
@@ -7,9 +8,7 @@ import WhatsAppButton from './components/layout/WhatsAppButton';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ScrollToTop from './components/common/ScrollToTop';
-
-// Lazy load pages for better performance
-import { lazy, Suspense } from 'react';
+import { csrfApi } from './services/api';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ProductsPage = lazy(() => import('./pages/ProductsPage'));
@@ -25,6 +24,10 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const AdminDashboardPage = lazy(() => import('./components/admin/AdminDashboardPage'));
 
 function App() {
+  useEffect(() => {
+    void csrfApi.bootstrap().catch(() => undefined);
+  }, []);
+
   return (
     <ErrorBoundary>
       <div className="flex flex-col min-h-screen">
