@@ -10,6 +10,11 @@ class User(models.Model):
     Email-based authentication with secure password hashing.
     Timestamps for audit purposes.
     """
+    # Django AUTH_USER_MODEL required attributes
+    USERNAME_FIELD = 'email'
+    EMAIL_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, blank=False, db_index=False)
     email = models.EmailField(unique=True, db_index=True)
