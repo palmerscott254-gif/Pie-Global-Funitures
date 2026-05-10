@@ -72,6 +72,7 @@ MIDDLEWARE = [
     'pie_global.middleware.StartupPerformanceMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'pie_global.middleware.InvalidAuthSessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

@@ -3,11 +3,40 @@ Custom middleware for Pie Global Furniture project.
 """
 import logging
 import mimetypes
+from django.contrib.auth import get_user_model
+from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY
+from django.core.exceptions import ValidationError
 
 from .performance import mark_request_and_get_state
 
 
 logger = logging.getLogger('django')
+
+
+class InvalidAuthSessionMiddleware:
+    """
+    Clear stale auth session data when stored user ID does not match current PK type.
+
+    This prevents crashes when legacy integer session IDs remain after migrating to UUID PKs.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.user_pk_field = get_user_model()._meta.pk
+
+    def __call__(self, request):
+        session_user_id = request.session.get(SESSION_KEY)
+
+        if session_user_id is not None:
+            try:
+                self.user_pk_field.to_python(session_user_id)
+            except (ValidationError, ValueError, TypeError):
+                request.session.pop(SESSION_KEY, None)
+                request.session.pop(BACKEND_SESSION_KEY, None)
+                request.session.pop(HASH_SESSION_KEY, None)
+                request.session.modified = True
+
+        return self.get_response(request)
 
 
 class StartupPerformanceMiddleware:
