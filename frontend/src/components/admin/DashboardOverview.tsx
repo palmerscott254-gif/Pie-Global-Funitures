@@ -27,7 +27,6 @@ export const DashboardOverview: React.FC = () => {
     loading: ordersLoading,
     error: ordersError,
     updateStatus,
-    markPaid,
   } = useAdminOrders(true, 10000, 5);
   const {
     messages,
@@ -145,8 +144,12 @@ export const DashboardOverview: React.FC = () => {
           <RecentMessagesPanel
             messages={messages}
             loading={messagesLoading}
-            onReply={reply}
-            onResolve={resolve}
+            onReply={async (messageId, replyText) => {
+              await reply(messageId, replyText);
+            }}
+            onResolve={async (messageId) => {
+              await resolve(messageId);
+            }}
           />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderStatusBadge } from './StatusBadge';
 import type { AdminOrder } from '@/types';
@@ -14,7 +14,6 @@ export const RecentOrdersTable: React.FC<RecentOrdersTableProps> = ({
   orders,
   loading = false,
   onViewDetails,
-  onStatusChange,
 }) => {
   const navigate = useNavigate();
 

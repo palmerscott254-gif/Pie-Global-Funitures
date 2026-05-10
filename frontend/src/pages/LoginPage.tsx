@@ -30,6 +30,8 @@ const LoginPage = () => {
         email: data.user.email,
         name: data.user.name,
         id: data.user.id,
+        is_staff: !!data.user.is_staff,
+        is_superuser: !!data.user.is_superuser,
       }));
       if (data.access) {
         localStorage.setItem('pgf-auth-access', data.access);
@@ -38,7 +40,9 @@ const LoginPage = () => {
         localStorage.setItem('pgf-auth-refresh', data.refresh);
       }
       window.dispatchEvent(new Event('pgf-auth-changed'));
-      const redirectTo = (location.state as { from?: string } | null)?.from || '/';
+      const from = (location.state as { from?: string } | null)?.from;
+      const isAdminUser = !!(data.user.is_staff || data.user.is_superuser);
+      const redirectTo = from || (isAdminUser ? '/admin/dashboard/' : '/');
       navigate(redirectTo, { replace: true });
     } catch (err) {
       console.error('Login error:', err);

@@ -101,6 +101,8 @@ export interface User {
   name: string;
   email: string;
   created_at: string;
+  is_staff?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface AuthResponse {

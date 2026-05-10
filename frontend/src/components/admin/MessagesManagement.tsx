@@ -59,7 +59,9 @@ export const MessagesManagement: React.FC = () => {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
         <p className="font-medium">Error loading messages: {error}</p>
         <button
-          onClick={refetch}
+          onClick={() => {
+            void refetch(statusFilter || undefined);
+          }}
           className="mt-2 text-red-600 hover:text-red-700 font-medium underline"
         >
           Try Again
