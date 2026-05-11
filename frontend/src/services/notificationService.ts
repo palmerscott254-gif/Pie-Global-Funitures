@@ -3,7 +3,7 @@
  * Handles API calls and WebSocket communication with backend notification system
  */
 
-import { API_BASE_URL } from './api';
+import { API_URL } from './api';
 
 export interface Notification {
   id: number;
@@ -42,7 +42,7 @@ export const notificationAPI = {
     pageSize: number = 20,
     filters?: { isRead?: boolean; notificationType?: string }
   ): Promise<NotificationListResponse> => {
-    const url = new URL(`${API_BASE_URL}/notifications/`);
+    const url = new URL(`${API_URL}/api/notifications/`);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
 
@@ -68,7 +68,7 @@ export const notificationAPI = {
    * CRITICAL: This is called frequently to update the badge
    */
   getUnreadCount: async (): Promise<number> => {
-    const response = await fetch(`${API_BASE_URL}/notifications/unread-count/`, {
+    const response = await fetch(`${API_URL}/api/notifications/unread-count/`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('pgf-auth-access')}`,
       },
@@ -83,7 +83,7 @@ export const notificationAPI = {
    * Mark single notification as read
    */
   markAsRead: async (notificationId: number): Promise<Notification> => {
-    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/mark-read/`, {
+    const response = await fetch(`${API_URL}/api/notifications/${notificationId}/mark-read/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('pgf-auth-access')}`,
@@ -99,7 +99,7 @@ export const notificationAPI = {
    * Mark all notifications as read
    */
   markAllAsRead: async (): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/notifications/mark-all-read/`, {
+    const response = await fetch(`${API_URL}/api/notifications/mark-all-read/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('pgf-auth-access')}`,
@@ -114,7 +114,7 @@ export const notificationAPI = {
    * Delete (soft delete) a notification
    */
   deleteNotification: async (notificationId: number): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/`, {
+    const response = await fetch(`${API_URL}/api/notifications/${notificationId}/`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('pgf-auth-access')}`,
@@ -131,7 +131,7 @@ export const notificationAPI = {
     notificationIds: number[],
     action: 'mark_read' | 'mark_unread' | 'delete'
   ): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/notifications/bulk-action/`, {
+    const response = await fetch(`${API_URL}/api/notifications/bulk-action/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('pgf-auth-access')}`,
@@ -156,7 +156,6 @@ export class NotificationWebSocket {
   private url: string;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
   private messageHandlers: Map<string, Set<(data: any) => void>> = new Map();
   private isIntentionallyClosed = false;
 

@@ -24,7 +24,7 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unsubscribeRef = useRef<Array<() => void>>([]);
 
   /**
