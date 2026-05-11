@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUser, FaSignOutAlt, FaBell } from 'react-icons/fa';
+import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useOnClickOutside, useScrollPosition } from '@/hooks';
+import { NotificationBell } from '@/components/notifications';
 import logoImage from './logo photo.jpeg';
 
 const Header = () => {
@@ -15,16 +16,13 @@ const Header = () => {
   const scrollY = useScrollPosition();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const notificationsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
   const closeUserMenu = useCallback(() => setIsUserMenuOpen(false), []);
-  const closeNotifications = useCallback(() => setIsNotificationsOpen(false), []);
 
   useEffect(() => {
     setIsScrolled(scrollY > 50);
@@ -52,29 +50,7 @@ const Header = () => {
   );
 
   useOnClickOutside(userMenuRef, closeUserMenu);
-  useOnClickOutside(notificationsRef, closeNotifications);
   useOnClickOutside(searchRef, () => setIsSearchOpen(false));
-
-  const notificationItems = useMemo(
-    () => [
-      {
-        title: 'New order update',
-        description: 'Your recent order is being processed.',
-        time: 'Just now',
-      },
-      {
-        title: 'Message received',
-        description: 'You have a new customer support reply.',
-        time: '12 min ago',
-      },
-      {
-        title: 'Weekend sale',
-        description: 'Selected items are now discounted.',
-        time: '1 hour ago',
-      },
-    ],
-    []
-  );
 
   const handleSearchSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -162,67 +138,8 @@ const Header = () => {
               )}
             </div>
 
-            {/* Notification Icon */}
-            <div className="relative" ref={notificationsRef}>
-              <button
-                onClick={() => setIsNotificationsOpen((prev) => !prev)}
-                className="relative text-gray-700 hover:text-primary-600 transition-colors"
-                aria-label="Open notifications"
-              >
-                <FaBell size={20} />
-                <span
-                  className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"
-                  aria-hidden
-                />
-              </button>
-
-              {isNotificationsOpen && (
-                <div className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-2rem)] bg-white shadow-xl border border-gray-200 rounded-2xl overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900">Notifications</p>
-                      <p className="text-xs text-gray-500">Latest updates and alerts</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-primary-600 hover:text-primary-700"
-                      onClick={closeNotifications}
-                    >
-                      Mark all read
-                    </button>
-                  </div>
-
-                  <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
-                    {notificationItems.map((item) => (
-                      <button
-                        key={`${item.title}-${item.time}`}
-                        type="button"
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-primary-500 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                            <p className="text-sm text-gray-600">{item.description}</p>
-                            <p className="mt-1 text-xs text-gray-400">{item.time}</p>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
-                    <Link
-                      to={isAuthenticated ? '/admin/dashboard' : '/login'}
-                      onClick={closeNotifications}
-                      className="block text-center w-full py-2 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors"
-                    >
-                      View all notifications
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Notification Bell */}
+            <NotificationBell />
 
             {/* Cart Icon */}
             <button
