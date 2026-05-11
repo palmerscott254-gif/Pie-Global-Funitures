@@ -74,9 +74,8 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         cancelled_orders = Order.objects.filter(status='cancelled').count()
 
         # Message counts
-        unread_messages = UserMessage.objects.filter(
-            Q(status='new') | Q(status='read')
-        ).count()
+        # only messages with status 'new' should be considered unread
+        unread_messages = UserMessage.objects.filter(status='new').count()
         total_messages = UserMessage.objects.count()
 
         # Revenue metrics
@@ -103,10 +102,8 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         )
         revenue_all_time = revenue_data_all['total'] or 0
 
-        # Average order value
-        avg_order = Order.objects.aggregate(
-            avg=Sum('total_amount') / Count('id')
-        )
+        # Average order value (use DB aggregation)
+        avg_order = Order.objects.aggregate(avg=Avg('total_amount'))
         average_order_value = avg_order['avg'] or 0
 
         # Recent orders (last 5)
