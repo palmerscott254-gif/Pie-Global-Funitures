@@ -4,12 +4,14 @@ import { motion } from 'framer-motion';
 import { FaArrowRight, FaCheckCircle, FaShieldAlt, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { authApi } from '@/services/api';
+import { useCartStore } from '@/store/cartStore';
 
 // This page is intentionally optional: browsing and checkout do not require login.
 // We provide a soft opt-in experience with social proof and low friction.
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const syncGuestCart = useCartStore((state) => state.syncGuestCart);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -40,6 +42,7 @@ const LoginPage = () => {
         localStorage.setItem('pgf-auth-refresh', data.refresh);
       }
       window.dispatchEvent(new Event('pgf-auth-changed'));
+      await syncGuestCart();
       const from = (location.state as { from?: string } | null)?.from;
       const isAdminUser = !!(data.user.is_staff || data.user.is_superuser);
       const redirectTo = from || (isAdminUser ? '/admin/dashboard/' : '/');

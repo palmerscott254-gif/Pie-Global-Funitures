@@ -3,9 +3,35 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.db import transaction
+from apps.products.models import Product
 
 from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
+
+
+def _serialize_cart(cart, request):
+    serializer = CartSerializer(cart, context={'request': request})
+    data = serializer.data
+    items = data.get('items', [])
+    total_items = sum(item.get('quantity', 0) for item in items)
+    total_price = 0
+    for item in items:
+        product = item.get('product') or {}
+        price = product.get('price')
+        try:
+            if price is not None:
+                total_price += float(price) * int(item.get('quantity', 0))
+        except Exception:
+            continue
+
+    return {
+        'id': data.get('id'),
+        'items': items,
+        'total_items': total_items,
+        'total_price': round(total_price, 2),
+        'created_at': data.get('created_at'),
+        'updated_at': data.get('updated_at'),
+    }
 
 
 class CartView(APIView):
@@ -13,8 +39,7 @@ class CartView(APIView):
 
     def get(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
-        serializer = CartSerializer(cart)
-        return Response(serializer.data)
+        return Response(_serialize_cart(cart, request))
 
 
 class AddToCartView(APIView):
@@ -30,13 +55,18 @@ class AddToCartView(APIView):
         cart, _ = Cart.objects.get_or_create(user=request.user)
 
         with transaction.atomic():
+            try:
+                product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
             item, created = CartItem.objects.get_or_create(cart=cart, product_id=product_id,
                                                            defaults={'quantity': quantity})
             if not created:
                 item.quantity = item.quantity + quantity
                 item.save()
 
-        return Response({'message': 'added', 'item': CartItemSerializer(item).data})
+        return Response({'message': 'added', 'item': CartItemSerializer(item, context={'request': request}).data})
 
 
 class CartItemDetailView(APIView):
@@ -55,7 +85,7 @@ class CartItemDetailView(APIView):
 
         item.quantity = quantity
         item.save()
-        return Response({'item': CartItemSerializer(item).data})
+        return Response({'item': CartItemSerializer(item, context={'request': request}).data})
 
     def delete(self, request, item_id):
         try:
@@ -86,11 +116,12 @@ class MergeCartView(APIView):
                 qty = int(it.get('quantity', 1))
                 if not pid:
                     continue
+                if not Product.objects.filter(id=pid).exists():
+                    continue
                 obj, created = CartItem.objects.get_or_create(cart=cart, product_id=pid,
                                                               defaults={'quantity': qty})
                 if not created:
                     obj.quantity = obj.quantity + qty
                     obj.save()
 
-        serializer = CartSerializer(cart)
-        return Response(serializer.data)
+        return Response(_serialize_cart(cart, request))

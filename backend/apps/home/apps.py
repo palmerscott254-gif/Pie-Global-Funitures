@@ -7,5 +7,6 @@ class HomeConfig(AppConfig):
     verbose_name = 'Home'
 
     def ready(self):
-        # Import signal handlers
-        from . import signals  # noqa: F401
+        # Cleanup signals are registered centrally by apps.core.apps.CoreConfig.
+        # Keep this hook available for future home-specific startup logic.
+        return

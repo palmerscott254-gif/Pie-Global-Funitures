@@ -1,23 +1,27 @@
-from django.db.models.signals import post_delete, pre_save
-from django.dispatch import receiver
-from apps.core.file_utils import delete_field_file
+"""Example Product cleanup signal registration.
+
+The production cleanup system is registered centrally by
+apps.core.apps.CoreConfig. This module is kept as a manual example for
+projects that want per-app registration instead.
+"""
+
+from django.db.models.signals import pre_delete, pre_save
+
+from apps.core.s3_cleanup import cleanup_model_files_on_delete, cleanup_replaced_files_on_save
 from .models import Product
 
 
-@receiver(post_delete, sender=Product)
-def delete_product_main_image_on_delete(sender, instance, **kwargs):
-    delete_field_file(instance.main_image)
-
-
-@receiver(pre_save, sender=Product)
-def delete_product_old_main_image_on_change(sender, instance, **kwargs):
-    if not instance.pk:
-        return
-    try:
-        old = Product.objects.get(pk=instance.pk)
-    except Product.DoesNotExist:
-        return
-    old_file = getattr(old, 'main_image', None)
-    new_file = getattr(instance, 'main_image', None)
-    if old_file and new_file and old_file.name != new_file.name:
-        delete_field_file(old_file)
+def register_product_cleanup_signals() -> None:
+    """Manually register Product cleanup signals."""
+    pre_delete.connect(
+        cleanup_model_files_on_delete,
+        sender=Product,
+        weak=False,
+        dispatch_uid="products.product.pre_delete.cleanup",
+    )
+    pre_save.connect(
+        cleanup_replaced_files_on_save,
+        sender=Product,
+        weak=False,
+        dispatch_uid="products.product.pre_save.cleanup",
+    )

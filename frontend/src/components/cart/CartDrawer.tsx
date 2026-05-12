@@ -11,10 +11,19 @@ const CartDrawer = () => {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const totalPrice = useCartStore((state) => state.totalPrice);
+  const syncFromServer = useCartStore((state) => state.syncFromServer);
   const isCartOpen = useUIStore((state) => state.isCartOpen);
   const closeCart = useUIStore((state) => state.closeCart);
 
   useEffect(() => {
+    void syncFromServer();
+
+    const handleAuthChanged = () => {
+      void syncFromServer();
+    };
+
+    window.addEventListener('pgf-auth-changed', handleAuthChanged);
+
     if (isCartOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -22,8 +31,9 @@ const CartDrawer = () => {
     }
     return () => {
       document.body.style.overflow = 'unset';
+      window.removeEventListener('pgf-auth-changed', handleAuthChanged);
     };
-  }, [isCartOpen]);
+  }, [isCartOpen, syncFromServer]);
 
   if (!isCartOpen) return null;
 

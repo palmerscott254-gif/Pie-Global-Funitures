@@ -12,6 +12,7 @@ import type {
   DashboardAlert,
   AdminOrder,
   AdminMessage,
+  CartResponse,
 } from '@/types';
 
 // Stable API URL rules:
@@ -311,6 +312,30 @@ export const adminApi = {
     const response = await api.get<any[]>('/admin/dashboard/audit_logs/', {
       params: { limit }
     });
+    return response.data;
+  },
+};
+
+// Cart API
+export const cartApi = {
+  getCart: async () => {
+    const response = await api.get<CartResponse>('/cart/');
+    return response.data;
+  },
+  addToCart: async (productId: number, quantity: number = 1) => {
+    const response = await api.post<any>('/cart/add/', { product_id: productId, quantity });
+    return response.data;
+  },
+  updateItem: async (itemId: number, quantity: number) => {
+    const response = await api.patch<any>(`/cart/item/${itemId}/`, { quantity });
+    return response.data;
+  },
+  removeItem: async (itemId: number) => {
+    const response = await api.delete<any>(`/cart/item/${itemId}/`);
+    return response.data;
+  },
+  mergeGuestCart: async (items: Array<{ product_id: number; quantity: number }>) => {
+    const response = await api.post<CartResponse>('/cart/merge/', { items });
     return response.data;
   },
 };

@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'storages',  # AWS S3 storage backend
 
     # Local apps
-    'apps.core',  # Core utilities (file uploads, etc.)
+    'apps.core.apps.CoreConfig',  # Core utilities (file uploads, etc.)
     'apps.products.apps.ProductsConfig',
     'apps.home.apps.HomeConfig',
     'apps.messages.apps.MessagesConfig',
@@ -337,6 +337,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'apps.users.authentication.PgfAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': None,  # Disable pagination - allow all products
@@ -381,6 +382,18 @@ CELERY_TIMEZONE = 'UTC'
 # JWT configuration for custom auth tokens
 JWT_ACCESS_TTL_MINUTES = config('JWT_ACCESS_TTL_MINUTES', default=30, cast=int)
 JWT_REFRESH_TTL_DAYS = config('JWT_REFRESH_TTL_DAYS', default=7, cast=int)
+
+# SimpleJWT settings: keep lifetimes in sync with project env vars
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=JWT_ACCESS_TTL_MINUTES),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=JWT_REFRESH_TTL_DAYS),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+}
 
 # CORS Settings - CRITICAL: Explicitly list all allowed origins (don't rely on DEBUG)
 # Development: localhost on multiple ports
@@ -549,6 +562,12 @@ LOGGING = {
     },
     'loggers': {
         'django': {
+            'handlers': ['console', 'file'] if not DEBUG else ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Capture cleanup logs from apps.core, apps.products, apps.home, etc.
+        'apps': {
             'handlers': ['console', 'file'] if not DEBUG else ['console'],
             'level': 'INFO',
             'propagate': False,

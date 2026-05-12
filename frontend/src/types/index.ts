@@ -118,11 +118,37 @@ export interface AuthResponse {
 // Cart item (frontend only)
 export interface CartItem {
   id: number;
+  cartItemId?: number;
   name: string;
   price: number;
   quantity: number;
   image: string;
   slug: string;
+}
+
+export interface ServerCartProduct {
+  id: number;
+  name: string;
+  slug: string;
+  price: string | number;
+  image?: string | null;
+  main_image?: string | null;
+}
+
+export interface ServerCartItem {
+  id: number;
+  product_id: number;
+  quantity: number;
+  product?: ServerCartProduct | null;
+}
+
+export interface CartResponse {
+  id: number;
+  items: ServerCartItem[];
+  total_items: number;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
 }
 
 // API response types

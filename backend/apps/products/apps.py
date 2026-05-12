@@ -7,4 +7,6 @@ class ProductsConfig(AppConfig):
     verbose_name = 'Products'
 
     def ready(self):
-        from . import signals  # noqa: F401
+        # Cleanup signals are registered centrally by apps.core.apps.CoreConfig.
+        # Keep this hook available for future product-specific startup logic.
+        return
