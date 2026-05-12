@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.orders.models import Order
 from apps.messages.models import UserMessage
 from apps.admin.models import AdminAuditLog
-from apps.admin.permissions import IsAdminOrStaff
+from apps.admin.permissions import IsAdminOrStaff, HasRole
 from apps.admin.serializers import (
     DashboardSummarySerializer,
     AdminOrderSerializer,
@@ -30,7 +30,7 @@ class AdminDashboardViewSet(viewsets.ViewSet):
     ViewSet for admin dashboard endpoints.
     Requires admin or staff permissions.
     """
-    permission_classes = [IsAuthenticated, IsAdminOrStaff]
+    permission_classes = [IsAuthenticated, HasRole]
 
     def get_client_ip(self, request):
         """Extract client IP from request."""

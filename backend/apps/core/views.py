@@ -57,9 +57,16 @@ class S3PresignedURLViewSet(viewsets.ViewSet):
     """
     
     def get_permissions(self):
-        """Admin-only for presigned URLs to control upload access."""
+        """Control permissions for presigned URL endpoints.
+
+        Upload URL generation requires an authenticated admin role. We use
+        role-based permissions from `apps.admin.permissions.HasRole` so
+        frontend can be restricted to specific admin roles later.
+        """
         if self.action in ['get_upload_url', 'get_product_upload_url']:
-            return [IsAdminUser()]
+            from apps.admin.permissions import HasRole
+            from rest_framework.permissions import IsAuthenticated
+            return [IsAuthenticated(), HasRole()]
         return [AllowAny()]
     
     @action(detail=False, methods=['post'])

@@ -58,6 +58,29 @@ class User(models.Model):
     is_superuser = models.BooleanField(default=False, db_index=True, help_text="Designates whether user is superuser (full admin)")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Role-based access for admin dashboard and responsibilities.
+    # Values: super_admin, staff_admin, support_agent, delivery_manager, customer
+    ROLE_SUPER = 'super_admin'
+    ROLE_STAFF = 'staff_admin'
+    ROLE_SUPPORT = 'support_agent'
+    ROLE_DELIVERY = 'delivery_manager'
+    ROLE_CUSTOMER = 'customer'
+
+    ROLE_CHOICES = [
+        (ROLE_SUPER, 'Super Admin'),
+        (ROLE_STAFF, 'Staff Admin'),
+        (ROLE_SUPPORT, 'Support Agent'),
+        (ROLE_DELIVERY, 'Delivery Manager'),
+        (ROLE_CUSTOMER, 'Customer'),
+    ]
+
+    role = models.CharField(
+        max_length=32,
+        choices=ROLE_CHOICES,
+        default=ROLE_CUSTOMER,
+        help_text='Primary role for admin dashboard access and permissions',
+        db_index=True,
+    )
 
     objects = UserManager()
 
