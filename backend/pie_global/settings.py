@@ -337,7 +337,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'apps.users.authentication.PgfAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'apps.users.simplejwt_compat.JWTAuthCompat',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': None,  # Disable pagination - allow all products
