@@ -117,6 +117,27 @@ class UserViewSet(viewsets.ModelViewSet):
             request.session['user_id'] = str(user.id)
             request.session['user_email'] = user.email
             request.session.modified = True
+            # If frontend provided guest cart items, merge into persistent cart
+            try:
+                guest_items = request.data.get('cart', {}).get('items') if isinstance(request.data.get('cart'), dict) else request.data.get('cart')
+                if guest_items:
+                    from apps.cart.models import Cart, CartItem
+                    from django.db import transaction
+
+                    cart, _ = Cart.objects.get_or_create(user=user)
+                    with transaction.atomic():
+                        for it in guest_items:
+                            pid = it.get('product_id')
+                            qty = int(it.get('quantity', 1)) if it.get('quantity') is not None else 1
+                            if not pid:
+                                continue
+                            obj, created = CartItem.objects.get_or_create(cart=cart, product_id=pid,
+                                                                          defaults={'quantity': qty})
+                            if not created:
+                                obj.quantity = obj.quantity + qty
+                                obj.save()
+            except Exception:
+                logger.exception('Failed to merge guest cart during login')
 
             return ResponseFormatter.success(
                 message='Signed in successfully.',

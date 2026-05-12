@@ -121,12 +121,10 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
           }
         );
 
-        // Subscribe to errors
+        // Subscribe to errors (keep silent; use polling fallback)
         const unsubscribeError = notificationWebSocket.on('error', (event) => {
           console.error('WebSocket error:', event.message);
-          if (isMounted) {
-            setError(event.message || 'Connection error');
-          }
+          // Intentionally do not surface transient WS errors to the user
         });
 
         // Store unsubscribe functions
@@ -159,9 +157,7 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
         }
       } catch (err) {
         console.error('Error setting up notifications:', err);
-        if (isMounted) {
-          setError('Failed to connect to notification service');
-        }
+        // Silent fallback: rely on polling for unread count instead of alarming UI
 
         // Fallback: Setup polling
         if (pollInterval > 0) {

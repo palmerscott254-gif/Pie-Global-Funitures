@@ -113,6 +113,22 @@ def notify_order_status_change(sender, instance, **kwargs):
                 tracking_number=tracking_number,
                 carrier=carrier
             )
+
+        # RECEIVED (order acknowledged) notification for PENDING -> RECEIVED
+        if old_status == 'PENDING' and new_status == 'RECEIVED':
+            try:
+                NotificationFactory.order_received(instance.user, instance)
+            except Exception:
+                logger.exception('Failed to send order received notification')
+
+        # RECEIVED -> SHIPPED mapping (ensure shipped notification still sent)
+        if old_status == 'RECEIVED' and new_status == 'SHIPPED':
+            try:
+                NotificationFactory.order_shipped(instance.user, instance,
+                                                  tracking_number=getattr(instance, 'tracking_number', None),
+                                                  carrier=getattr(instance, 'carrier', None))
+            except Exception:
+                logger.exception('Failed to send shipped notification after RECEIVED')
         
         # DELIVERED notification
         elif new_status == 'DELIVERED':
@@ -320,6 +336,43 @@ def notify_warranty_updates(sender, instance, created, **kwargs):
             f"Error handling warranty update notification: {str(exc)}",
             exc_info=True
         )
+
+
+# ============================================
+# ADMIN REPLY / MESSAGES
+# ============================================
+
+@receiver(post_save, sender='messages.UserMessage')
+def notify_admin_reply(sender, instance, created, **kwargs):
+    """
+    Notify user when admin replies to their message. Trigger when status becomes 'replied'
+    and `reply_text` is present. Avoid duplicate notifications if status unchanged.
+    """
+    if created:
+        return
+
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        old = None
+
+    # If status changed to 'replied' and there's reply_text, notify
+    if (old is None or old.status != instance.status) and instance.status == 'replied' and instance.reply_text:
+        try:
+            from .notification_service import NotificationFactory
+            # Try to find user by email if available
+            try:
+                user = User.objects.filter(email__iexact=instance.email).first()
+            except Exception:
+                user = None
+
+            if user:
+                NotificationFactory.admin_reply_to_message(user, instance)
+            else:
+                logger.info(f"No registered user for message reply notification (email={instance.email})")
+
+        except Exception:
+            logger.exception('Failed to send admin reply notification')
 
 
 # ============================================

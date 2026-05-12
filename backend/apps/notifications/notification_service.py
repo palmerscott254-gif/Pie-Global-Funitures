@@ -357,6 +357,36 @@ class NotificationFactory:
         )
 
     @staticmethod
+    def order_received(user, order):
+        """Create notification for order received (acknowledgement)."""
+        return NotificationService.create_and_broadcast(
+            user=user,
+            title="Order Received",
+            message="Your order has been received and is now being processed.",
+            notification_type=NotificationType.ORDER_CONFIRMED,
+            priority=NotificationPriority.NORMAL,
+            action_url=f"/orders/{order.id}",
+            metadata={'order_id': order.id},
+        )
+
+    @staticmethod
+    def admin_reply_to_message(user, message_obj):
+        """Notify a user that support/admin replied to their message."""
+        preview = (message_obj.reply_text or '')[:120]
+        return NotificationService.create_and_broadcast(
+            user=user,
+            title="You have received a reply from support.",
+            message=f"{preview}",
+            notification_type=NotificationType.ADMIN_MESSAGE,
+            priority=NotificationPriority.HIGH,
+            action_url=f"/support/tickets/{getattr(message_obj, 'id', '')}",
+            metadata={
+                'message_id': getattr(message_obj, 'id', None),
+                'preview': preview,
+            },
+        )
+
+    @staticmethod
     def delivery_update(user, order, update_message, tracking_info=None):
         """Create notification for delivery update."""
         return NotificationService.create_and_broadcast(

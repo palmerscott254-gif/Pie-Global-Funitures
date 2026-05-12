@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/', include('apps.users.urls')),
     path('api/auth/', include('apps.users.urls')),
     path('api/admin/', include('apps.admin.urls')),
+    path('api/cart/', include('apps.cart.urls')),
     
     # Redirect root to admin or API docs
     path('', RedirectView.as_view(url='/admin/', permanent=False)),

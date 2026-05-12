@@ -61,9 +61,12 @@ INSTALLED_APPS = [
     'apps.home.apps.HomeConfig',
     'apps.messages.apps.MessagesConfig',
     'apps.orders',
+    'apps.notifications.apps.NotificationsConfig',
+    'apps.cart',
     'apps.about',
     'apps.users.apps.UsersConfig',
     'apps.admin.apps.AdminConfig',  # Admin dashboard
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -312,6 +315,21 @@ else:
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Channels (WebSocket) configuration
+ASGI_APPLICATION = 'pie_global.asgi.application'
+
+# Redis channel layer configuration for Django Channels
+REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379')
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        },
+    },
+}
+
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -351,6 +369,14 @@ CACHES = {
         'TIMEOUT': API_RESPONSE_CACHE_TTL,
     }
 }
+
+    # Celery configuration using Redis as broker and backend
+    CELERY_BROKER_URL = config('CELERY_BROKER_URL', default=REDIS_URL)
+    CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default=REDIS_URL)
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_TIMEZONE = 'UTC'
 
 # JWT configuration for custom auth tokens
 JWT_ACCESS_TTL_MINUTES = config('JWT_ACCESS_TTL_MINUTES', default=30, cast=int)

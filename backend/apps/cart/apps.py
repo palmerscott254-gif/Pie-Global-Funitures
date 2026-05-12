@@ -1,0 +1,10 @@
+from django.apps import AppConfig
+
+
+class CartConfig(AppConfig):
+    name = 'apps.cart'
+    verbose_name = 'Cart'
+
+    def ready(self):
+        # Import signals here if added later
+        pass
