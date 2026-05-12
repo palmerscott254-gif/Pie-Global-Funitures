@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+def _resolve_order_user(order_instance):
+    user = getattr(order_instance, 'user', None)
+    if user:
+        return user
+
+    email = getattr(order_instance, 'email', None)
+    if not email:
+        return None
+
+    return User.objects.filter(email__iexact=email).first()
+
+
 # ============================================
 # USER-RELATED SIGNALS
 # ============================================
@@ -61,9 +73,12 @@ def notify_order_confirmed(sender, instance, created, **kwargs):
     
     Condition: Only on creation, not on updates
     """
-    if created and instance.user:
+    if created:
         try:
-            NotificationFactory.order_confirmed(instance.user, instance)
+            user = _resolve_order_user(instance)
+            if not user:
+                return
+            NotificationFactory.order_confirmed(user, instance)
             logger.info(f"Order confirmed notification sent for order {instance.id}")
         except Exception as exc:
             logger.error(
@@ -94,6 +109,10 @@ def notify_order_status_change(sender, instance, **kwargs):
         old_instance = sender.objects.get(pk=instance.pk)
         old_status = old_instance.status
         new_status = instance.status
+        user = _resolve_order_user(instance)
+
+        if not user:
+            return
         
         # Only act if status changed
         if old_status == new_status:
@@ -103,36 +122,38 @@ def notify_order_status_change(sender, instance, **kwargs):
             f"Order {instance.id} status changed: {old_status} → {new_status}"
         )
         
-        # ORDER_SHIPPED notification
-        if new_status == 'SHIPPED':
-            tracking_number = getattr(instance, 'tracking_number', None)
-            carrier = getattr(instance, 'carrier', None)
-            NotificationFactory.order_shipped(
-                instance.user,
-                instance,
-                tracking_number=tracking_number,
-                carrier=carrier
-            )
-
-        # RECEIVED (order acknowledged) notification for PENDING -> RECEIVED
-        if old_status == 'PENDING' and new_status == 'RECEIVED':
+        # RECEIVED (order acknowledged) notification for pending -> received
+        if old_status == 'pending' and new_status == 'received':
             try:
-                NotificationFactory.order_received(instance.user, instance)
+                NotificationFactory.order_received(user, instance)
             except Exception:
                 logger.exception('Failed to send order received notification')
 
-        # RECEIVED -> SHIPPED mapping (ensure shipped notification still sent)
-        if old_status == 'RECEIVED' and new_status == 'SHIPPED':
+        # received -> shipped notification
+        if old_status == 'received' and new_status == 'shipped':
             try:
-                NotificationFactory.order_shipped(instance.user, instance,
+                NotificationFactory.order_shipped(user, instance,
                                                   tracking_number=getattr(instance, 'tracking_number', None),
                                                   carrier=getattr(instance, 'carrier', None))
             except Exception:
                 logger.exception('Failed to send shipped notification after RECEIVED')
+
+        # Delivery progress updates
+        if new_status in {'out_for_delivery', 'delayed'}:
+            status_message = 'Out for delivery' if new_status == 'out_for_delivery' else 'Delivery delayed'
+            try:
+                NotificationFactory.delivery_update(
+                    user,
+                    instance,
+                    status_message,
+                    tracking_info={'status': new_status},
+                )
+            except Exception:
+                logger.exception('Failed to send delivery update notification')
         
         # DELIVERED notification
-        elif new_status == 'DELIVERED':
-            NotificationFactory.delivered(instance.user, instance)
+        elif new_status == 'delivered':
+            NotificationFactory.delivered(user, instance)
             
             # Schedule review reminder for 3-7 days after delivery
             from apps.notifications.tasks import schedule_review_reminder
@@ -145,28 +166,28 @@ def notify_order_status_change(sender, instance, **kwargs):
             )
         
         # DELIVERY_FAILED notification
-        elif new_status == 'DELIVERY_FAILED':
+        elif new_status == 'delivery_failed':
             reason = getattr(instance, 'delivery_failure_reason', None)
             NotificationFactory.delivery_failed(
-                instance.user,
+                user,
                 instance,
                 reason=reason
             )
         
         # Handle refund status changes
-        elif new_status == 'REFUND_INITIATED':
+        elif new_status == 'refund_initiated':
             refund_amount = getattr(instance, 'refund_amount', None)
             NotificationFactory.refund_status(
-                instance.user,
+                user,
                 instance,
                 'initiated',
                 amount=refund_amount
             )
         
-        elif new_status == 'REFUND_COMPLETED':
+        elif new_status == 'refund_completed':
             refund_amount = getattr(instance, 'refund_amount', None)
             NotificationFactory.refund_status(
-                instance.user,
+                user,
                 instance,
                 'completed',
                 amount=refund_amount
@@ -187,7 +208,6 @@ def notify_order_status_change(sender, instance, **kwargs):
 # PAYMENT-RELATED SIGNALS
 # ============================================
 
-@receiver(post_save, sender='orders.Payment')
 def notify_payment_received(sender, instance, created, **kwargs):
     """
     Trigger PAYMENT_RECEIVED notification when payment is successfully processed.
@@ -296,7 +316,6 @@ def notify_restocked_items(sender, instance, **kwargs):
 # SUPPORT/WARRANTY-RELATED SIGNALS
 # ============================================
 
-@receiver(post_save, sender='support.SupportTicket')
 def notify_warranty_updates(sender, instance, created, **kwargs):
     """
     Trigger WARRANTY_UPDATE notification when support ticket status changes.
@@ -342,7 +361,23 @@ def notify_warranty_updates(sender, instance, created, **kwargs):
 # ADMIN REPLY / MESSAGES
 # ============================================
 
-@receiver(post_save, sender='messages.UserMessage')
+@receiver(pre_save, sender='user_messages.UserMessage')
+def capture_message_previous_state(sender, instance, **kwargs):
+    if not instance.pk:
+        instance._previous_status = None
+        instance._previous_reply_text = None
+        return
+
+    try:
+        previous = sender.objects.get(pk=instance.pk)
+        instance._previous_status = previous.status
+        instance._previous_reply_text = previous.reply_text
+    except sender.DoesNotExist:
+        instance._previous_status = None
+        instance._previous_reply_text = None
+
+
+@receiver(post_save, sender='user_messages.UserMessage')
 def notify_admin_reply(sender, instance, created, **kwargs):
     """
     Notify user when admin replies to their message. Trigger when status becomes 'replied'
@@ -351,13 +386,13 @@ def notify_admin_reply(sender, instance, created, **kwargs):
     if created:
         return
 
-    try:
-        old = sender.objects.get(pk=instance.pk)
-    except sender.DoesNotExist:
-        old = None
+    previous_status = getattr(instance, '_previous_status', None)
+    previous_reply_text = getattr(instance, '_previous_reply_text', None)
 
-    # If status changed to 'replied' and there's reply_text, notify
-    if (old is None or old.status != instance.status) and instance.status == 'replied' and instance.reply_text:
+    # If status changed to replied or new reply_text was added, notify once per update
+    became_replied = previous_status != 'replied' and instance.status == 'replied'
+    got_new_reply = instance.reply_text and previous_reply_text != instance.reply_text
+    if (became_replied or got_new_reply) and instance.reply_text:
         try:
             from .notification_service import NotificationFactory
             # Try to find user by email if available
@@ -379,7 +414,6 @@ def notify_admin_reply(sender, instance, created, **kwargs):
 # INVOICE-RELATED SIGNALS
 # ============================================
 
-@receiver(post_save, sender='orders.Invoice')
 def notify_invoice_ready(sender, instance, created, **kwargs):
     """
     Trigger INVOICE_READY notification when invoice is generated.
@@ -405,7 +439,6 @@ def notify_invoice_ready(sender, instance, created, **kwargs):
 # LOYALTY/REWARDS-RELATED SIGNALS
 # ============================================
 
-@receiver(post_save, sender='loyalty.LoyaltyTransaction')
 def notify_loyalty_points(sender, instance, created, **kwargs):
     """
     Trigger LOYALTY_POINTS notification when points are earned or redeemed.
@@ -437,7 +470,6 @@ def notify_loyalty_points(sender, instance, created, **kwargs):
 # DELIVERY TRACKING SIGNALS
 # ============================================
 
-@receiver(post_save, sender='orders.TrackingUpdate')
 def notify_delivery_update(sender, instance, created, **kwargs):
     """
     Trigger DELIVERY_UPDATE notification when tracking status is updated.
@@ -473,7 +505,6 @@ def notify_delivery_update(sender, instance, created, **kwargs):
 # DELIVERY ETA SIGNALS
 # ============================================
 
-@receiver(post_save, sender='orders.DeliveryETA')
 def notify_delivery_eta(sender, instance, created, **kwargs):
     """
     Trigger DELIVERY_ETA notification when estimated arrival is set.

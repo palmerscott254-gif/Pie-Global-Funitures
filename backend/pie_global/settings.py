@@ -370,13 +370,13 @@ CACHES = {
     }
 }
 
-    # Celery configuration using Redis as broker and backend
-    CELERY_BROKER_URL = config('CELERY_BROKER_URL', default=REDIS_URL)
-    CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default=REDIS_URL)
-    CELERY_ACCEPT_CONTENT = ['json']
-    CELERY_TASK_SERIALIZER = 'json'
-    CELERY_RESULT_SERIALIZER = 'json'
-    CELERY_TIMEZONE = 'UTC'
+# Celery configuration using Redis as broker and backend
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default=REDIS_URL)
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default=REDIS_URL)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
 
 # JWT configuration for custom auth tokens
 JWT_ACCESS_TTL_MINUTES = config('JWT_ACCESS_TTL_MINUTES', default=30, cast=int)

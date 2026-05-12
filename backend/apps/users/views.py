@@ -1,4 +1,5 @@
 import logging
+from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from .serializers import (
     RefreshTokenSerializer,
 )
 from .jwt_utils import create_access_token, create_refresh_token, decode_token
+from apps.cart.models import Cart, CartItem
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +119,34 @@ class UserViewSet(viewsets.ModelViewSet):
         request.session['user_id'] = str(user.id)
         request.session['user_email'] = user.email
         request.session.modified = True
+
+        # Merge guest cart payload into persistent cart when provided
+        try:
+            cart_payload = request.data.get('cart')
+            guest_items = []
+            if isinstance(cart_payload, dict):
+                guest_items = cart_payload.get('items', [])
+            elif isinstance(cart_payload, list):
+                guest_items = cart_payload
+
+            if guest_items:
+                cart, _ = Cart.objects.get_or_create(user=user)
+                with transaction.atomic():
+                    for item in guest_items:
+                        product_id = item.get('product_id')
+                        quantity = int(item.get('quantity', 1))
+                        if not product_id:
+                            continue
+                        cart_item, created = CartItem.objects.get_or_create(
+                            cart=cart,
+                            product_id=product_id,
+                            defaults={'quantity': quantity},
+                        )
+                        if not created:
+                            cart_item.quantity += quantity
+                            cart_item.save(update_fields=['quantity'])
+        except Exception as exc:
+            logger.exception(f"Guest cart merge failed during login: {exc}")
 
         access_token = create_access_token(user)
         refresh_token = create_refresh_token(user)

@@ -304,16 +304,20 @@ class NotificationFactory:
     @staticmethod
     def order_confirmed(user, order):
         """Create notification for confirmed order."""
+        total_items = getattr(order, 'total_items', None)
+        if total_items is None:
+            total_items = getattr(order, 'item_count', 0)
+
         return NotificationService.create_and_broadcast(
             user=user,
             title=f"Order #{order.id} Confirmed",
-            message=f"Your order for {order.total_items} item(s) has been confirmed. We're preparing it for shipment.",
+            message=f"Your order for {total_items} item(s) has been confirmed. We're preparing it for shipment.",
             notification_type=NotificationType.ORDER_CONFIRMED,
             priority=NotificationPriority.NORMAL,
             action_url=f"/orders/{order.id}",
             metadata={
                 'order_id': order.id,
-                'total_items': order.total_items,
+                'total_items': total_items,
                 'total_amount': str(order.total_amount),
             },
         )
