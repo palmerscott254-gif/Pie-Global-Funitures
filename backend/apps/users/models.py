@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password, check_password, identify_hasher
 from django.contrib.auth.base_user import BaseUserManager
 import uuid
 
@@ -110,8 +110,11 @@ class User(models.Model):
         
         Only hashes if password looks like plain text (doesn't already have algorithm prefix).
         """
-        if self.password and not self.password.startswith('pbkdf2_sha256$'):
-            self.set_password(self.password)
+        if self.password:
+            try:
+                identify_hasher(self.password)
+            except Exception:
+                self.set_password(self.password)
         super().save(*args, **kwargs)
 
     # Django admin/auth compatibility helpers
