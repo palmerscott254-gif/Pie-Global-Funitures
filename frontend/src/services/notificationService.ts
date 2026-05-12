@@ -9,8 +9,10 @@ export interface Notification {
   id: number;
   uuid: string;
   title: string;
-  description: string;
-  type: string;
+  description?: string;
+  message?: string;
+  type?: string;
+  notification_type?: string;
   priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
   is_read: boolean;
   read_at: string | null;
@@ -160,9 +162,18 @@ export class NotificationWebSocket {
   private isIntentionallyClosed = false;
 
   constructor() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    this.url = `${protocol}//${host}/ws/notifications/`;
+    let wsBaseUrl: URL;
+
+    try {
+      wsBaseUrl = API_URL.startsWith('http://') || API_URL.startsWith('https://')
+        ? new URL(API_URL)
+        : new URL(API_URL, window.location.origin);
+    } catch {
+      wsBaseUrl = new URL(window.location.origin);
+    }
+
+    const wsProtocol = wsBaseUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.url = `${wsProtocol}//${wsBaseUrl.host}/ws/notifications/`;
   }
 
   /**

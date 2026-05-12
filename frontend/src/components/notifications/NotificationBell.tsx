@@ -32,7 +32,6 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     unreadCount,
     isLoading,
     error,
-    isConnected,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -129,13 +128,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           </div>
         )}
 
-        {/* Connection Status Indicator (optional) */}
-        {!isConnected && (
-          <div
-            className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-yellow-500"
-            title="Reconnecting..."
-          />
-        )}
+        {/* Connection status is intentionally silent; polling fallback handles updates */}
       </button>
 
       {/* Dropdown Menu */}
@@ -231,7 +224,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                           {notification.title}
                         </p>
                         <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
-                          {notification.description}
+                          {notification.description || notification.message || ''}
                         </p>
                         <p className="mt-1.5 text-xs text-gray-400">
                           {getRelativeTime(notification.created_at)}
@@ -240,7 +233,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                         {/* Type Badge */}
                         <div className="mt-2">
                           <span className="inline-block px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded">
-                            {notification.type
+                            {(notification.type || notification.notification_type || 'notification')
                               .replace(/_/g, ' ')
                               .toUpperCase()}
                           </span>
@@ -294,14 +287,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             </div>
           )}
 
-          {/* Connection Status */}
-          {!isConnected && (
-            <div className="px-4 py-2 bg-yellow-50 border-t border-yellow-100 text-center">
-              <p className="text-xs text-yellow-700">
-                ⚠️ Reconnecting to notification service...
-              </p>
-            </div>
-          )}
+          {/* Connection status is intentionally hidden for silent reconnect UX */}
         </div>
       )}
     </div>

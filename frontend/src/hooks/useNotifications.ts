@@ -74,6 +74,10 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
 
     let isMounted = true;
 
+    // Always fetch initial state via REST so dropdown isn't empty while WS is reconnecting
+    fetchNotifications();
+    fetchUnreadCount();
+
     /**
      * Connect to WebSocket and setup message handlers
      */
@@ -185,6 +189,8 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
+
+      setIsConnected(false);
     };
   }, [enabled, pollInterval, fetchNotifications, fetchUnreadCount]);
 
