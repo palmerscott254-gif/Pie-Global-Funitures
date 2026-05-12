@@ -30,7 +30,7 @@ WHY PRE_SAVE?
 import logging
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from django.apps import apps as django_apps
-from django.core.files.base import FieldFile
+from django.db.models.fields.files import FieldFile
 
 logger = logging.getLogger(__name__)
 
