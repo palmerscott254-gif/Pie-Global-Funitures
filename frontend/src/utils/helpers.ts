@@ -12,6 +12,24 @@ export const formatPrice = (price: string | number): string => {
 };
 
 /**
+ * Format amount as Kenyan Shillings.
+ */
+export const formatKSh = (amount: string | number): string => {
+  const numericAmount = typeof amount === 'string' ? Number(amount) : amount;
+
+  if (Number.isNaN(numericAmount)) {
+    return 'KSh 0';
+  }
+
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(numericAmount);
+};
+
+/**
  * Truncate text to specified length
  */
 export const truncateText = (text: string, maxLength: number): string => {

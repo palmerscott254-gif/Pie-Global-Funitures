@@ -73,6 +73,8 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/admin/dashboard/*" element={<AdminDashboardPage />} />
+              <Route path="/admin/orders/*" element={<AdminDashboardPage />} />
+              <Route path="/admin/messages/*" element={<AdminDashboardPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>

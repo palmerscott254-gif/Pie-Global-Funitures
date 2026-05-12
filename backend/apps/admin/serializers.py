@@ -122,6 +122,23 @@ class AdminMessageSerializer(serializers.ModelSerializer):
         return (timezone.now() - obj.created_at).days
 
 
+class AdminProductSerializer(serializers.ModelSerializer):
+    """Serializer for admin product management."""
+    
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'slug', 'description', 'short_description',
+            'price', 'compare_at_price', 'category', 'tags',
+            'main_image', 'gallery', 'stock', 'sku',
+            'dimensions', 'material', 'color', 'weight',
+            'featured', 'is_active', 'on_sale',
+            'meta_title', 'meta_description',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+
 class OrderStatusUpdateSerializer(serializers.Serializer):
     """Serializer for updating order status."""
     

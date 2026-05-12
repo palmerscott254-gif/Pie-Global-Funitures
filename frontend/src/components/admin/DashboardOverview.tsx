@@ -13,7 +13,8 @@ import { AlertPanel } from './AlertPanel';
 import { RecentOrdersTable } from './RecentOrdersTable';
 import { RecentMessagesPanel } from './RecentMessagesPanel';
 import { RevenueChart } from './RevenueChart';
-import { useDashboardSummary, useDashboardAlerts, useAdminOrders, useAdminMessages } from '@/hooks';
+import { useDashboardSummary, useDashboardAlerts, useAdminOrders, useAdminMessages, useTopProducts } from '@/hooks';
+import { formatKSh } from '@/utils/helpers';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -35,6 +36,11 @@ export const DashboardOverview: React.FC = () => {
     reply,
     resolve,
   } = useAdminMessages(true, 10000, 5);
+  const { products: topProducts, loading: topProductsLoading, error: topProductsError } = useTopProducts(
+    true,
+    10000,
+    5
+  );
 
   // Show error toast if any API errors
   React.useEffect(() => {
@@ -52,6 +58,10 @@ export const DashboardOverview: React.FC = () => {
   React.useEffect(() => {
     if (messagesError) toast.error(`Messages error: ${messagesError}`);
   }, [messagesError]);
+
+  React.useEffect(() => {
+    if (topProductsError) toast.error(`Top products error: ${topProductsError}`);
+  }, [topProductsError]);
 
   const isLoading = useMemo(
     () => summaryLoading || alertsLoading || ordersLoading || messagesLoading,
@@ -116,13 +126,13 @@ export const DashboardOverview: React.FC = () => {
         />
         <KPICard
           label="Revenue Today"
-          value={`$${parseFloat(String(dashboardData?.revenue_today || 0)).toFixed(2)}`}
+          value={formatKSh(dashboardData?.revenue_today || 0)}
           icon={<DollarSign />}
           color="green"
         />
         <KPICard
           label="Revenue This Month"
-          value={`$${parseFloat(String(dashboardData?.revenue_this_month || 0)).toFixed(2)}`}
+          value={formatKSh(dashboardData?.revenue_this_month || 0)}
           icon={<TrendingUp />}
           color="purple"
         />
@@ -161,6 +171,47 @@ export const DashboardOverview: React.FC = () => {
         revenueAllTime={dashboardData?.revenue_all_time || 0}
         averageOrderValue={dashboardData?.average_order_value || 0}
       />
+
+      {/* Top Selling Products */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Top Selling Products</h3>
+            <p className="text-sm text-gray-500">Highest performing products by units sold</p>
+          </div>
+        </div>
+
+        {topProductsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-24 rounded-lg bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : topProducts.length === 0 ? (
+          <div className="py-8 text-center text-gray-500">No sales data available yet</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Product</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Units Sold</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Revenue</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {topProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
+                    <td className="px-4 py-3 text-gray-700">{product.units_sold}</td>
+                    <td className="px-4 py-3 font-semibold text-gray-900">{formatKSh(product.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

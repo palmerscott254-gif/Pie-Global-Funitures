@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderStatusBadge } from './StatusBadge';
 import type { AdminOrder } from '@/types';
+import { formatKSh } from '@/utils/helpers';
 
 interface RecentOrdersTableProps {
   orders: AdminOrder[];
@@ -74,7 +75,7 @@ export const RecentOrdersTable: React.FC<RecentOrdersTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 font-semibold text-gray-900">
-                    ${parseFloat(String(order.total_amount)).toFixed(2)}
+                    {formatKSh(order.total_amount)}
                   </td>
                   <td className="px-6 py-4">
                     <OrderStatusBadge status={order.status || 'pending'} />

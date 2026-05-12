@@ -5,6 +5,8 @@ import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useOnClickOutside, useScrollPosition } from '@/hooks';
 import { NotificationBell } from '@/components/notifications';
+import { clearAuthState, getStoredAuthUser, isAdminUser, type StoredAuthUser } from '@/utils/auth';
+import { authApi } from '@/services/api';
 import logoImage from './logo photo.jpeg';
 
 const Header = () => {
@@ -19,6 +21,7 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState<StoredAuthUser | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
@@ -30,14 +33,17 @@ const Header = () => {
 
   useEffect(() => {
     const readAuth = () => {
-      const raw = localStorage.getItem('pgf-auth-current');
-      setIsAuthenticated(!!raw);
+      const currentUser = getStoredAuthUser();
+      setAuthUser(currentUser);
+      setIsAuthenticated(!!currentUser);
     };
     readAuth();
     const handler = () => readAuth();
     window.addEventListener('pgf-auth-changed', handler as EventListener);
     return () => window.removeEventListener('pgf-auth-changed', handler as EventListener);
   }, []);
+
+  const adminMode = isAdminUser(authUser);
 
   const navLinks = useMemo(
     () => [
@@ -62,6 +68,19 @@ const Header = () => {
     },
     [navigate, searchTerm]
   );
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore backend logout errors; local state still must be cleared.
+    } finally {
+      clearAuthState();
+      navigate('/login', { replace: true });
+      closeUserMenu();
+      closeMobileMenu();
+    }
+  }, [closeMobileMenu, closeUserMenu, navigate]);
 
   return (
     <header
@@ -88,25 +107,39 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+            {adminMode ? (
               <NavLink
-                key={link.to}
-                to={link.to}
+                to="/admin/dashboard/"
                 className={({ isActive }) =>
                   `text-gray-700 hover:text-primary-600 transition-colors font-medium ${
                     isActive ? 'text-primary-600' : ''
                   }`
                 }
               >
-                {link.label}
+                Admin Dashboard
               </NavLink>
-            ))}
+            ) : (
+              navLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `text-gray-700 hover:text-primary-600 transition-colors font-medium ${
+                      isActive ? 'text-primary-600' : ''
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))
+            )}
           </nav>
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4 relative">
             {/* Search Icon */}
-            <div className="hidden md:block relative">
+            {!adminMode && (
+              <div className="hidden md:block relative">
               <button
                 onClick={() => setIsSearchOpen((prev) => !prev)}
                 className="text-gray-700 hover:text-primary-600 transition-colors"
@@ -136,23 +169,26 @@ const Header = () => {
                   </button>
                 </form>
               )}
-            </div>
+              </div>
+            )}
 
             {/* Notification Bell */}
-            <NotificationBell />
+            {!adminMode && <NotificationBell />}
 
             {/* Cart Icon */}
-            <button
-              onClick={toggleCart}
-              className="relative text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <FaShoppingCart size={22} />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </button>
+            {!adminMode && (
+              <button
+                onClick={toggleCart}
+                className="relative text-gray-700 hover:text-primary-600 transition-colors"
+              >
+                <FaShoppingCart size={22} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* User Account Menu - Now visible on all screen sizes */}
             <div className="relative" ref={userMenuRef}>
@@ -178,13 +214,7 @@ const Header = () => {
                         Signed in
                       </div>
                       <button
-                        onClick={() => {
-                          localStorage.removeItem('pgf-auth-current');
-                          localStorage.removeItem('pgf-auth-access');
-                          localStorage.removeItem('pgf-auth-refresh');
-                          window.dispatchEvent(new Event('pgf-auth-changed'));
-                          closeUserMenu();
-                        }}
+                        onClick={() => void handleLogout()}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors flex items-center gap-2"
                       >
                         <FaSignOutAlt size={14} /> Sign out
@@ -228,10 +258,9 @@ const Header = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 animate-slide-down">
           <nav className="container-custom py-4 flex flex-col space-y-4">
-            {navLinks.map((link) => (
+            {adminMode ? (
               <NavLink
-                key={link.to}
-                to={link.to}
+                to="/admin/dashboard/"
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
                   `text-gray-700 hover:text-primary-600 transition-colors font-medium ${
@@ -239,43 +268,54 @@ const Header = () => {
                   }`
                 }
               >
-                {link.label}
+                Admin Dashboard
               </NavLink>
-            ))}
+            ) : (
+              navLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={closeMobileMenu}
+                  className={({ isActive }) =>
+                    `text-gray-700 hover:text-primary-600 transition-colors font-medium ${
+                      isActive ? 'text-primary-600' : ''
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))
+            )}
 
             <div className="pt-4 border-t border-gray-200">
               {isAuthenticated ? (
                 /* Authenticated Mobile Menu */
                 <button
-                  onClick={() => {
-                    localStorage.removeItem('pgf-auth-current');
-                    localStorage.removeItem('pgf-auth-access');
-                    localStorage.removeItem('pgf-auth-refresh');
-                    window.dispatchEvent(new Event('pgf-auth-changed'));
-                    closeMobileMenu();
-                  }}
+                  onClick={() => void handleLogout()}
                   className="w-full py-2 bg-red-600 text-white rounded-lg font-semibold shadow hover:bg-red-700 flex items-center justify-center gap-2"
                 >
                   <FaSignOutAlt size={14} /> Sign out
                 </button>
               ) : (
                 /* Guest Mobile Menu */
-                <div className="flex items-center gap-3">
-                  <Link
-                    to="/login"
-                    onClick={closeMobileMenu}
-                    className="flex-1 text-center py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:text-primary-600"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={closeMobileMenu}
-                    className="flex-1 text-center py-2 bg-primary-600 text-white rounded-lg font-semibold shadow hover:bg-primary-700"
-                  >
-                    Create account
-                  </Link>
-                </div>
+                !adminMode && (
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to="/login"
+                      onClick={closeMobileMenu}
+                      className="flex-1 text-center py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:text-primary-600"
+                    >
+                      Sign in
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={closeMobileMenu}
+                      className="flex-1 text-center py-2 bg-primary-600 text-white rounded-lg font-semibold shadow hover:bg-primary-700"
+                    >
+                      Create account
+                    </Link>
+                  </div>
+                )
               )}
             </div>
           </nav>

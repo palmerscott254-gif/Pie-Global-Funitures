@@ -235,3 +235,11 @@ export interface AdminAuditLog {
   ip_address?: string;
 }
 
+// Top-selling products type
+export interface TopSellingProduct {
+  id: number;
+  name: string;
+  units_sold: number;
+  revenue: number;
+}
+

@@ -52,6 +52,6 @@ export function useOnClickOutside(
 }
 
 export { default as useSEO } from './useSEO';
-export { useDashboardSummary, useDashboardAlerts, useAdminOrders, useAdminMessages } from './useDashboard';
+export { useDashboardSummary, useDashboardAlerts, useAdminOrders, useAdminMessages, useAdminProducts, useTopProducts } from './useDashboard';
 export { useNotifications } from './useNotifications';
 

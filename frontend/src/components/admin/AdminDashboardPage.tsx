@@ -3,15 +3,17 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { DashboardOverview } from './DashboardOverview';
 import { OrdersManagement } from './OrdersManagement';
 import { MessagesManagement } from './MessagesManagement';
+import { ProductsManagement } from './ProductsManagement';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { authApi } from '@/services/api';
 import toast from 'react-hot-toast';
+import { clearAuthState } from '@/utils/auth';
 
 export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [currentTab, setCurrentTab] = useState<'overview' | 'orders' | 'messages'>('overview');
+  const [currentTab, setCurrentTab] = useState<'overview' | 'orders' | 'messages' | 'products'>('overview');
 
   // Check authorization (reuse backend auth/me for admin flags)
   useEffect(() => {
@@ -38,7 +40,9 @@ export const AdminDashboardPage: React.FC = () => {
   // Determine current tab based on location
   useEffect(() => {
     const pathname = location.pathname;
-    if (pathname.includes('/messages')) {
+    if (pathname.includes('/products')) {
+      setCurrentTab('products');
+    } else if (pathname.includes('/messages')) {
       setCurrentTab('messages');
     } else if (pathname.includes('/orders')) {
       setCurrentTab('orders');
@@ -66,10 +70,16 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => {
-                  localStorage.removeItem('pgf-auth-access');
-                  navigate('/');
-                  toast.success('Logged out');
+                onClick={async () => {
+                  try {
+                    await authApi.logout();
+                  } catch {
+                    // Ignore backend logout failures; local cleanup is still required.
+                  } finally {
+                    clearAuthState();
+                    navigate('/login', { replace: true });
+                    toast.success('Logged out');
+                  }
                 }}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium text-sm"
               >
@@ -119,6 +129,19 @@ export const AdminDashboardPage: React.FC = () => {
             >
               Messages Management
             </button>
+            <button
+              onClick={() => {
+                setCurrentTab('products');
+                navigate('/admin/dashboard/products/');
+              }}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                currentTab === 'products'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Products Management
+            </button>
           </div>
         </div>
       </div>
@@ -128,6 +151,7 @@ export const AdminDashboardPage: React.FC = () => {
         {currentTab === 'overview' && <DashboardOverview />}
         {currentTab === 'orders' && <OrdersManagement />}
         {currentTab === 'messages' && <MessagesManagement />}
+        {currentTab === 'products' && <ProductsManagement />}
       </main>
     </div>
   );

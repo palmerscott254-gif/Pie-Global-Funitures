@@ -314,6 +314,80 @@ export const adminApi = {
     });
     return response.data;
   },
+
+  getTopProducts: async (limit: number = 10) => {
+    const response = await api.get<any[]>('/admin/dashboard/top-products/', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
+  getProducts: async (page: number = 1, limit: number = 20, search?: string, category?: string) => {
+    const params: Record<string, any> = { page, limit };
+    if (search) params.search = search;
+    if (category) params.category = category;
+    const response = await api.get<any>('/admin/dashboard/products/', { params });
+    return response.data;
+  },
+
+  createProduct: async (data: any) => {
+    const formData = new FormData();
+    
+    // Add all fields to form data
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'main_image' && value instanceof File) {
+        formData.append(key, value);
+      } else if (key === 'gallery' && Array.isArray(value)) {
+        value.forEach((item: any, index: number) => {
+          if (item instanceof File) {
+            formData.append(`gallery_${index}`, item);
+          }
+        });
+      } else if (value !== null && value !== undefined && !(value instanceof File)) {
+        if (typeof value === 'object') {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    }
+    
+    const response = await api.post<any>('/admin/dashboard/products/', formData, {
+    });
+    return response.data;
+  },
+
+  updateProduct: async (productId: number, data: any) => {
+    const formData = new FormData();
+    
+    // Add all fields to form data
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'main_image' && value instanceof File) {
+        formData.append(key, value);
+      } else if (key === 'gallery' && Array.isArray(value)) {
+        value.forEach((item: any, index: number) => {
+          if (item instanceof File) {
+            formData.append(`gallery_${index}`, item);
+          }
+        });
+      } else if (value !== null && value !== undefined && !(value instanceof File)) {
+        if (typeof value === 'object') {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    }
+    
+    const response = await api.patch<any>(`/admin/dashboard/products/${productId}/`, formData, {
+    });
+    return response.data;
+  },
+
+  deleteProduct: async (productId: number) => {
+    const response = await api.delete<any>(`/admin/dashboard/products/${productId}/`);
+    return response.data;
+  },
 };
 
 // Cart API

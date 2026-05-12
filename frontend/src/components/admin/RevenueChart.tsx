@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatKSh } from '@/utils/helpers';
 
 interface RevenueChartProps {
   revenueToday: number | string;
@@ -33,7 +34,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">Revenue Today</span>
-            <span className="text-sm font-semibold text-gray-900">${today.toFixed(2)}</span>
+            <span className="text-sm font-semibold text-gray-900">{formatKSh(today)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -47,7 +48,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">Revenue This Month</span>
-            <span className="text-sm font-semibold text-gray-900">${month.toFixed(2)}</span>
+            <span className="text-sm font-semibold text-gray-900">{formatKSh(month)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -61,7 +62,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">Revenue All Time</span>
-            <span className="text-sm font-semibold text-gray-900">${allTime.toFixed(2)}</span>
+            <span className="text-sm font-semibold text-gray-900">{formatKSh(allTime)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -75,7 +76,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">Average Order Value</span>
-            <span className="text-sm font-semibold text-gray-900">${avgOrder.toFixed(2)}</span>
+            <span className="text-sm font-semibold text-gray-900">{formatKSh(avgOrder)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div

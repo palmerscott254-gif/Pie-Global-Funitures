@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminApi } from '@/services/api';
-import type { DashboardSummary, DashboardAlert, AdminOrder, AdminMessage } from '@/types';
+import type { DashboardSummary, DashboardAlert, AdminOrder, AdminMessage, TopSellingProduct, Product } from '@/types';
 import toast from 'react-hot-toast';
 
 /**
@@ -212,3 +212,142 @@ export const useAdminMessages = (enabled: boolean = true, pollInterval: number =
 
   return { messages, loading, error, reply, resolve, refetch: fetchMessages };
 };
+
+/**
+ * Hook for managing admin products
+ */
+export const useAdminProducts = (enabled: boolean = true, pollInterval: number = 0, limit: number = 20) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchProducts = useCallback(async (page: number = 1, search?: string, category?: string) => {
+    try {
+      const result = await adminApi.getProducts(page, limit, search, category);
+      setProducts((result.results || []) as Product[]);
+      setTotalCount(result.count || 0);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err: any) {
+      const message = err.response?.data?.detail || err.message || 'Failed to fetch products';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [limit]);
+
+  const createProduct = useCallback(async (data: any) => {
+    try {
+      const result = await adminApi.createProduct(data);
+      setProducts([result.data as Product, ...products]);
+      setTotalCount(totalCount + 1);
+      toast.success('Product created successfully');
+      return result.data;
+    } catch (err: any) {
+      const message = err.response?.data?.detail || err.message || 'Failed to create product';
+      toast.error(message);
+      throw err;
+    }
+  }, [products, totalCount]);
+
+  const updateProduct = useCallback(async (productId: number, data: any) => {
+    try {
+      const result = await adminApi.updateProduct(productId, data);
+      setProducts(products.map((p: Product) => (p.id === productId ? (result.data as Product) : p)));
+      toast.success('Product updated successfully');
+      return result.data;
+    } catch (err: any) {
+      const message = err.response?.data?.detail || err.message || 'Failed to update product';
+      toast.error(message);
+      throw err;
+    }
+  }, [products]);
+
+  const deleteProduct = useCallback(async (productId: number) => {
+    try {
+      await adminApi.deleteProduct(productId);
+      setProducts(products.filter((p: Product) => p.id !== productId));
+      setTotalCount(totalCount - 1);
+      toast.success('Product deleted successfully');
+    } catch (err: any) {
+      const message = err.response?.data?.detail || err.message || 'Failed to delete product';
+      toast.error(message);
+      throw err;
+    }
+  }, [products, totalCount]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    fetchProducts();
+
+    // Only set polling if interval is > 0
+    if (pollInterval > 0) {
+      intervalRef.current = setInterval(() => fetchProducts(), pollInterval);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [enabled, pollInterval, fetchProducts]);
+
+  return {
+    products,
+    loading,
+    error,
+    totalCount,
+    currentPage,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    refetch: fetchProducts,
+  };
+};
+
+/**
+ * Hook for fetching top-selling products
+ */
+export const useTopProducts = (enabled: boolean = true, pollInterval: number = 0, limit: number = 10) => {
+  const [products, setProducts] = useState<TopSellingProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchTopProducts = useCallback(async () => {
+    try {
+      const result = await adminApi.getTopProducts(limit);
+      setProducts(result);
+      setError(null);
+    } catch (err: any) {
+      const message = err.response?.data?.detail || err.message || 'Failed to fetch top products';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [limit]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    fetchTopProducts();
+
+    // Only set polling if interval is > 0
+    if (pollInterval > 0) {
+      intervalRef.current = setInterval(fetchTopProducts, pollInterval);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [enabled, pollInterval, fetchTopProducts]);
+
+  return { products, loading, error, refetch: fetchTopProducts };
+};
+

@@ -1,15 +1,18 @@
 import logging
 from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Sum, Avg, Q
+from django.db.models import Sum, Avg, Q, F, Case, When, Value
+from django.db.models.functions import Coalesce
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from apps.orders.models import Order
 from apps.messages.models import UserMessage
+from apps.products.models import Product
 from apps.admin.models import AdminAuditLog
 from apps.admin.permissions import IsAdminOrStaff, HasRole
 from apps.admin.serializers import (
@@ -55,6 +58,35 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             )
         except Exception as e:
             logger.exception(f"Failed to log admin action: {e}")
+
+    def get_product_sales_map(self):
+        """Build a map of product_id -> sales metrics from delivered orders."""
+        product_sales = {}
+        delivered_orders = Order.objects.filter(status='delivered')
+
+        for order in delivered_orders:
+            if not order.items:
+                continue
+
+            for item in order.items:
+                product_id = item.get('product_id')
+                if not product_id:
+                                        continue
+
+                qty = int(item.get('qty', 0) or 0)
+                price = float(item.get('price', 0) or 0)
+                revenue = qty * price
+
+                if product_id not in product_sales:
+                    product_sales[product_id] = {
+                        'units_sold': 0,
+                        'revenue': 0,
+                    }
+
+                product_sales[product_id]['units_sold'] += qty
+                product_sales[product_id]['revenue'] += revenue
+
+        return product_sales
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
@@ -408,3 +440,189 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         logs = AdminAuditLog.objects.all()[:limit]
         serializer = AdminAuditLogSerializer(logs, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def top_products(self, request):
+        """
+        Get top-selling products (by units sold).
+        /api/admin/dashboard/top-products/?limit=10
+        """
+        limit = int(request.query_params.get('limit', 10))
+        product_sales = self.get_product_sales_map()
+        
+        # Get product details and sort by units sold
+        top_product_ids = sorted(
+            product_sales.items(),
+            key=lambda x: x[1]['units_sold'],
+            reverse=True
+        )[:limit]
+        
+        result = []
+        for product_id, sales_data in top_product_ids:
+            try:
+                product = Product.objects.get(id=product_id)
+                result.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'units_sold': sales_data['units_sold'],
+                    'revenue': sales_data['revenue'],
+                })
+            except Product.DoesNotExist:
+                pass
+        
+        return Response(result)
+
+    @action(detail=False, methods=['get'])
+    def products(self, request):
+        """
+        Get all products (paged).
+        GET /api/admin/dashboard/products/?search=sofa&category=furniture&page=1
+        """
+        search = request.query_params.get('search', '')
+        category = request.query_params.get('category', '')
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 20))
+        
+        queryset = Product.objects.all()
+        
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | 
+                Q(description__icontains=search) |
+                Q(sku__icontains=search)
+            )
+        
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        # Order by newest first
+        queryset = queryset.order_by('-created_at')
+        
+        # Count total
+        total_count = queryset.count()
+
+        product_sales = self.get_product_sales_map()
+        
+        # Paginate
+        offset = (page - 1) * limit
+        products = queryset[offset:offset + limit]
+        
+        from apps.admin.serializers import AdminProductSerializer
+        serialized = AdminProductSerializer(products, many=True).data
+        results = []
+        for item in serialized:
+            sales = product_sales.get(item['id'], {'units_sold': 0, 'revenue': 0})
+            item['units_sold'] = sales['units_sold']
+            results.append(item)
+        
+        return Response({
+            'count': total_count,
+            'page': page,
+            'limit': limit,
+            'results': results,
+        })
+
+    @action(detail=False, methods=['post'])
+    def create_product(self, request):
+        """
+        Create new product.
+        POST /api/admin/dashboard/products/
+        """
+        from apps.admin.serializers import AdminProductSerializer
+        
+        serializer = AdminProductSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save()
+        
+        # Log action
+        self.log_action(request, 'create_product', product)
+        
+        logger.info(f"Product {product.id} created by {request.user.email}")
+        
+        return Response(
+            {
+                'message': 'Product created successfully',
+                'data': AdminProductSerializer(product).data
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=False, methods=['patch'], url_path='products/(?P<product_id>[^/.]+)')
+    def update_product(self, request, pk=None, product_id=None):
+        """
+        Update product.
+        PATCH /api/admin/dashboard/products/{id}/
+        """
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response(
+                {'error': 'Product not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        from apps.admin.serializers import AdminProductSerializer
+        
+        # Track changes
+        old_data = {
+            'name': product.name,
+            'price': str(product.price),
+            'stock': product.stock,
+            'featured': product.featured,
+            'is_active': product.is_active,
+        }
+        
+        serializer = AdminProductSerializer(product, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save()
+        
+        new_data = {
+            'name': product.name,
+            'price': str(product.price),
+            'stock': product.stock,
+            'featured': product.featured,
+            'is_active': product.is_active,
+        }
+        
+        changes = {k: {'old': old_data[k], 'new': new_data[k]} for k in old_data if old_data[k] != new_data[k]}
+        
+        # Log action
+        if changes:
+            self.log_action(request, 'update_product', product, changes)
+            logger.info(f"Product {product.id} updated by {request.user.email}")
+        
+        return Response(
+            {
+                'message': 'Product updated successfully',
+                'data': AdminProductSerializer(product).data
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['delete'], url_path='products/(?P<product_id>[^/.]+)')
+    def delete_product(self, request, pk=None, product_id=None):
+        """
+        Delete product.
+        DELETE /api/admin/dashboard/products/{id}/
+        """
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response(
+                {'error': 'Product not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Log action before delete
+        self.log_action(request, 'delete_product', product)
+        
+        product_name = product.name
+        product.delete()
+        
+        logger.info(f"Product {product.id} ({product_name}) deleted by {request.user.email}")
+        
+        return Response(
+            {'message': 'Product deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+

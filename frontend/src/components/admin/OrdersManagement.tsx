@@ -3,6 +3,7 @@ import { OrderStatusBadge } from './StatusBadge';
 import { useAdminOrders } from '@/hooks';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { formatKSh } from '@/utils/helpers';
 
 export const OrdersManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -144,7 +145,7 @@ export const OrdersManagement: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-semibold text-gray-900">
-                        ${parseFloat(String(order.total_amount)).toFixed(2)}
+                        {formatKSh(order.total_amount)}
                       </td>
                       <td className="px-6 py-4">
                         <OrderStatusBadge status={order.status || 'pending'} />
@@ -192,11 +193,11 @@ export const OrdersManagement: React.FC = () => {
                                     <div>
                                       <p className="font-medium text-gray-900">{item.name}</p>
                                       <p className="text-xs text-gray-500">
-                                        Qty: {item.qty} × ${item.price}
+                                        Qty: {item.qty} × {formatKSh(item.price)}
                                       </p>
                                     </div>
                                     <p className="font-semibold text-gray-900">
-                                      ${(item.qty * item.price).toFixed(2)}
+                                      {formatKSh(item.qty * item.price)}
                                     </p>
                                   </div>
                                 ))}
