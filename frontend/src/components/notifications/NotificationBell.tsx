@@ -10,6 +10,7 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaBell, FaCheck } from 'react-icons/fa';
 import { useNotifications } from '@/hooks/useNotifications';
 import type { Notification } from '@/services/notificationService';
@@ -89,6 +90,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
   const hasUnread = unreadCount > 0;
   const displayCount = unreadCount > 99 ? '99+' : unreadCount;
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('portal-root') : null;
 
   return (
     <div className={`relative ${className}`}>
@@ -132,10 +134,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       </button>
 
       {/* Dropdown Menu */}
-      {isOpen && (
+      {isOpen && portalRoot && createPortal(
         <div
           ref={dropdownRef}
-          className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-white shadow-2xl border border-gray-200 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="fixed right-4 top-20 md:right-6 w-96 max-w-[calc(100vw-2rem)] bg-white shadow-2xl border border-gray-200 rounded-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200"
         >
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
@@ -143,9 +145,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
               <div>
                 <p className="font-semibold text-gray-900">Notifications</p>
                 <p className="text-xs text-gray-500">
-                  {unreadCount > 0
-                    ? `${unreadCount} unread`
-                    : 'All caught up!'}
+                  {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
                 </p>
               </div>
               {unreadCount > 0 && (
@@ -178,9 +178,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             {error && !isLoading && (
               <div className="py-4 px-4 text-center">
                 <p className="text-sm text-red-600">{error}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Please refresh or try again
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Please refresh or try again</p>
               </div>
             )}
 
@@ -188,9 +186,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             {!isLoading && !error && notifications.length === 0 && (
               <div className="py-8 px-4 text-center">
                 <FaBell className="mx-auto text-gray-300 mb-2" size={32} />
-                <p className="text-sm font-medium text-gray-600">
-                  No notifications yet
-                </p>
+                <p className="text-sm font-medium text-gray-600">No notifications yet</p>
                 <p className="text-xs text-gray-500 mt-1">
                   We'll notify you when something important happens
                 </p>
@@ -288,7 +284,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           )}
 
           {/* Connection status is intentionally hidden for silent reconnect UX */}
-        </div>
+        </div>,
+        portalRoot
       )}
     </div>
   );
