@@ -114,9 +114,9 @@ const TermsOfServicePage = () => {
           </p>
           <ul className="list-none mb-4 text-gray-700">
             <li><strong>Email:</strong> pieglobal308@gmail.com</li>
-            <li><strong>Phone:</strong> +254 704 456 788</li>
+            <li><strong>Phone:</strong> +254 704 912 429</li>
             <li><strong>Address:</strong> Kayole Spine Rd, Nairobi</li>
-            <li><strong>WhatsApp:</strong> +254 704 456 788</li>
+            <li><strong>WhatsApp:</strong> +254 704 912 429</li>
           </ul>
         </section>
 

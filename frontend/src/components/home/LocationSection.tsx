@@ -4,7 +4,7 @@ import { FaMapMarkerAlt, FaClock, FaPhone, FaEnvelope, FaDirections } from 'reac
 const LocationSection = () => {
   const locationData = {
     address: 'Kayole Spine Rd, Nairobi',
-    phone: '+254 704 456 788',
+    phone: '+254 704 912 429',
     email: 'pieglobal308@gmail.com',
     hours: [
       { day: 'Monday - Friday', time: '8:00 AM - 6:00 PM' },

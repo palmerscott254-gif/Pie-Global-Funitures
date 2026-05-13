@@ -163,8 +163,8 @@ const ContactPage = () => {
                 <FaPhone className="text-primary-600 text-xl" />
                 <div>
                   <p className="font-medium">Phone</p>
-                  <a href="tel:+254704456788" className="text-gray-600 hover:text-primary-600">
-                    +254 704 456 788
+                  <a href="tel:+254704912429" className="text-gray-600 hover:text-primary-600">
+                    +254 704 912 429
                   </a>
                 </div>
               </div>
@@ -174,7 +174,7 @@ const ContactPage = () => {
                 <div>
                   <p className="font-medium">WhatsApp</p>
                   <a
-                    href="https://wa.me/254704456788?text=Hello%20pie%20funitures"
+                    href="https://wa.me/254704912429?text=Hello%20pie%20funitures"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-green-600"
