@@ -547,7 +547,6 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    @action(detail=False, methods=['patch'], url_path='products/(?P<product_id>[^/.]+)')
     def update_product(self, request, pk=None, product_id=None):
         """
         Update product.
@@ -599,7 +598,6 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             status=status.HTTP_200_OK
         )
 
-    @action(detail=False, methods=['delete'], url_path='products/(?P<product_id>[^/.]+)')
     def delete_product(self, request, pk=None, product_id=None):
         """
         Delete product.

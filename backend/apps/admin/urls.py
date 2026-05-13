@@ -6,7 +6,6 @@ router = DefaultRouter()
 router.register(r'dashboard', AdminDashboardViewSet, basename='admin-dashboard')
 
 urlpatterns = [
-    path('', include(router.urls)),
     path(
         'dashboard/products/',
         AdminDashboardViewSet.as_view({'get': 'products', 'post': 'create_product'}),
@@ -14,7 +13,7 @@ urlpatterns = [
     ),
     path(
         'dashboard/products/<int:product_id>/',
-        AdminDashboardViewSet.as_view({'patch': 'update_product', 'delete': 'delete_product'}),
+        AdminDashboardViewSet.as_view({'patch': 'update_product', 'put': 'update_product', 'delete': 'delete_product'}),
         name='admin-dashboard-product-detail'
     ),
     path(
@@ -25,3 +24,5 @@ urlpatterns = [
     # Backwards-compatible active alerts endpoint expected by frontend
     path('alerts/active/', AdminDashboardViewSet.as_view({'get': 'alerts'}), name='admin-active-alerts'),
 ]
+
+urlpatterns += [path('', include(router.urls))]
