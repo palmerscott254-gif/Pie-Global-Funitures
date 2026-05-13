@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 from django.utils import timezone
+from django.db import IntegrityError
 from django.db.models import Sum, Avg, Q, F, Case, When, Value
 from django.db.models.functions import Coalesce
 from django.contrib.contenttypes.models import ContentType
@@ -532,7 +533,14 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         
         serializer = AdminProductSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        product = serializer.save()
+        try:
+            product = serializer.save()
+        except IntegrityError as e:
+            logger.warning(f"Product create integrity error by {request.user.email}: {e}")
+            return Response(
+                {'error': 'Product could not be created due to duplicate unique fields (e.g., SKU).'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Log action
         self.log_action(request, 'create_product', product)
@@ -573,7 +581,14 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         
         serializer = AdminProductSerializer(product, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        product = serializer.save()
+        try:
+            product = serializer.save()
+        except IntegrityError as e:
+            logger.warning(f"Product update integrity error by {request.user.email} on product {product_id}: {e}")
+            return Response(
+                {'error': 'Product could not be updated due to duplicate unique fields (e.g., SKU).'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         new_data = {
             'name': product.name,

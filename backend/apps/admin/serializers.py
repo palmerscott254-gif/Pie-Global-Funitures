@@ -124,6 +124,17 @@ class AdminMessageSerializer(serializers.ModelSerializer):
 
 class AdminProductSerializer(serializers.ModelSerializer):
     """Serializer for admin product management."""
+
+    def validate_sku(self, value):
+        """Normalize blank SKU to null so DB unique constraint is not hit by empty strings."""
+        if value is None:
+            return None
+
+        if isinstance(value, str):
+            trimmed = value.strip()
+            return trimmed or None
+
+        return value
     
     class Meta:
         model = Product

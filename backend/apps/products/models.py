@@ -91,6 +91,10 @@ class Product(models.Model):
     
     def save(self, *args, **kwargs):
         """Auto-generate slug from name if not provided."""
+        # Keep SKU nullable instead of persisting empty strings, which can violate unique constraints.
+        if isinstance(self.sku, str):
+            self.sku = self.sku.strip() or None
+
         if not self.slug:
             base_slug = slugify(self.name)
             slug = base_slug
