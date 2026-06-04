@@ -60,6 +60,6 @@ services:
       - key: NODE_VERSION
         value: 18.17.0
       - key: VITE_API_URL
-        value: https://pie-global-funitures.onrender.com
+        value: https://pie-global-funitures.onrender.com/api/
     healthCheckPath: /
     autoDeploy: true

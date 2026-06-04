@@ -76,9 +76,6 @@ if (!isValidApiUrl(API_BASE_URL)) {
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000, // Increased timeout for better UX
-  headers: {
-    'Content-Type': 'application/json',
-  },
   // CRITICAL for CORS: Allow credentials when calling cross-origin backend
   // Must match CORS_ALLOW_CREDENTIALS = True on Django backend
   withCredentials: true,
