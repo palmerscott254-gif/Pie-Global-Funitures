@@ -16,6 +16,13 @@ const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [about, setAbout] = useState<AboutPage | null>(null);
   const [loading, setLoading] = useState(true);
+  const activeVideos = videos.filter((video) => video.active);
+  const heroVideo =
+    activeVideos
+      .slice()
+      .sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime())[0] ??
+    videos[0];
+  const heroSlider = sliders.find((slider) => slider.active) ?? sliders[0];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,7 +104,7 @@ const HomePage = () => {
     <div className="overflow-hidden">
       {/* Hero Video or Slider with Premium Component */}
       {/* Always render hero with video + first slider as fallback */}
-      <HeroVideo videos={videos} slider={sliders[0]} />
+      <HeroVideo video={heroVideo} slider={heroSlider} />
 
       {/* Premium glassy transition between hero and slider */}
       {sliders.length > 1 && (

@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { authApi } from '@/services/api';
 import toast from 'react-hot-toast';
 import { clearAuthState } from '@/utils/auth';
+import { useCartStore } from '@/store/cartStore';
 
 export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ export const AdminDashboardPage: React.FC = () => {
                   } catch {
                     // Ignore backend logout failures; local cleanup is still required.
                   } finally {
+                    useCartStore.getState().clearCart();
                     clearAuthState();
                     navigate('/login', { replace: true });
                     toast.success('Logged out');

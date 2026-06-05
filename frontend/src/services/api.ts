@@ -205,12 +205,18 @@ export const messagesApi = {
 export const aboutApi = {
   get: async () => {
     try {
-      const response = await api.get<AboutPage>('/about/current/');
-      return response.data;
+      const response = await api.get<AboutPage | { detail: string }>('/about/current/', {
+        validateStatus: (status) => status < 500,
+      });
+
+      if (response.status !== 404) {
+        return response.data as AboutPage;
+      }
+
+      const fallbackResponse = await api.get<AboutPage[]>('/about/');
+      return fallbackResponse.data[0];
     } catch (error) {
-      // Fallback to list endpoint (sorted by backend ordering)
-      const response = await api.get<AboutPage[]>('/about/');
-      return response.data[0];
+      throw error;
     }
   },
 };

@@ -42,12 +42,8 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         videoRef.current.muted = true;
         videoRef.current.defaultMuted = true;
         await videoRef.current.play();
-      } catch {
-        setTimeout(() => {
-          videoRef.current?.play().catch(() => {
-            setVideoFailed(true);
-          });
-        }, 300);
+      } catch (error) {
+        console.debug('[HeroVideo] Autoplay deferred until the browser allows playback.', error);
       }
     };
 
@@ -56,8 +52,13 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
     return () => document.removeEventListener('visibilitychange', playVideo);
   }, [videoUrl, videoFailed]);
 
+  useEffect(() => {
+    setVideoFailed(false);
+    videoRef.current?.load();
+  }, [videoUrl]);
+
   return (
-    <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden">
+    <section className="relative h-[78vh] sm:h-[86vh] lg:h-[90vh] min-h-[520px] sm:min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
       {fallbackImageUrl ? (
         <img
@@ -65,7 +66,6 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           alt={slider?.title || 'Hero background'}
           className="absolute inset-0 z-0 w-full h-full object-cover"
           loading="eager"
-          fetchPriority="high"
           onError={(e) => console.error('Slider fallback image failed to load:', slider?.image, e)}
         />
       ) : (
@@ -91,7 +91,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           }}
           onCanPlay={() => {
             videoRef.current?.play().catch(() => {
-              setVideoFailed(true);
+              console.debug('[HeroVideo] Playback request was blocked; keeping the video mounted for retry.');
             });
           }}
           onError={(e) => {
