@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { Toaster, ToastBar, toast } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 import { useEffect, lazy, Suspense } from 'react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -40,7 +40,6 @@ function App() {
           }}
           toastOptions={{
             duration: 3000,
-            className: 'pgf-toast',
             style: {
               background: '#363636',
               color: '#fff',
@@ -67,46 +66,7 @@ function App() {
               },
             },
           }}
-        >
-          {(t) => (
-            <ToastBar
-              toast={t}
-              style={{
-                ...t.style,
-                width: 'min(28rem, calc(100vw - 2rem))',
-                maxWidth: 'calc(100vw - 2rem)',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                padding: '0.875rem 1rem',
-                borderRadius: '0.875rem',
-                boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18)',
-                whiteSpace: 'normal',
-                overflowWrap: 'anywhere',
-                wordBreak: 'break-word',
-                lineHeight: '1.4',
-              }}
-            >
-              {({ icon, message }) => (
-                <div className="flex w-full items-start gap-3">
-                  <div className="shrink-0 pt-0.5">{icon}</div>
-                  <div className="min-w-0 flex-1 text-sm leading-5 break-words">
-                    {message}
-                  </div>
-                  {t.type !== 'loading' && (
-                    <button
-                      type="button"
-                      onClick={() => toast.dismiss(t.id)}
-                      className="shrink-0 rounded-full p-1 text-white/70 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
-                      aria-label="Dismiss notification"
-                    >
-                      <span aria-hidden="true">✕</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </ToastBar>
-          )}
-        </Toaster>
+        />
         
         <Header />
         <CartDrawer />
