@@ -21,28 +21,33 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         console.debug('[HomePage] Fetching home page data...');
-        
-        const [slidersResponse, videosResponse, productsData, aboutData] = await Promise.all([
+
+        const [slidersResult, videosResult, productsResult, aboutResult] = await Promise.allSettled([
           homeApi.getSliders(),
           homeApi.getVideos(),
           productsApi.getFeatured(),
           aboutApi.get().catch(() => null),
         ]);
-        
+
+        const slidersResponse = slidersResult.status === 'fulfilled' ? slidersResult.value : [];
+        const videosResponse = videosResult.status === 'fulfilled' ? videosResult.value : [];
+        const productsResponse = productsResult.status === 'fulfilled' ? productsResult.value : [];
+        const aboutData = aboutResult.status === 'fulfilled' ? aboutResult.value : null;
+
         // Handle paginated or array response for sliders
-        const slidersData = Array.isArray(slidersResponse) 
-          ? slidersResponse 
+        const slidersData = Array.isArray(slidersResponse)
+          ? slidersResponse
           : (slidersResponse as any).results || [];
-        
+
         // Handle paginated or array response for videos
-        const videosData = Array.isArray(videosResponse) 
-          ? videosResponse 
+        const videosData = Array.isArray(videosResponse)
+          ? videosResponse
           : (videosResponse as any).results || [];
-        
+
         // Handle paginated or array response for products
-        const products = Array.isArray(productsData) 
-          ? productsData 
-          : (productsData as any).results || [];
+        const products = Array.isArray(productsResponse)
+          ? productsResponse
+          : (productsResponse as any).results || [];
         
         console.debug('[HomePage] Sliders loaded:', slidersData.length);
         console.debug('[HomePage] Videos loaded:', videosData.length);
@@ -53,6 +58,16 @@ const HomePage = () => {
         setVideos(videosData);
         setFeaturedProducts(products);
         setAbout(aboutData);
+
+        if (slidersResult.status === 'rejected') {
+          console.error('[HomePage] Failed to fetch sliders:', slidersResult.reason);
+        }
+        if (videosResult.status === 'rejected') {
+          console.error('[HomePage] Failed to fetch videos:', videosResult.reason);
+        }
+        if (productsResult.status === 'rejected') {
+          console.error('[HomePage] Failed to fetch featured products:', productsResult.reason);
+        }
       } catch (error) {
         console.error('[HomePage] Error fetching data:', error);
         console.error('Error fetching homepage data:', error);
@@ -69,14 +84,20 @@ const HomePage = () => {
   }, []);
 
   if (loading) {
-    return <LoadingSpinner fullScreen />;
+    return (
+      <section className="py-24 md:py-32">
+        <div className="container-custom flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </section>
+    );
   }
 
   return (
     <div className="overflow-hidden">
       {/* Hero Video or Slider with Premium Component */}
       {/* Always render hero with video + first slider as fallback */}
-      <HeroVideo video={videos[0]} slider={sliders[0]} />
+      <HeroVideo videos={videos} slider={sliders[0]} />
 
       {/* Premium glassy transition between hero and slider */}
       {sliders.length > 1 && (
