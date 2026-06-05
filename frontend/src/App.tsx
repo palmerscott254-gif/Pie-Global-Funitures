@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { useEffect, lazy, Suspense } from 'react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -9,6 +8,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ScrollToTop from './components/common/ScrollToTop';
 import { csrfApi } from './services/api';
+import { Toaster } from './services/toast';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ProductsPage = lazy(() => import('./pages/ProductsPage'));

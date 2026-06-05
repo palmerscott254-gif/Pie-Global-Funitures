@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaCheckCircle, FaShieldAlt, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
 import { authApi } from '@/services/api';
+import { toast } from '../services/toast';
 import { useCartStore } from '@/store/cartStore';
 
 // This page is intentionally optional: browsing and checkout do not require login.
