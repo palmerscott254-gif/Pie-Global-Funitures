@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaCheckCircle, FaShieldAlt, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { authApi } from '@/services/api';
-import { toast } from '../services/toast';
+import '../services/toast';
 import { useCartStore } from '@/store/cartStore';
 
 // This page is intentionally optional: browsing and checkout do not require login.
@@ -23,7 +23,7 @@ const LoginPage = () => {
     try {
       const data = await authApi.login({ email, password });
 
-      toast.success('Signed in — welcome back!');
+      window.pgfToast?.success('Signed in — welcome back!');
       // Store user info in localStorage for frontend use
       if (!data.user) {
         throw new Error('Missing user data in login response.');
@@ -50,7 +50,7 @@ const LoginPage = () => {
     } catch (err) {
       console.error('Login error:', err);
       const message = (err as any)?.response?.data?.error || (err as Error).message || 'Could not sign in. Please try again.';
-      toast.error(message);
+      window.pgfToast?.error(message);
     } finally {
       setLoading(false);
     }
