@@ -14,7 +14,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const [videoFailed, setVideoFailed] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoUrl = video?.video ? getVideoUrl(video.video) : '';
-  const videoSrc = videoUrl;
+  const videoSrc = videoUrl.trim();
   const fallbackImageUrl = slider?.image ? getImageUrl(slider.image) : '';
 
   const particles = useMemo(() => {
@@ -38,24 +38,37 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   };
 
   useEffect(() => {
-    const playVideo = async () => {
-      if (!videoRef.current || !videoSrc || videoFailed) return;
+    if (!videoSrc) {
+      setIsPlaying(false);
+      return;
+    }
+
+    // Reset failure state when source changes.
+    setVideoFailed(false);
+    setIsPlaying(false);
+  }, [videoSrc]);
+
+  useEffect(() => {
+    const tryPlay = async () => {
+      const el = videoRef.current;
+      if (!el || !videoSrc || videoFailed) return;
+
       try {
-        videoRef.current.muted = true;
-        videoRef.current.defaultMuted = true;
-        await videoRef.current.play();
+        el.muted = true;
+        el.defaultMuted = true;
+        await el.play();
         setIsPlaying(true);
-      } catch (error) {
-        console.debug('[HeroVideo] Autoplay deferred until the browser allows playback.', error);
+      } catch {
+        // Keep mounted; user can still play manually.
       }
     };
 
-    playVideo();
-    document.addEventListener('visibilitychange', playVideo);
-    return () => document.removeEventListener('visibilitychange', playVideo);
+    tryPlay();
+    document.addEventListener('visibilitychange', tryPlay);
+    return () => document.removeEventListener('visibilitychange', tryPlay);
   }, [videoSrc, videoFailed]);
 
-  // Try to play on user interaction (some mobile browsers require a gesture)
+  // Some mobile browsers require a user gesture before playback starts.
   useEffect(() => {
     const tryPlay = async () => {
       if (!videoRef.current || !videoSrc) return;
@@ -64,8 +77,8 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         videoRef.current.defaultMuted = true;
         await videoRef.current.play();
         setIsPlaying(true);
-      } catch (e) {
-        // keep the play button visible so the user can start playback manually
+      } catch {
+        // Keep play button visible for manual start.
       }
     };
 
@@ -77,25 +90,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
     };
   }, [videoSrc]);
 
-  useEffect(() => {
-    setVideoFailed(false);
-    videoRef.current?.load();
-  }, [videoSrc]);
-
   const shouldShowFallbackImage = Boolean(fallbackImageUrl) && (!videoSrc || videoFailed);
-
-  // Diagnostic logging
-  useEffect(() => {
-    console.group('[HeroVideo] Component State');
-    console.log('video prop:', video);
-    console.log('videoUrl:', videoUrl);
-    console.log('videoSrc:', videoSrc);
-    console.log('fallbackImageUrl:', fallbackImageUrl);
-    console.log('videoFailed:', videoFailed);
-    console.log('shouldShowFallbackImage:', shouldShowFallbackImage);
-    console.log('Will render video?', !!(videoSrc && !videoFailed));
-    console.groupEnd();
-  }, [video, videoUrl, videoSrc, fallbackImageUrl, videoFailed, shouldShowFallbackImage]);
 
   return (
     <section className="relative h-[78vh] sm:h-[86vh] lg:h-[90vh] min-h-[520px] sm:min-h-[600px] w-full overflow-hidden">
@@ -120,10 +115,11 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           poster={fallbackImageUrl || undefined}
           disablePictureInPicture
           disableRemotePlayback
+          crossOrigin="anonymous"
           className="absolute inset-0 z-[1] w-full h-full object-cover pointer-events-none"
           style={{
             willChange: 'transform',
@@ -131,19 +127,25 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
             WebkitBackfaceVisibility: 'hidden',
           }}
           onCanPlay={() => {
-            videoRef.current?.play().catch(() => {
-              console.debug('[HeroVideo] Playback request was blocked; keeping the video mounted for retry.');
-            });
+            videoRef.current?.play().catch(() => undefined);
+          }}
+          onPlay={() => {
+            setIsPlaying(true);
+          }}
+          onPause={() => {
+            setIsPlaying(false);
           }}
           onError={(e) => {
             const mediaError = videoRef.current?.error;
-            console.error('Video error:', e);
-            console.error('Video src:', video?.video);
-            console.error('Attempted URL:', videoSrc);
-            console.error('Video element state:', {
-              currentSrc: videoRef.current?.currentSrc,
-              networkState: videoRef.current?.networkState,
-              readyState: videoRef.current?.readyState,
+
+            // Ignore aborted loads during source swaps/re-renders.
+            if (mediaError?.code === MediaError.MEDIA_ERR_ABORTED) {
+              return;
+            }
+
+            console.error('[HeroVideo] Video load error', {
+              event: e,
+              source: videoSrc,
               errorCode: mediaError?.code,
               errorMessage: mediaError?.message,
             });
