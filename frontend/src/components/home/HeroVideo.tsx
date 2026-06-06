@@ -12,6 +12,8 @@ interface HeroVideoProps {
 const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playBlocked, setPlayBlocked] = useState(false);
   const videoUrl = video?.video ? getVideoUrl(video.video) : '';
   const fallbackImageUrl = slider?.image ? getImageUrl(slider.image) : '';
 
@@ -42,8 +44,11 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         videoRef.current.muted = true;
         videoRef.current.defaultMuted = true;
         await videoRef.current.play();
+        setIsPlaying(true);
+        setPlayBlocked(false);
       } catch (error) {
         console.debug('[HeroVideo] Autoplay deferred until the browser allows playback.', error);
+        setPlayBlocked(true);
       }
     };
 
@@ -51,6 +56,30 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
     document.addEventListener('visibilitychange', playVideo);
     return () => document.removeEventListener('visibilitychange', playVideo);
   }, [videoUrl, videoFailed]);
+
+  // Try to play on user interaction (some mobile browsers require a gesture)
+  useEffect(() => {
+    const tryPlay = async () => {
+      if (!videoRef.current || !videoUrl) return;
+      try {
+        videoRef.current.muted = true;
+        videoRef.current.defaultMuted = true;
+        await videoRef.current.play();
+        setIsPlaying(true);
+        setPlayBlocked(false);
+      } catch (e) {
+        // keep playBlocked true so we show the play button
+        setPlayBlocked(true);
+      }
+    };
+
+    document.addEventListener('pointerdown', tryPlay, { once: true });
+    document.addEventListener('touchstart', tryPlay, { once: true });
+    return () => {
+      document.removeEventListener('pointerdown', tryPlay as any);
+      document.removeEventListener('touchstart', tryPlay as any);
+    };
+  }, [videoUrl]);
 
   useEffect(() => {
     setVideoFailed(false);
@@ -203,6 +232,28 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           </motion.div>
         </div>
       </div>
+      {/* Play Button Overlay shown if autoplay blocked */}
+      {videoUrl && !isPlaying && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto">
+          <button
+            onClick={async () => {
+              try {
+                videoRef.current!.muted = true;
+                await videoRef.current!.play();
+                setIsPlaying(true);
+                setPlayBlocked(false);
+              } catch (e) {
+                setPlayBlocked(true);
+                console.debug('User-initiated play failed', e);
+              }
+            }}
+            className="bg-black/50 hover:bg-black/60 p-4 rounded-full text-white text-2xl shadow-lg"
+            aria-label="Play hero video"
+          >
+            ▶
+          </button>
+        </div>
+      )}
     </section>
   );
 });

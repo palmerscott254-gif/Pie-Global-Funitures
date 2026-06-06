@@ -20,6 +20,8 @@ const Slider = ({ images }: SliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
+  const [broken, setBroken] = useState<Set<number>>(new Set());
+  const brokenRef = useRef(broken);
 
   useEffect(() => {
     if (images.length <= 1 || !autoplay) return;
@@ -31,6 +33,26 @@ const Slider = ({ images }: SliderProps) => {
 
     return () => clearInterval(interval);
   }, [images.length, autoplay]);
+
+  // Keep ref in sync for handlers
+  useEffect(() => {
+    brokenRef.current = broken;
+  }, [broken]);
+
+  // Reset broken cache when images change
+  useEffect(() => {
+    setBroken(new Set());
+    setCurrentIndex(0);
+  }, [images]);
+
+  const getNextValidIndex = (start: number, dir: number) => {
+    if (images.length === 0) return -1;
+    for (let i = 0; i < images.length; i++) {
+      const candidate = (start + (dir > 0 ? i : -i) + images.length) % images.length;
+      if (!brokenRef.current.has(candidate)) return candidate;
+    }
+    return -1;
+  };
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -57,10 +79,8 @@ const Slider = ({ images }: SliderProps) => {
   const paginate = (newDirection: number) => {
     setDirection(newDirection);
     setCurrentIndex((prev) => {
-      const next = prev + newDirection;
-      if (next < 0) return images.length - 1;
-      if (next >= images.length) return 0;
-      return next;
+      const next = getNextValidIndex((prev + newDirection + images.length) % images.length, newDirection);
+      return next >= 0 ? next : prev;
     });
     setAutoplay(true);
   };
@@ -105,7 +125,7 @@ const Slider = ({ images }: SliderProps) => {
           {currentImage.image ? (
             <img
               src={getImageUrl(currentImage.image)}
-              alt="Gallery"
+              alt={currentImage.title || 'Gallery'}
               className="w-full h-full object-contain object-center"
               loading="eager"
               decoding="async"
@@ -113,10 +133,20 @@ const Slider = ({ images }: SliderProps) => {
               crossOrigin="anonymous"
               onError={() => {
                 console.error('Image failed to load:', currentImage.image);
+                // mark this slide as broken and advance
+                setBroken((s) => {
+                  const n = new Set(s);
+                  n.add(currentIndex);
+                  return n;
+                });
+                const next = getNextValidIndex(currentIndex, 1);
+                if (next >= 0) setCurrentIndex(next);
               }}
             />
           ) : (
-            <div className="w-full h-full bg-gray-200" />
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <div className="text-gray-500">Image unavailable</div>
+            </div>
           )}
         </motion.div>
       </AnimatePresence>
