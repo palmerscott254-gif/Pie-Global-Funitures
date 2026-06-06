@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/home/scholsey/Desktop/pie Global/Pie-Global-Funitures/.venv/bin/python3" "$0" "$@"
-' '''
+#!/home/scholsey/Desktop/Pie-Global-Funitures/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

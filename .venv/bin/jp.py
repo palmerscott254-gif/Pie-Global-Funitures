@@ -1,4 +1,4 @@
-#!/home/scholsey/Desktop/pie Global/Pie-Global-Funitures/.venv/bin/python
+#!/home/scholsey/Desktop/Pie-Global-Funitures/.venv/bin/python
 
 import sys
 import json
