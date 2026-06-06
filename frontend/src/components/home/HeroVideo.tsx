@@ -13,8 +13,8 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoFailed, setVideoFailed] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playBlocked, setPlayBlocked] = useState(false);
   const videoUrl = video?.video ? getVideoUrl(video.video) : '';
+  const videoSrc = videoUrl;
   const fallbackImageUrl = slider?.image ? getImageUrl(slider.image) : '';
 
   const particles = useMemo(() => {
@@ -39,37 +39,33 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
 
   useEffect(() => {
     const playVideo = async () => {
-      if (!videoRef.current || !videoUrl || videoFailed) return;
+      if (!videoRef.current || !videoSrc || videoFailed) return;
       try {
         videoRef.current.muted = true;
         videoRef.current.defaultMuted = true;
         await videoRef.current.play();
         setIsPlaying(true);
-        setPlayBlocked(false);
       } catch (error) {
         console.debug('[HeroVideo] Autoplay deferred until the browser allows playback.', error);
-        setPlayBlocked(true);
       }
     };
 
     playVideo();
     document.addEventListener('visibilitychange', playVideo);
     return () => document.removeEventListener('visibilitychange', playVideo);
-  }, [videoUrl, videoFailed]);
+  }, [videoSrc, videoFailed]);
 
   // Try to play on user interaction (some mobile browsers require a gesture)
   useEffect(() => {
     const tryPlay = async () => {
-      if (!videoRef.current || !videoUrl) return;
+      if (!videoRef.current || !videoSrc) return;
       try {
         videoRef.current.muted = true;
         videoRef.current.defaultMuted = true;
         await videoRef.current.play();
         setIsPlaying(true);
-        setPlayBlocked(false);
       } catch (e) {
-        // keep playBlocked true so we show the play button
-        setPlayBlocked(true);
+        // keep the play button visible so the user can start playback manually
       }
     };
 
@@ -79,21 +75,36 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
       document.removeEventListener('pointerdown', tryPlay as any);
       document.removeEventListener('touchstart', tryPlay as any);
     };
-  }, [videoUrl]);
+  }, [videoSrc]);
 
   useEffect(() => {
     setVideoFailed(false);
     videoRef.current?.load();
-  }, [videoUrl]);
+  }, [videoSrc]);
+
+  const shouldShowFallbackImage = Boolean(fallbackImageUrl) && (!videoSrc || videoFailed);
+
+  // Diagnostic logging
+  useEffect(() => {
+    console.group('[HeroVideo] Component State');
+    console.log('video prop:', video);
+    console.log('videoUrl:', videoUrl);
+    console.log('videoSrc:', videoSrc);
+    console.log('fallbackImageUrl:', fallbackImageUrl);
+    console.log('videoFailed:', videoFailed);
+    console.log('shouldShowFallbackImage:', shouldShowFallbackImage);
+    console.log('Will render video?', !!(videoSrc && !videoFailed));
+    console.groupEnd();
+  }, [video, videoUrl, videoSrc, fallbackImageUrl, videoFailed, shouldShowFallbackImage]);
 
   return (
     <section className="relative h-[78vh] sm:h-[86vh] lg:h-[90vh] min-h-[520px] sm:min-h-[600px] w-full overflow-hidden">
       {/* Background Media */}
-      {fallbackImageUrl ? (
+      {shouldShowFallbackImage ? (
         <img
           src={fallbackImageUrl}
           alt={slider?.title || 'Hero background'}
-          className="absolute inset-0 z-0 w-full h-full object-contain object-center"
+          className="absolute inset-0 z-0 w-full h-full object-cover object-center"
           loading="eager"
           onError={(e) => console.error('Slider fallback image failed to load:', slider?.image, e)}
         />
@@ -101,8 +112,9 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600" />
       )}
 
-      {videoUrl && !videoFailed && (
+      {videoSrc && !videoFailed && (
         <video
+          key={videoSrc}
           ref={videoRef}
           autoPlay
           loop
@@ -124,13 +136,21 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
             });
           }}
           onError={(e) => {
+            const mediaError = videoRef.current?.error;
             console.error('Video error:', e);
             console.error('Video src:', video?.video);
-            console.error('Attempted URL:', videoUrl);
+            console.error('Attempted URL:', videoSrc);
+            console.error('Video element state:', {
+              currentSrc: videoRef.current?.currentSrc,
+              networkState: videoRef.current?.networkState,
+              readyState: videoRef.current?.readyState,
+              errorCode: mediaError?.code,
+              errorMessage: mediaError?.message,
+            });
             setVideoFailed(true);
           }}
         >
-          <source src={videoUrl} type={getVideoMimeType(videoUrl)} />
+          <source src={videoSrc} type={getVideoMimeType(videoSrc)} />
         </video>
       )}
 
@@ -233,7 +253,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         </div>
       </div>
       {/* Play Button Overlay shown if autoplay blocked */}
-      {videoUrl && !isPlaying && (
+      {videoSrc && !isPlaying && !videoFailed && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto">
           <button
             onClick={async () => {
@@ -241,9 +261,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
                 videoRef.current!.muted = true;
                 await videoRef.current!.play();
                 setIsPlaying(true);
-                setPlayBlocked(false);
               } catch (e) {
-                setPlayBlocked(true);
                 console.debug('User-initiated play failed', e);
               }
             }}

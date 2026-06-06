@@ -58,6 +58,9 @@ const HomePage = () => {
         
         console.debug('[HomePage] Sliders loaded:', slidersData.length);
         console.debug('[HomePage] Videos loaded:', videosData.length);
+          console.warn('[HomePage DEBUG] videosData full:', JSON.stringify(videosData));
+          console.warn('[HomePage DEBUG] activeVideos:', JSON.stringify(activeVideos));
+          console.warn('[HomePage DEBUG] heroVideo:', JSON.stringify(heroVideo));
         console.debug('[HomePage] Featured products loaded:', products.length);
         console.debug('[HomePage] About page loaded:', aboutData?.headline);
         
