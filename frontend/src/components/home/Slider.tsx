@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -22,6 +22,9 @@ const Slider = ({ images }: SliderProps) => {
   const [autoplay, setAutoplay] = useState(true);
   const [broken, setBroken] = useState<Set<number>>(new Set());
   const brokenRef = useRef(broken);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [wrapperHeight, setWrapperHeight] = useState<number | null>(null);
+  const [currentAspect, setCurrentAspect] = useState<number | null>(null);
 
   useEffect(() => {
     if (images.length <= 1 || !autoplay) return;
@@ -44,6 +47,30 @@ const Slider = ({ images }: SliderProps) => {
     setBroken(new Set());
     setCurrentIndex(0);
   }, [images]);
+
+  const getMaxVhPx = () => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 1280;
+    const h = typeof window !== 'undefined' ? window.innerHeight : 800;
+    if (w >= 1024) return h * 0.3; // lg
+    if (w >= 768) return h * 0.28; // md
+    if (w >= 640) return h * 0.25; // sm
+    return h * 0.22; // base
+  };
+
+  const recomputeHeight = (aspect?: number | null) => {
+    const a = aspect ?? currentAspect;
+    if (!a || !containerRef.current) return;
+    const containerWidth = containerRef.current.clientWidth || window.innerWidth;
+    const maxH = getMaxVhPx();
+    const desired = Math.min(containerWidth * a, maxH);
+    setWrapperHeight(Math.round(desired));
+  };
+
+  useEffect(() => {
+    const onResize = () => recomputeHeight();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [currentAspect]);
 
   const getNextValidIndex = (start: number, dir: number) => {
     if (images.length === 0) return -1;
@@ -80,7 +107,8 @@ const Slider = ({ images }: SliderProps) => {
     setDirection(newDirection);
     setCurrentIndex((prev) => {
       const next = getNextValidIndex((prev + newDirection + images.length) % images.length, newDirection);
-      return next >= 0 ? next : prev;
+      if (next >= 0) return next;
+      return prev;
     });
     setAutoplay(true);
   };
@@ -123,26 +151,37 @@ const Slider = ({ images }: SliderProps) => {
           className="absolute inset-0 cursor-grab active:cursor-grabbing flex items-center justify-center"
         >
           {currentImage.image ? (
-            <img
-              src={getImageUrl(currentImage.image)}
-              alt={currentImage.title || 'Gallery'}
-              className="w-full h-full object-contain object-center"
-              loading="eager"
-              decoding="async"
-              sizes="100vw"
-              crossOrigin="anonymous"
-              onError={() => {
-                console.error('Image failed to load:', currentImage.image);
-                // mark this slide as broken and advance
-                setBroken((s) => {
-                  const n = new Set(s);
-                  n.add(currentIndex);
-                  return n;
-                });
-                const next = getNextValidIndex(currentIndex, 1);
-                if (next >= 0) setCurrentIndex(next);
-              }}
-            />
+            <div ref={containerRef} className="w-full flex items-center justify-center" style={{ height: wrapperHeight ? `${wrapperHeight}px` : undefined, transition: 'height 240ms ease' }}>
+              <img
+                src={getImageUrl(currentImage.image)}
+                alt={currentImage.title || 'Gallery'}
+                className="max-w-full max-h-full object-contain object-center"
+                loading="eager"
+                decoding="async"
+                sizes="100vw"
+                crossOrigin="anonymous"
+                onLoad={(e) => {
+                  try {
+                    const img = e.currentTarget as HTMLImageElement;
+                    const aspect = img.naturalHeight / img.naturalWidth;
+                    setCurrentAspect(aspect);
+                    recomputeHeight(aspect);
+                  } catch (err) {
+                    console.error('Error computing image aspect', err);
+                  }
+                }}
+                onError={() => {
+                  console.error('Image failed to load:', currentImage.image);
+                  setBroken((s) => {
+                    const n = new Set(s);
+                    n.add(currentIndex);
+                    return n;
+                  });
+                  const next = getNextValidIndex(currentIndex, 1);
+                  if (next >= 0) setCurrentIndex(next);
+                }}
+              />
+            </div>
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <div className="text-gray-500">Image unavailable</div>
