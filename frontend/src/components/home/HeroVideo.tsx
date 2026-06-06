@@ -64,7 +64,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
         <img
           src={fallbackImageUrl}
           alt={slider?.title || 'Hero background'}
-          className="absolute inset-0 z-0 w-full h-full object-cover"
+          className="absolute inset-0 z-0 w-full h-full object-contain object-center"
           loading="eager"
           onError={(e) => console.error('Slider fallback image failed to load:', slider?.image, e)}
         />
