@@ -73,7 +73,7 @@ function App() {
         <WhatsAppButton />
         <ScrollToTop />
         
-        <main className="flex-grow pt-20">
+        <main className="flex-grow" style={{ paddingTop: 'var(--header-offset)' }}>
           <Suspense fallback={<LoadingSpinner fullScreen />}>
             <Routes>
               <Route path="/" element={<HomePage />} />

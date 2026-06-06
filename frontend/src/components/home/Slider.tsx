@@ -57,13 +57,21 @@ const Slider = ({ images }: SliderProps) => {
     return h * 0.22; // base
   };
 
+  const getMinHeightPx = () => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 1280;
+    if (w >= 1024) return 360;
+    if (w >= 768) return 320;
+    if (w >= 640) return 280;
+    return 240;
+  };
+
   const recomputeHeight = (aspect?: number | null) => {
     const a = aspect ?? currentAspect;
     if (!a || !containerRef.current) return;
     const containerWidth = containerRef.current.clientWidth || window.innerWidth;
     const maxH = getMaxVhPx();
     const desired = Math.min(containerWidth * a, maxH);
-    setWrapperHeight(Math.round(desired));
+    setWrapperHeight(Math.round(Math.max(desired, getMinHeightPx())));
   };
 
   useEffect(() => {
@@ -120,7 +128,7 @@ const Slider = ({ images }: SliderProps) => {
 
   return (
     <section 
-      className="relative w-full h-[22vh] sm:h-[25vh] md:h-[28vh] lg:h-[30vh] bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden flex items-center justify-center"
+      className="relative w-full h-[22vh] sm:h-[25vh] md:h-[28vh] lg:h-[30vh] min-h-[240px] sm:min-h-[280px] md:min-h-[320px] lg:min-h-[360px] bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden flex items-center justify-center"
       onMouseEnter={() => setAutoplay(false)}
       onMouseLeave={() => setAutoplay(true)}
     >
@@ -151,7 +159,7 @@ const Slider = ({ images }: SliderProps) => {
           className="absolute inset-0 cursor-grab active:cursor-grabbing flex items-center justify-center"
         >
           {currentImage.image ? (
-            <div ref={containerRef} className="w-full flex items-center justify-center" style={{ height: wrapperHeight ? `${wrapperHeight}px` : undefined, transition: 'height 240ms ease' }}>
+            <div ref={containerRef} className="w-full h-full flex items-center justify-center px-4 sm:px-6" style={{ height: wrapperHeight ? `${wrapperHeight}px` : '100%', transition: 'height 240ms ease' }}>
               <img
                 src={getImageUrl(currentImage.image)}
                 alt={currentImage.title || 'Gallery'}

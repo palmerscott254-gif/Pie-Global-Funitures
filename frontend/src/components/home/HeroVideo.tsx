@@ -119,7 +119,6 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           poster={fallbackImageUrl || undefined}
           disablePictureInPicture
           disableRemotePlayback
-          crossOrigin="anonymous"
           className="absolute inset-0 z-[1] w-full h-full object-cover pointer-events-none"
           style={{
             willChange: 'transform',

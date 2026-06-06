@@ -85,22 +85,22 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 backdrop-blur-md ${
         isScrolled ? 'bg-white shadow-lg' : 'bg-white/95'
       }`}
     >
-      <div className="container-custom">
-        <div className="flex items-center justify-between h-20">
+      <div className="container-custom h-full">
+        <div className="flex h-16 md:h-20 items-center justify-between gap-3 md:gap-4">
           {/* Brand */}
-          <Link to="/" className="flex items-center space-x-1">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <img
               src={logoImage}
               alt="PieGlobal logo"
-              className="h-10 md:h-12 w-auto object-contain"
+              className="h-9 md:h-12 w-auto object-contain"
               loading="eager"
               decoding="async"
             />
-            <div className="text-2xl font-bold text-primary-600">
+            <div className="hidden sm:block text-xl md:text-2xl font-bold text-primary-600 whitespace-nowrap">
               Pie<span className="text-secondary-600">Global</span>
             </div>
           </Link>
@@ -136,13 +136,13 @@ const Header = () => {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center space-x-4 relative">
+          <div className="flex items-center space-x-2 sm:space-x-4 relative">
             {/* Search Icon */}
             {!adminMode && (
               <div className="hidden md:block relative">
               <button
                 onClick={() => setIsSearchOpen((prev) => !prev)}
-                className="text-gray-700 hover:text-primary-600 transition-colors"
+                className="text-gray-700 hover:text-primary-600 transition-colors p-1"
                 aria-label="Search products"
               >
                 <FaSearch size={20} />
@@ -179,7 +179,7 @@ const Header = () => {
             {!adminMode && (
               <button
                 onClick={toggleCart}
-                className="relative text-gray-700 hover:text-primary-600 transition-colors"
+                className="relative text-gray-700 hover:text-primary-600 transition-colors p-1"
               >
                 <FaShoppingCart size={22} />
                 {totalItems > 0 && (
@@ -194,7 +194,7 @@ const Header = () => {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="text-gray-700 hover:text-primary-600 transition-colors"
+                className="text-gray-700 hover:text-primary-600 transition-colors p-1"
                 aria-label="User account menu"
               >
                 <span className="relative inline-block">
@@ -246,7 +246,7 @@ const Header = () => {
             {/* Mobile Menu Toggle */}
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden text-gray-700 hover:text-primary-600 transition-colors"
+              className="md:hidden text-gray-700 hover:text-primary-600 transition-colors p-1"
             >
               {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
             </button>
@@ -256,7 +256,7 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 animate-slide-down">
+        <div className="md:hidden bg-white border-t border-gray-200 max-h-[calc(100vh-var(--header-offset))] overflow-y-auto animate-slide-down">
           <nav className="container-custom py-4 flex flex-col space-y-4">
             {adminMode ? (
               <NavLink

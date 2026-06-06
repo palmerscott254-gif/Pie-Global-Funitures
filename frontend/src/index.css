@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --header-offset: 4rem;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --header-offset: 5rem;
+    }
+  }
+
   * {
     @apply box-border;
   }
@@ -170,6 +180,7 @@
 /* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--header-offset);
 }
 
 /* Glassmorphism utility */
