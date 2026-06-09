@@ -15,12 +15,14 @@ services:
       find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true &&
       find . -type f -name "*.pyc" -delete 2>/dev/null || true &&
       pip install --no-cache-dir -r requirements.txt &&
+      python manage.py collectstatic --no-input --clear &&
+      python -c "from django.conf import settings; print(f'✓ Build complete - S3 enabled: {settings.USE_S3}')"
+    preDeployCommand: |
+      cd backend &&
       python manage.py migrate &&
       python manage.py sync_s3_to_db &&
       python populate_s3_records.py &&
-      python manage.py fix_production_products &&
-      python manage.py collectstatic --no-input --clear &&
-      python -c "from django.conf import settings; print(f'✓ Build complete - S3 enabled: {settings.USE_S3}')"
+      python manage.py fix_production_products
     startCommand: cd backend && gunicorn pie_global.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
