@@ -27,8 +27,6 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.debug('[HomePage] Fetching home page data...');
-
         const [slidersResult, videosResult, productsResult, aboutResult] = await Promise.allSettled([
           homeApi.getSliders(),
           homeApi.getVideos(),
@@ -55,14 +53,6 @@ const HomePage = () => {
         const products = Array.isArray(productsResponse)
           ? productsResponse
           : (productsResponse as any).results || [];
-        
-        console.debug('[HomePage] Sliders loaded:', slidersData.length);
-        console.debug('[HomePage] Videos loaded:', videosData.length);
-          console.warn('[HomePage DEBUG] videosData full:', JSON.stringify(videosData));
-          console.warn('[HomePage DEBUG] activeVideos:', JSON.stringify(activeVideos));
-          console.warn('[HomePage DEBUG] heroVideo:', JSON.stringify(heroVideo));
-        console.debug('[HomePage] Featured products loaded:', products.length);
-        console.debug('[HomePage] About page loaded:', aboutData?.headline);
         
         setSliders(slidersData);
         setVideos(videosData);

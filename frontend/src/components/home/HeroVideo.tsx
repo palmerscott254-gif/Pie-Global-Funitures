@@ -16,6 +16,21 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
   const videoUrl = video?.video ? getVideoUrl(video.video) : '';
   const videoSrc = videoUrl.trim();
   const fallbackImageUrl = slider?.image ? getImageUrl(slider.image) : '';
+  const posterUrl = useMemo(() => {
+    if (!videoSrc) {
+      return fallbackImageUrl;
+    }
+
+    const [path, query] = videoSrc.split('?');
+    const posterPath = path.replace(/\.(mp4|mov|webm)$/i, '-poster.jpg');
+
+    // If extension replacement failed, keep current fallback behavior.
+    if (posterPath === path) {
+      return fallbackImageUrl;
+    }
+
+    return query ? `${posterPath}?${query}` : posterPath;
+  }, [videoSrc, fallbackImageUrl]);
 
   const particles = useMemo(() => {
     const width = typeof window !== 'undefined' ? window.innerWidth : 1440;
@@ -101,6 +116,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           alt={slider?.title || 'Hero background'}
           className="absolute inset-0 z-0 w-full h-full object-cover object-center"
           loading="eager"
+          decoding="async"
           onError={(e) => console.error('Slider fallback image failed to load:', slider?.image, e)}
         />
       ) : (
@@ -116,7 +132,7 @@ const HeroVideo = memo(({ video, slider }: HeroVideoProps) => {
           muted
           playsInline
           preload="metadata"
-          poster={fallbackImageUrl || undefined}
+          poster={posterUrl || undefined}
           disablePictureInPicture
           disableRemotePlayback
           className="absolute inset-0 z-[1] w-full h-full object-cover pointer-events-none"
