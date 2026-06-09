@@ -100,7 +100,7 @@ const Header = () => {
               loading="eager"
               decoding="async"
             />
-            <div className="hidden sm:block text-xl md:text-2xl font-bold text-primary-600 whitespace-nowrap">
+            <div className="text-sm sm:text-xl md:text-2xl font-bold text-primary-600 whitespace-nowrap">
               Pie<span className="text-secondary-600">Global</span>
             </div>
           </Link>
